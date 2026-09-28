@@ -1,0 +1,94 @@
+---
+import { Download } from "lucide-astro";
+
+import { APP_NAME, MEDIA, formatLocalePath } from "@/config";
+import { Button } from "@/components/ui/button";
+
+export interface Props {
+	locale?: string;
+}
+
+const { locale = "en" } = Astro.props as Props;
+
+const navItems = [
+	{ label: "Home", href: formatLocalePath(locale, "home") },
+	{ label: "About", href: formatLocalePath(locale, "about") },
+	{ label: "Products", href: formatLocalePath(locale, "products") },
+	{ label: "Contact", href: formatLocalePath(locale, "contact") },
+];
+---
+
+<header
+	id="site-header"
+	data-site-header
+	data-scrolled="false"
+	class="fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out md:px-6 md:pt-5"
+>
+	<nav
+		data-nav-shell
+		data-scrolled="false"
+		class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#0d1726]/55 p-2.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-300 ease-out data-[scrolled=true]:border-white/[0.14] data-[scrolled=true]:bg-[#0d1726]/95 data-[scrolled=true]:shadow-[0_18px_50px_rgba(0,0,0,0.28)] md:flex-nowrap md:gap-3 md:rounded-full md:px-3"
+		aria-label="Primary navigation"
+	>
+		<a
+			class="group flex shrink-0 items-center gap-2.5 rounded-full px-2 py-1.5 outline-none transition-colors duration-200 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
+			href={formatLocalePath(locale, "home")}
+			aria-label={`${APP_NAME.fullname} home`}
+		>
+			<span class="grid size-10 place-items-center rounded-xl bg-white/[0.07] ring-1 ring-inset ring-white/[0.12] transition-transform duration-300 group-hover:scale-105">
+				<img
+					src={MEDIA.logo.minimal}
+					alt=""
+					width="32"
+					height="32"
+					loading="eager"
+					class="size-8 object-contain"
+				/>
+			</span>
+			<span class="font-code text-[0.78rem] font-semibold tracking-[-0.08em] text-white sm:text-sm">
+				{APP_NAME.styled}
+			</span>
+		</a>
+
+		<div class="order-3 flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:order-none md:ml-5 md:overflow-visible">
+			{
+				navItems.map((item) => (
+					<a
+						href={item.href}
+						class="group relative shrink-0 rounded-full px-3 py-2 text-[0.78rem] font-medium tracking-wide text-white/65 outline-none transition-[background-color,color] duration-200 hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70 sm:px-3.5 sm:text-sm"
+					>
+						<span class="relative z-10">{item.label}</span>
+						<span class="absolute inset-x-3 bottom-1 h-px origin-center scale-x-0 bg-[#ff6d00] transition-transform duration-200 group-hover:scale-x-100" />
+					</a>
+				))
+			}
+		</div>
+
+		<div class="ml-auto flex shrink-0 items-center">
+			<Button
+				type="button"
+				variant="default"
+				size="lg"
+				className="h-10 rounded-full !bg-[#ff6d00] px-3.5 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(255,109,0,0.28)] transition-[background-color,box-shadow,transform] duration-200 hover:!bg-[#ff7d1a] hover:shadow-[0_10px_28px_rgba(255,109,0,0.38)] hover:-translate-y-0.5 sm:px-4 sm:text-sm"
+				aria-label={`Download ${APP_NAME.fullname}`}
+			>
+				<Download size={16} strokeWidth={2.25} aria-hidden="true" />
+				<span>Download</span>
+			</Button>
+		</div>
+	</nav>
+</header>
+
+<script>
+	const header = document.querySelector<HTMLElement>("[data-site-header]");
+	const nav = header?.querySelector<HTMLElement>("[data-nav-shell]");
+
+	if (header && nav) {
+		const updateHeaderState = () => {
+			nav.dataset.scrolled = window.scrollY > 16 ? "true" : "false";
+		};
+
+		updateHeaderState();
+		window.addEventListener("scroll", updateHeaderState, { passive: true });
+	}
+</script>

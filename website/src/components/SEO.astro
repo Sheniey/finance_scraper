@@ -1,0 +1,42 @@
+---
+import { SITE } from "@/config";
+
+export interface Props {
+    title: string;
+    description: string;
+    theme: string;
+}
+
+const { title, description, theme } = Astro.props as Props;
+
+const og = {
+    title: title,
+    description: description,
+    image: SITE.ogImage,
+    type: SITE.ogType,
+};
+
+const twitter = {
+    title: title,
+    description: description,
+    card: SITE.twitterCard,
+    creator: SITE.twitterCreator,
+    image: SITE.ogImage,
+};
+---
+
+<meta name="description" content={description} />
+<meta name="keywords" content={SITE.keywords} />
+<meta name="author" content={SITE.authorPseudonym} />
+
+<meta property="og:title" content={og.title} />
+<meta property="og:description" content={og.description} />
+<meta property="og:image" content={og.image} />
+<meta property="og:type" content={og.type} />
+<meta property="og:url" content={SITE.baseURL} />
+<meta name="twitter:card" content={twitter.card} />
+<meta name="twitter:creator" content={twitter.creator} />
+<meta name="twitter:title" content={twitter.title} />
+<meta name="twitter:description" content={twitter.description} />
+<meta name="twitter:image" content={twitter.image} />
+<meta name="theme-color" content={theme} />

@@ -1,0 +1,121 @@
+---
+import { Activity, ArrowUp, ArrowUpRight } from "lucide-astro";
+
+import { APP_NAME, MEDIA, SITE, formatLocalePath } from "@/config";
+
+export interface Props {
+	locale?: string;
+}
+
+const { locale = "en" } = Astro.props as Props;
+
+const navItems = [
+	{ label: "Home", href: formatLocalePath(locale, "home") },
+	{ label: "About", href: formatLocalePath(locale, "about") },
+	{ label: "Products", href: formatLocalePath(locale, "products") },
+	{ label: "Contact", href: formatLocalePath(locale, "contact") },
+];
+---
+
+<footer class="relative isolate overflow-hidden border-t border-white/[0.08] bg-[#07101f] text-white">
+	<div
+		aria-hidden="true"
+		class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_0%,rgba(255,109,0,0.16),transparent_28%),radial-gradient(circle_at_92%_18%,rgba(49,94,153,0.22),transparent_30%)]"
+	></div>
+	<div
+		aria-hidden="true"
+		class="pointer-events-none absolute -right-24 top-24 -z-10 size-72 rounded-full bg-[#ff6d00]/[0.07] blur-3xl"
+	></div>
+
+	<div class="mx-auto max-w-7xl px-5 pb-7 pt-14 sm:px-8 md:pt-20">
+		<div class="relative mb-16 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-8 md:flex md:items-end md:justify-between md:gap-10 md:p-10">
+			<div
+				aria-hidden="true"
+				class="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-[#ff6d00]/10 blur-3xl"
+			></div>
+			<div class="relative max-w-2xl">
+				<p class="mb-4 font-code text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#ff8a38]">
+					Financial clarity, without the noise
+				</p>
+				<h2 class="max-w-xl font-heading text-3xl font-semibold tracking-[-0.045em] text-white sm:text-4xl md:text-5xl">
+					Make your next move with better data.
+				</h2>
+			</div>
+			<div class="relative mt-7 flex shrink-0 items-center gap-3 rounded-full border border-white/10 bg-[#07101f]/65 px-4 py-3 text-sm text-white/70 md:mt-0">
+				<span class="grid size-8 place-items-center rounded-full bg-[#ff6d00]/15 text-[#ff8a38]">
+					<Activity size={16} strokeWidth={2.25} aria-hidden="true" />
+				</span>
+				<span>Signal over noise.</span>
+			</div>
+		</div>
+
+		<div class="grid gap-12 lg:grid-cols-[1.2fr_0.65fr_0.8fr] lg:gap-16">
+			<div>
+				<img
+					src={MEDIA.logo.banner}
+					alt={APP_NAME.fullname}
+					width="1277"
+					height="473"
+					loading="lazy"
+					class="w-full max-w-[22rem] object-contain object-left"
+				/>
+				<p class="mt-6 max-w-sm text-sm leading-6 text-white/55">
+					An open, focused way to turn market data into a clearer point of view.
+				</p>
+				<a
+					href={SITE.authorIg}
+					target="_blank"
+					rel="noreferrer"
+					class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-white/65 outline-none transition-colors duration-200 hover:text-[#ff8a38] focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
+				>
+					Built by {SITE.authorPseudonym}
+					<ArrowUpRight size={15} aria-hidden="true" />
+				</a>
+			</div>
+
+			<div>
+				<p class="mb-5 font-code text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-white/35">
+					Explore
+				</p>
+				<nav class="grid justify-start gap-3" aria-label="Footer navigation">
+					{
+						navItems.map((item) => (
+							<a
+								href={item.href}
+								class="group inline-flex w-fit items-center gap-2 text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
+							>
+								<span>{item.label}</span>
+								<ArrowUpRight
+									size={14}
+									class="opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+									aria-hidden="true"
+								/>
+							</a>
+						))
+					}
+				</nav>
+			</div>
+
+			<div>
+				<p class="mb-5 font-code text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-white/35">
+					Stay curious
+				</p>
+				<p class="max-w-xs text-sm leading-6 text-white/55">
+					Research smarter, keep your edge, and let the numbers tell the story.
+				</p>
+				<a
+					href="#site-header"
+					class="mt-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/75 outline-none transition-[background-color,border-color,color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#ff6d00]/40 hover:bg-[#ff6d00]/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
+				>
+					Back to top
+					<ArrowUp size={15} aria-hidden="true" />
+				</a>
+			</div>
+		</div>
+
+		<div class="mt-14 flex flex-col gap-4 border-t border-white/[0.09] pt-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
+			<p>© {new Date().getFullYear()} {APP_NAME.fullname}. All rights reserved.</p>
+			<p class="font-code tracking-[-0.04em]">finance_scraper / market intelligence</p>
+		</div>
+	</div>
+</footer>
