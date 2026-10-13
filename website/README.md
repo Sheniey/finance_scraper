@@ -23,18 +23,21 @@ Finance Scraper is a tool for generating **financial reports** and insights from
 
 <br>
 
-## 🗂️ Folder About
+## 🗂️ Website Section
 
-This folder contains the official Finance Scraper website.
+This project folder contains the official Finance Scraper website.
 
-The localized Home page is served at `/{locale}/home`. Visiting `/` selects a supported browser language (falling back to Spanish), and `/{locale}` redirects to that locale's Home page.
+The localized Home page is served at `/{locale}/home`. Visiting `/` selects a supported browser language (falling back to English), and `/{locale}` redirects to that locale's Home page.
 
 The website is built with Astro.js and Tailwind CSS and is responsible for:
 - Shared, localized site navigation
-- Product information and executable downloads
+- Executable downloads
 - Documentation access
 - SEO optimization
 - Internationalization
+- Product information
+- Contact information
+- Legal information
 
 <p align="right">
     <strong><a href="#readme-top">↑ To Top ↑</a></strong>
@@ -71,14 +74,14 @@ pnpm dev
 
 <br>
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+| Command | Action  |
+|---------|---------|
+| `pnpm install` | Installs dependencies  |
+| `pnpm dev` | Starts local dev server at `localhost:4321` |
+| `pnpm build` | Build your production site to `./dist/` |
+| `pnpm preview` | Preview your build locally, before deploying |
+| `pnpm astro ...` | Run CLI commands like `astro add`, `astro check` |
+| `pnpm astro -- --help` | Get help using the Astro CLI |
 
 <p align="right">
     <strong><a href="#readme-top">↑ To Top ↑</a></strong>
@@ -90,19 +93,17 @@ pnpm dev
 We welcome contributions from the community. If you would like to contribute, please follow these steps:
 
 > [!IMPORTANT]
-> When contributing, ensure that you are modifying only one section of the repository. In this case, only the `website` section.
+> When contributing, make sure to modify **only the `website` section** of the repository. Changes to other sections are outside the scope of this contribution process.
 
 1. Make a **Fork** of this repository.
 
 2. Create a new branch for your feature or bugfix:
 ```bash
-git checkout -b {branch}/{branch_name}
-
-# Recommended : Git >= 2.23.
-git switch -c {branch}/{branch_name}
+git switch -c {prefix}/{branch_name}
 ```
+Alternatively, you can use `git checkout -b` (Git >= 2.23 is recommended for git switch).
 
-**We recommend following the pattern below when naming a branch for your feature:**
+**We recommend following the naming convention for branch names:**
 
 | Prefix | Purpose |
 |---------|---------|
@@ -114,21 +115,35 @@ git switch -c {branch}/{branch_name}
 | chore/ | Maintenance |
 | style/ | Formatting and styling |
 
+**Example:**
+- `feat/responsive-navbar`
+- `fix/mobile-layout`
+- `docs/update-installation-guide`
+
 3. Add your changes to your Fork and commit them:
 ```bash
 git add .
-git commit -m "{branch}: <description>"
+git commit -m "{prefix}: <description>"
 ```
+Use the same prefix for your commit message as your branch name.
 
 4. Push your changes to your branch:
 ```bash
-git push origin {branch}/{branch_name}
+git push origin {prefix}/{branch_name}
 ```
 
 > [!WARNING]
 > This command must receive the name of your branch and your implementation exactly as defined in step two.
 
-5. Open a Pull Request and describe the changes you have made.
+5. Open a Pull Request against the original repository's appropriate branch. Include a clear description of your changes and their purpose.
+
+### ⚠️ Before submitting
+
+Make sure that:
+- Your changes are limited to the website section.
+- Your branch follows the recommended naming convention.
+- Your commit messages use the appropriate prefix. You can add a scope in parentheses after the prefix if needed.
+- Your Pull Request clearly describes your implementation.
 
 <p align="right">
     <strong><a href="#readme-top">↑ To Top ↑</a></strong>
