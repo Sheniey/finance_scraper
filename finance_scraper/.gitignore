@@ -1,21 +1,35 @@
+
+# build artifacts
+build/
+dist/
+*.egg-info/
+
+# sensitive files
 .env
+.env.production
+
+# python related files
 .venv/
 venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
+
+# rust related files
 .ruff_cache/
+src/finance_core/target/
+
+# third party cache
 .complexipy_cache/
 catboost_info/
+
+# in dev reports
 reports/
-testing_reports/
-tmp_site/
-tmp_report.html
 report.pdf
-build/
-dist/
-*.egg-info/
+testing_reports/
+
+# database files
 src/data/*.sqlite3
 src/data/*.sqlite3-*
 src/finance/db/*.sqlite3
@@ -24,17 +38,21 @@ src/finance/db/sync/
 api/data/*.sqlite3
 api/data/*.sqlite3-*
 api/data/credentials.json
+
+# machine learning artifacts
 nexis.joblib
 tiny_predictor.joblib
-src/finance_core/target
 src/nexis/artifacts/*.joblib
-finance-cli.spec
-_miplanjugoso.md
-installer.iss
-nuitka.log
-nuitka-crash-report.xml
-uvicorn.pid
-output.json
-DOCS.md
-futuro.md
+
+# log files
 *.log
+
+# private files
+priv/*
+
+# temporary files
+tmp_site/
+tmp_report.html
+
+# temporary PID files
+uvicorn.pid

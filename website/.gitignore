@@ -23,8 +23,8 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# privacy-related files
-priv.md
+# private files
+priv/*
 
-# too heavy files
-public/bin/FinanceScraperSetup-0.1.0-x.exe
+# heavy binaries
+public/bin/*

@@ -26,6 +26,5 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# privacy-related files
-priv.md
-concept.md
+# private files
+priv/
