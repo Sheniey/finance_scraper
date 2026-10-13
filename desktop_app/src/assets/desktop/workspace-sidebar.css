@@ -1,0 +1,143 @@
+.workspace-shell {
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: 248px minmax(0, 1fr);
+    background: var(--paper);
+}
+
+.workspace-sidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    padding: 24px 15px 14px;
+    background:
+        radial-gradient(circle at 0 0, rgba(36, 122, 119, 0.13), transparent 30%),
+        var(--ink);
+    color: #eef1f3;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+}
+
+.sidebar-brand-mark {
+    width: 37px;
+    height: 37px;
+    border-radius: 11px;
+}
+
+.sidebar-brand-mark img {
+    width: 23px;
+    height: 23px;
+}
+
+.sidebar-brand strong {
+    font-size: 15px;
+}
+
+.sidebar-brand small {
+    color: #7f8d9c;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+}
+
+.workspace-switcher {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 9px;
+    margin: 28px 0 24px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.workspace-monogram {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(36, 122, 119, 0.16);
+    color: #b6d7d3;
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.workspace-switcher-copy,
+.sidebar-user-copy,
+.api-health-copy {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 3px;
+}
+
+.workspace-switcher-copy small {
+    color: #7c8998;
+    font-size: 12px;
+}
+
+.workspace-switcher-copy strong {
+    overflow: hidden;
+    color: #e8ebef;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workspace-switcher > svg {
+    color: #7c8998;
+}
+
+.workspace-nav {
+    display: grid;
+    gap: 4px;
+}
+
+.nav-section-label {
+    margin: 0 0 6px;
+    padding: 0 10px;
+    color: #778698;
+    font-size: 12px;
+}
+
+.nav-section-spaced {
+    margin-top: 22px;
+}
+
+.workspace-nav-item {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 11px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #9eabb9;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    transition: color 160ms ease, background 160ms ease;
+}
+
+.workspace-nav-item:hover {
+    background: rgba(255, 255, 255, 0.055);
+    color: #fff;
+}
+
+.workspace-nav-item.active {
+    border-color: rgba(36, 122, 119, 0.16);
+    background: rgba(36, 122, 119, 0.12);
+    color: #ffd1ac;
+}

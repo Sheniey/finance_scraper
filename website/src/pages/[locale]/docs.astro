@@ -1,0 +1,12 @@
+---
+import { LOCALES } from '@/config';
+import Layout from '@/layouts/Layout.astro';
+
+export function getStaticPaths() {
+    return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale ?? 'en';
+---
+
+<Layout locale={locale} />

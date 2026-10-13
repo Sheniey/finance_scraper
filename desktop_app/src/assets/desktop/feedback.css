@@ -1,0 +1,103 @@
+.toast-message {
+    position: fixed;
+    z-index: 20;
+    right: 24px;
+    bottom: 22px;
+    display: flex;
+    max-width: min(430px, calc(100vw - 36px));
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 14px 42px rgba(13, 23, 38, 0.26);
+    font-size: 12px;
+    animation: toast-in 190ms both ease-out;
+}
+
+.toast-icon {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 7px;
+    background: rgba(24, 122, 88, 0.2);
+    color: #81d0a8;
+}
+
+.toast-close {
+    width: 25px;
+    height: 25px;
+    margin-left: auto;
+    border-radius: 6px;
+    color: #aab4be;
+}
+
+.toast-close:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: white;
+}
+
+.boot-screen {
+    display: grid;
+    min-height: 100vh;
+    align-content: center;
+    justify-items: center;
+    gap: 13px;
+    background:
+        radial-gradient(circle at 50% 28%, rgba(36, 122, 119, 0.1), transparent 23%),
+        var(--ink);
+    color: #f7f3ec;
+    text-align: center;
+}
+
+.boot-mark {
+    display: grid;
+    width: 62px;
+    height: 62px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 17px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.boot-screen .field-kicker {
+    margin: 10px 0 0;
+    color: #9dcac4;
+}
+
+.boot-screen h1 {
+    margin: 0;
+    font-family: 'Geist', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.boot-screen > small {
+    color: #8694a3;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.boot-progress {
+    width: 180px;
+    height: 2px;
+    overflow: hidden;
+    margin-top: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.boot-progress span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--orange);
+    animation: boot-progress 1.2s ease-in-out infinite alternate;
+}
+

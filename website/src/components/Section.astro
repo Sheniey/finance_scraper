@@ -1,0 +1,38 @@
+---
+export interface Props {
+	id: string
+	ariaLabelledby: string
+	class?: string
+	containerClass?: string
+	fullBleed?: boolean
+}
+
+const {
+	id,
+	ariaLabelledby,
+	class: sectionClass,
+	containerClass,
+	fullBleed = false,
+} = Astro.props as Props
+---
+
+<section
+	id={id}
+	aria-labelledby={ariaLabelledby}
+	class:list={['relative scroll-mt-24', sectionClass]}
+>
+	{
+		fullBleed ? (
+			<slot />
+		) : (
+			<div
+				class:list={[
+					'mx-auto w-full max-w-310 px-5 py-24 sm:px-8 md:py-32',
+					containerClass,
+				]}
+			>
+				<slot />
+			</div>
+		)
+	}
+</section>

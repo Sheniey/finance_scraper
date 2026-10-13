@@ -1,0 +1,69 @@
+
+services:
+
+  api:
+    profiles:
+      - api
+    build: .
+    env_file:
+      - .env
+    environment:
+      DB_LOCAL_PATH: /app/finance-sync/financescraper.sqlite3
+      REPORT_STORE_PATH: /app/src/finance/db/report_store.sqlite3
+    command: uvicorn api.core.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - account_data:/app/src/data
+      - api_state_data:/app/api/data
+      - report_store_data:/app/src/finance/db
+      - finance_sync_data:/app/finance-sync
+      - model_data:/app/src/ml/artifacts
+    ports:
+      - "8000:8000"
+
+  cli:
+    profiles:
+      - cli
+    build: .
+    env_file:
+      - .env
+    environment:
+      DB_LOCAL_PATH: /app/finance-sync/financescraper.sqlite3
+      REPORT_STORE_PATH: /app/src/finance/db/report_store.sqlite3
+    command: python finance-cli.py
+    volumes:
+      - report_store_data:/app/src/finance/db
+      - finance_sync_data:/app/finance-sync
+      - model_data:/app/src/ml/artifacts
+
+  database-migrate:
+    profiles:
+      - migrate
+    build: .
+    env_file:
+      - .env
+    environment:
+      DB_LOCAL_PATH: /app/finance-sync/financescraper.sqlite3
+      LEGACY_DATABASE_DIR: /app/legacy-finance-db
+      REPORT_STORE_PATH: /app/src/finance/db/report_store.sqlite3
+    command: python -m finance.services.database.migrate_local
+    volumes:
+      - finance_sync_data:/app/finance-sync
+      - report_store_data:/app/report-cache
+      - ./src/finance/db:/app/legacy-finance-db
+
+  train:
+    profiles:
+      - train
+    build: .
+    env_file:
+      - .env
+    command: python -m nexis.scripts.training
+    volumes:
+      - model_data:/app/src/ml/artifacts
+
+volumes:
+  account_data:
+  api_state_data:
+  report_store_data:
+  finance_sync_data:
+  model_data:

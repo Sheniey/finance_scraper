@@ -1,0 +1,77 @@
+---
+import { translations, type Locale } from '@/i18n'
+import Section from '@/components/Section.astro'
+import WhyStoryItem from '@/components/WhyStoryItem.astro'
+
+interface Props {
+	locale: Locale
+}
+
+const { locale } = Astro.props as Props
+const t = translations(locale)
+
+const storyItems = [
+	{
+		stage: t({ mnemonic: 'why.stage1' }),
+		text: t({ mnemonic: 'why.story1' }),
+	},
+	{
+		stage: t({ mnemonic: 'why.stage2' }),
+		text: t({ mnemonic: 'why.story2' }),
+	},
+	{
+		stage: t({ mnemonic: 'why.stage3' }),
+		text: t({ mnemonic: 'why.story3' }),
+	},
+]
+---
+
+<Section
+	id='project-origin'
+	ariaLabelledby='why-title'
+	class='bg-surface-light dark:bg-semiblack'
+>
+	<div class='grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20'>
+		<div>
+			<h2
+				id='why-title'
+				class='max-w-lg font-heading text-5xl font-medium leading-[0.96] tracking-[-0.07em] sm:text-6xl md:text-7xl'
+			>
+				{t({ mnemonic: 'why.title' })}
+			</h2>
+			<div class='mt-8 hidden overflow-hidden rounded-[1.5rem] border border-border bg-background p-3 lg:block'>
+				<figure
+					role='img'
+					aria-label={t({ mnemonic: 'why.image_placeholder' })}
+					class='relative aspect-4/5 overflow-hidden rounded-[1.15rem] bg-muted/40'
+				>
+					<div aria-hidden='true' class='absolute inset-0 p-5'>
+						<div class='flex h-full flex-col justify-between rounded-xl border border-foreground/6 bg-foreground/2.5 p-4'>
+							<div class='grid gap-3'>
+								<div class='h-2.5 w-1/2 rounded-full bg-foreground/10'></div>
+								<div class='h-2 w-3/4 rounded-full bg-foreground/[0.07]'></div>
+							</div>
+							<div class='mx-auto grid size-28 place-items-center rounded-full border border-accent/20 bg-accent/5'>
+								<div class='size-16 rounded-full border border-accent/30'></div>
+							</div>
+							<div class='grid gap-2'>
+								<div class='h-2 w-full rounded-full bg-foreground/8'></div>
+								<div class='h-2 w-4/5 rounded-full bg-foreground/[0.07]'></div>
+							</div>
+						</div>
+					</div>
+					<figcaption class='sr-only'>
+						{t({ mnemonic: 'why.image_caption' })}
+					</figcaption>
+				</figure>
+				<p class='px-2 pb-1 pt-3 text-xs leading-5 text-muted-foreground'>
+					{t({ mnemonic: 'why.image_caption' })}
+				</p>
+			</div>
+		</div>
+
+		<div class='timeline-view animate-blurred-fade-in animate-range-[entry_10%_contain_30%] motion-reduce:animate-none grid content-start gap-7 sm:gap-9'>
+			{storyItems.map((item) => <WhyStoryItem stage={item.stage} text={item.text} />)}
+		</div>
+	</div>
+</Section>

@@ -1,0 +1,24 @@
+---
+import AudienceSection from '@/components/AudienceSection.astro'
+import FeaturesSection from '@/components/FeaturesSection.astro'
+import HeroSection from '@/components/HeroSection.astro'
+import MarketsSection from '@/components/MarketsSection.astro'
+import ReportSection from '@/components/ReportSection.astro'
+import WhySection from '@/components/WhySection.astro'
+import type { Locale } from '@/i18n'
+
+interface Props {
+	locale: Locale
+}
+
+const { locale } = Astro.props as Props
+---
+
+<main id='main-content' class='relative'>
+	<HeroSection locale={locale} />
+	<FeaturesSection locale={locale} />
+	<ReportSection locale={locale} />
+	<AudienceSection locale={locale} />
+	<MarketsSection locale={locale} />
+	<WhySection locale={locale} />
+</main>

@@ -5,15 +5,17 @@ export interface Props {
     title: string;
     description: string;
     theme: string;
+    canonicalUrl: string;
 }
 
-const { title, description, theme } = Astro.props as Props;
+const { title, description, theme, canonicalUrl } = Astro.props as Props;
 
 const og = {
     title: title,
     description: description,
     image: SITE.ogImage,
     type: SITE.ogType,
+    url: canonicalUrl,
 };
 
 const twitter = {
@@ -33,7 +35,8 @@ const twitter = {
 <meta property="og:description" content={og.description} />
 <meta property="og:image" content={og.image} />
 <meta property="og:type" content={og.type} />
-<meta property="og:url" content={SITE.baseURL} />
+<meta property="og:url" content={og.url} />
+<link rel="canonical" href={canonicalUrl} />
 <meta name="twitter:card" content={twitter.card} />
 <meta name="twitter:creator" content={twitter.creator} />
 <meta name="twitter:title" content={twitter.title} />

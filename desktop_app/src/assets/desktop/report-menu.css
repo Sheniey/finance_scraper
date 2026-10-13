@@ -1,0 +1,72 @@
+.report-more {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.report-more > summary {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #586774;
+    cursor: pointer;
+    list-style: none;
+}
+
+.report-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+.report-more > summary:hover,
+.report-more[open] > summary {
+    border-color: var(--line);
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.report-more-menu {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    display: grid;
+    min-width: 200px;
+    gap: 3px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+}
+
+.report-more-menu button {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+}
+
+.report-more-menu button:hover:not(:disabled) {
+    background: var(--paper);
+}
+
+.report-more-menu button.danger {
+    color: var(--red);
+}
+
+.report-more-menu button:disabled {
+    opacity: 0.5;
+}

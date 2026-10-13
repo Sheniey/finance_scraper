@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import 'tailwind-animations';
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/figtree";
 
@@ -45,10 +46,10 @@
         U+0500-052F; /* Cyrillic */
 }
 
-/* MONROPE */
+/* MANROPE */
 @font-face {
-    font-family: 'Monrope';
-    src: url('/fonts/Monrope-Regular.ttf') format('truetype');
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope-Regular.ttf') format('truetype');
     font-weight: 400;
     font-style: normal;
     unicode-range:
@@ -59,8 +60,8 @@
         U+0500-052F; /* Cyrillic */
 }
 @font-face {
-    font-family: 'Monrope';
-    src: url('/fonts/Monrope-Bold.ttf') format('truetype');
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope-Bold.ttf') format('truetype');
     font-weight: 700;
     font-style: normal;
     unicode-range:
@@ -111,6 +112,7 @@
     --color-text-dark: #0A0A0A;
 
     --color-muted: #667085;
+    --color-muted-dark: #A8B0BC;
     --color-semiwhite: #D9D9D9;
     --color-semiblack: #333333;
 
@@ -263,9 +265,9 @@ body {
     --primary: var(--color-primary);
     --primary-foreground: var(--color-text-light);
     --secondary: var(--color-surface-dark);
-    --secondary-foreground: var(--color-muted);
+    --secondary-foreground: var(--color-muted-dark);
     --muted: var(--color-surface-dark);
-    --muted-foreground: var(--color-muted);
+    --muted-foreground: var(--color-muted-dark);
     --accent: var(--color-accent);
     --accent-foreground: var(--color-text-light);
     --destructive: var(--color-negative);

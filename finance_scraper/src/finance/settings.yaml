@@ -1,0 +1,101 @@
+# Non-secret application preferences. Keep API keys and other credentials in .env.
+
+app:
+  default_language:
+    code: en
+    name: English
+    style: friendly
+
+db:
+  default_location: https://financescraper-sheniey.aws-us-west-2.turso.io
+  pool_size: 4
+  pool_timeout: 5.0
+  profile: false
+
+security:
+  jwt_algorithm: HS256
+  jwt_issuer: finance_scraper
+  access_token_expire_minutes: 15
+
+llm:
+  # Providers are tried from top to bottom. Ollama is intentionally the final fallback.
+  provider_priority:
+    - anthropic
+    - deepseek
+    - chatgpt
+    - ollama
+  generation:
+    temperature: 0.2
+    max_tokens: 364
+  effort: medium
+  providers:
+    anthropic:
+      - effort: low
+        model: claude-4-haiku-latest
+        base_url: https://api.anthropic.com
+        timeout_seconds: 60
+        max_tokens: 364
+        api_version: '2023-06-01'
+      - effort: medium
+        model: claude-4-sonnet-latest
+        base_url: https://api.anthropic.com
+        timeout_seconds: 60
+        max_tokens: 364
+        api_version: '2023-06-01'
+      - effort: high
+        model: claude-4-opus-latest
+        base_url: https://api.anthropic.com
+        timeout_seconds: 60
+        max_tokens: 364
+        api_version: '2023-06-01'
+    deepseek:
+      - effort: low
+        model: deepseek-chat
+        base_url: https://api.deepseek.com
+        timeout_seconds: 60
+        max_tokens: 364
+      - effort: medium
+        model: deepseek-chat
+        base_url: https://api.deepseek.com
+        timeout_seconds: 60
+        max_tokens: 364
+      - effort: high
+        model: deepseek-chat
+        base_url: https://api.deepseek.com
+        timeout_seconds: 60
+        max_tokens: 364
+    chatgpt:
+      - effort: low
+        model: gpt-4
+        base_url: https://api.openai.com/v1
+        timeout_seconds: 60
+        max_tokens: 364
+      - effort: medium
+        model: gpt-5.6-luna
+        base_url: https://api.openai.com/v1
+        timeout_seconds: 60
+        max_tokens: 364
+      - effort: high
+        model: gpt-5.6-terra
+        base_url: https://api.openai.com/v1
+        timeout_seconds: 60
+        max_tokens: 364
+    ollama:
+      - effort: low
+        model: phi-4-mini-reasoning
+        base_url: http://localhost:11434
+        timeout_seconds: 60
+        max_tokens: 364
+        context_size: 6144
+      - effort: medium
+        model: llama3.1:8b
+        base_url: http://localhost:11434
+        timeout_seconds: 60
+        max_tokens: 512
+        context_size: 6144
+      - effort: high
+        model: qwen3.8-27b
+        base_url: http://localhost:11434
+        timeout_seconds: 60
+        max_tokens: 512
+        context_size: 6744

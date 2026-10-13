@@ -1,0 +1,10 @@
+{
+  "signup.name": "Escribe tu nombre, carnal: ",
+  "signup.email": "Escribe tu correo: ",
+  "signup.password": "Escribe tu contrasena: ",
+  "signup.confirm_password": "Confirma tu contrasena: ",
+  "signup.language": "Escoge tu idioma: ",
+  "signup.style": "Escoge el estilo de idioma: ",
+  "signup.watchlist": "Escoge los tickers de tu watchlist: ",
+  "signup.password_mismatch": "Las contrasenas no coinciden."
+}

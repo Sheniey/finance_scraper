@@ -1,0 +1,95 @@
+[
+    {
+        "name": "José Daniel Ávalos Becerra",
+        "email": "jose.avalos1862@alumnos.udg.mx",
+        "password": "your_password_here",
+        "custom_report": [
+            "explanation",
+            "pe_ratio",
+            "peg_ratio",
+            "roic",
+            "roce",
+            "fcf_margin",
+            "net_debt_to_ebitda",
+            "dividends"
+        ],
+        "language": {
+            "code": "es",
+            "name": "Spanish",
+            "style": "friendly"
+        },
+        "watchlist": [
+            {
+                "ticker": "AAPL",
+                "region": "US"
+            }
+        ],
+        "portfolio": [
+            {
+                "ticker": "AAPL",
+                "region": "US",
+                "currency": "USD",
+                "actions": [
+                    {
+                        "action": "BUY",
+                        "price": 150.0,
+                        "quantity": 10,
+                        "date": "2026-01-15"
+                    },
+                    {
+                        "action": "SELL",
+                        "price": 160.0,
+                        "quantity": 6,
+                        "date": "2026-02-20"
+                    }
+                ]
+            },
+            {
+                "ticker": "FMX23",
+                "region": "MX",
+                "currency": "MXN",
+                "actions": [
+                    {
+                        "action": "BUY",
+                        "price": 28.48,
+                        "quantity": 7,
+                        "date": "2026-02-06"
+                    },
+                    {
+                        "action": "BUY",
+                        "price": 29.0,
+                        "quantity": 3,
+                        "date": "2026-15-06"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Emilia Becerra Villaseñor",
+        "email": "emilytbc3@gmail.com",
+        "language": {
+            "code": "es",
+            "name": "Spanish",
+            "style": "friendly"
+        },
+        "watchlist": [],
+        "portfolio": []
+    },
+    {
+        "name": "Carlos Isaac De Niz Medina",
+        "email": "carlos.deniz1942@alumnos.udg.mx",
+        "language": {
+            "code": "es",
+            "name": "Spanish",
+            "style": "friendly"
+        },
+        "watchlist": [
+            {
+                "ticker": "AAPL",
+                "region": "US"
+            }
+        ],
+        "portfolio": []
+    }
+]

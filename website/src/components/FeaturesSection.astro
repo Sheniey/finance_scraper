@@ -1,0 +1,88 @@
+---
+import { translations, type Locale, type Mnemonic } from '@/i18n'
+import FeatureCard from '@/components/FeatureCard.astro'
+import Section from '@/components/Section.astro'
+
+interface Props {
+	locale: Locale
+}
+
+type FeatureCardData = {
+	index: number
+	title: Mnemonic
+	body: Mnemonic
+	tag: Mnemonic
+}
+
+const { locale } = Astro.props as Props
+const t = translations(locale)
+
+const featureCards: FeatureCardData[] = [
+	{
+		index: 1,
+		title: 'features.card1.title',
+		body: 'features.card1.description',
+		tag: 'features.card1.tag',
+	},
+	{
+		index: 2,
+		title: 'features.card2.title',
+		body: 'features.card2.description',
+		tag: 'features.card2.tag',
+	},
+	{
+		index: 3,
+		title: 'features.card3.title',
+		body: 'features.card3.description',
+		tag: 'features.card3.tag',
+	},
+]
+---
+
+<Section
+	id='overview'
+	ariaLabelledby='intro-title'
+	class='bg-background-light dark:bg-surface-dark'
+>
+	<div class='grid gap-8 md:grid-cols-[1.15fr_0.72fr] md:items-end md:gap-14'>
+		<div>
+			<h2
+				id='intro-title'
+				class='max-w-3xl font-heading text-4xl font-medium leading-[1.02] tracking-[-0.06em] sm:text-5xl md:text-6xl'
+			>
+				{t({ mnemonic: 'intro.title' })}
+			</h2>
+		</div>
+
+		<div class='border-l border-accent/50 pl-5 md:pb-1 md:pl-7'>
+			<p class='text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8'>
+				{t({ mnemonic: 'intro.description' })}
+			</p>
+			<p class='mt-5 text-sm font-medium leading-6 text-foreground'>
+				{t({ mnemonic: 'intro.callout' })}
+			</p>
+		</div>
+	</div>
+
+	<div class='mt-20 max-w-3xl'>
+		<h2 class='font-heading text-3xl font-semibold leading-tight tracking-tighter sm:text-4xl md:text-5xl'>
+			{t({ mnemonic: 'features.title' })}
+		</h2>
+		<p class='mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg'>
+			{t({ mnemonic: 'features.description' })}
+		</p>
+	</div>
+
+	<div class='timeline-view animate-blurred-fade-in animate-range-[entry_10%_contain_30%] motion-reduce:animate-none mt-10 grid gap-4 md:grid-cols-3'>
+		{
+			featureCards.map((card) => (
+				<FeatureCard
+					index={card.index}
+					title={t({ mnemonic: card.title })}
+					body={t({ mnemonic: card.body })}
+					tag={t({ mnemonic: card.tag })}
+				/>
+			))
+		}
+	</div>
+</Section>

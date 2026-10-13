@@ -1,0 +1,84 @@
+.connection-chip {
+    position: absolute;
+    z-index: 3;
+    bottom: 25px;
+    left: 25px;
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    background: rgba(6, 15, 26, 0.82);
+    color: #dfe5eb;
+    backdrop-filter: blur(12px);
+}
+
+.connection-chip.online > svg {
+    color: #77c7a2;
+}
+
+.connection-chip.offline > svg {
+    color: #b6d7d3;
+}
+
+.connection-chip > span {
+    display: grid;
+    gap: 3px;
+}
+
+.connection-chip strong {
+    font-size: 12px;
+}
+
+.connection-chip button {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #b6d7d3;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.art-coordinate {
+    position: absolute;
+    right: 24px;
+    bottom: 27px;
+    color: rgba(255, 255, 255, 0.38);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    letter-spacing: 0.09em;
+}
+
+.auth-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: #7d8a98;
+    font-size: 12px;
+}
+
+.form-message {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.error-message {
+    border: 1px solid rgba(168, 57, 62, 0.17);
+    background: var(--red-wash);
+    color: var(--red);
+}
+
+.success-message {
+    border: 1px solid rgba(24, 122, 88, 0.15);
+    background: var(--green-wash);
+    color: var(--green);
+}
+

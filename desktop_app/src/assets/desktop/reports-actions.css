@@ -1,0 +1,157 @@
+.report-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid rgba(13, 23, 38, 0.055);
+    color: #4c5864;
+    font-size: 12px;
+}
+
+.report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.report-ticker {
+    display: block;
+    color: var(--ink);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.report-filename {
+    display: block;
+    max-width: 230px;
+    overflow: hidden;
+    margin-top: 4px;
+    color: #9099a2;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.report-date {
+    white-space: nowrap;
+}
+
+.format-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #627080;
+    font-size: 12px;
+}
+
+.format-tag svg {
+    color: #416d6b;
+}
+
+.status-chip {
+    display: inline-flex;
+    min-height: 22px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.status-chip-dot {
+    width: 5px;
+    height: 5px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-completed {
+    border-color: rgba(24, 122, 88, 0.12);
+    background: var(--green-wash);
+    color: var(--green);
+}
+
+.status-pending,
+.status-in-progress {
+    border-color: rgba(53, 111, 116, 0.18);
+    background: #eaf2f1;
+    color: #526c69;
+}
+
+.status-failed {
+    border-color: rgba(168, 57, 62, 0.13);
+    background: var(--red-wash);
+    color: var(--red);
+}
+
+.report-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 3px;
+}
+
+
+.icon-action {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: #75818e;
+}
+
+.icon-action:hover:not(:disabled) {
+    background: #eef1f4;
+    color: var(--ink);
+}
+
+.icon-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.icon-action.danger:hover:not(:disabled) {
+    background: var(--red-wash);
+    color: var(--red);
+}
+
+.table-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 18px;
+}
+
+.empty-state {
+    display: grid;
+    min-height: 220px;
+    align-content: center;
+    justify-items: center;
+    gap: 8px;
+    padding: 22px;
+    color: #687581;
+    text-align: center;
+}
+
+.empty-state.compact {
+    min-height: 175px;
+}
+
+.empty-mark {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 4px;
+    background: var(--orange-wash);
+    color: #247a77;
+}
+
+.empty-state strong {
+    color: var(--ink);
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.empty-state p {
+    max-width: 330px;
+    margin: 0 0 7px;
+    color: #86919b;
+    font-size: 12px;
+    line-height: 1.6;
+}

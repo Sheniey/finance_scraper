@@ -7,19 +7,27 @@ export const APP_NAME = {
 } as const;
 
 export const LOCALES = ['en', 'es'] as const;
+export const DEFAULT_LOCALE = 'es' as const;
 
 export const SITE = {
-    baseURL: 'https://fincrap.vercel.app',
+    baseURL: 'https://finscrap.vercel.app',
     keywords: 'finance scraper,fs,fincrap,financial data,stock market,investments,portfolio,analysis,tracking',
     
     authorPseudonym: 'Sheñey',
     authorFirstName: 'José Daniel',
     authorLastName: 'Ávalos Becerra',
     authorIg: 'https://www.instagram.com/sheneyby2010_/',
-    
-    favicon: '/favicon.svg',
-    faviconType: 'image/svg+xml',
-    
+    authorX: 'https://twitter.com/Sheney',
+    authorGithub: 'https://github.com/Sheniey',
+    authorLinkedIn: 'https://www.linkedin.com/in/sheney',
+    authorYoutube: 'https://www.youtube.com/@Sheney',
+    authorSpotify: 'https://open.spotify.com/user/sheney',
+
+    favicon1: '/favicon.svg',
+    favicon1Type: 'image/svg+xml',
+    favicon2: '/favicon.ico',
+    favicon2Type: 'image/x-icon',
+
     ogImage: '/og.jpg',
     ogImageAlt: 'Financial data overview',
     ogImageType: 'image/jpeg',
@@ -27,7 +35,11 @@ export const SITE = {
     
     twitterCard: 'summary_large_image',
     twitterCreator: '@Sheñey',
+
+    repo: 'https://github.com/Sheniey/finance_scraper',
 } as const;
+
+export const BINARY_CURRENT_VERSION = '0.1.0';
 
 export const formatPath = (path: string) => `/${path.replace(/^\/+/, '')}`;
 export const formatStrictPath = (path: string) => `${SITE.baseURL}${formatPath(path)}`;

@@ -1,0 +1,63 @@
+{
+  "name": "finance_scraper",
+  "version": "1.0.0",
+  "description": "Finance Scraper - Desktop Application",
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "vite build && pnpm run build:preload && electron-builder",
+    "build:ui": "vite build",
+    "build:preload": "tsc -p tsconfig.preload.json",
+    "dev": "pnpm run build:preload && concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron --import=tsx/esm .\"",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run typecheck && node --test"
+  },
+  "keywords": [],
+  "author": "Sheñey",
+  "license": "ISC",
+  "packageManager": "pnpm@10.26.2",
+  "devDependencies": {
+    "@electron/typescript-definitions": "9.2.0",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "electron": "44.4.5",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.23.15",
+    "typescript": "7.0.2",
+    "vite": "^8.3.1",
+    "wait-on": "^9.1.0"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "build": {
+    "appId": "com.sheniey.finance-scraper",
+    "productName": "Finance Scraper",
+    "directories": {
+      "output": "release"
+    },
+    "extraResources": [
+      {
+        "from": "../finance_scraper/dist/finance-scraper",
+        "to": "finance-scraper",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

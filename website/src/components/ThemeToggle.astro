@@ -1,0 +1,97 @@
+---
+import { translations, type Locale } from '@/i18n'
+
+interface Props {
+	locale: Locale
+	compact?: boolean
+}
+
+const { locale, compact = false } = Astro.props as Props
+const t = translations(locale)
+---
+
+<button
+	type='button'
+	data-theme-toggle
+	data-dark-label={t({ mnemonic: 'theme.switch_to_dark' })}
+	data-light-label={t({ mnemonic: 'theme.switch_to_light' })}
+	aria-label={t({ mnemonic: 'theme.switch_to_dark' })}
+	aria-pressed='false'
+	class:list={[
+		'group outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none',
+		compact
+			? 'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/75'
+			: 'hidden size-9 place-items-center rounded-full text-white/70 md:grid sm:size-10',
+	]}
+>
+	<svg
+		aria-hidden='true'
+		class='size-[1.1rem] dark:hidden'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		stroke-width='1.7'
+		stroke-linecap='round'
+		stroke-linejoin='round'
+	>
+		<circle cx='12' cy='12' r='4' />
+		<path d='M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42' />
+	</svg>
+	<svg
+		aria-hidden='true'
+		class='hidden size-[1.1rem] dark:block'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		stroke-width='1.7'
+		stroke-linecap='round'
+		stroke-linejoin='round'
+	>
+		<path d='M20.2 15.3A8.6 8.6 0 0 1 8.7 3.8 8.6 8.6 0 1 0 20.2 15.3Z' />
+	</svg>
+	{compact && <span>{t({ mnemonic: 'theme.menu_label' })}</span>}
+	{!compact && <span class='sr-only'>{t({ mnemonic: 'theme.switch_to_dark' })}</span>}
+</button>
+
+<script>
+	const THEME_STORAGE_KEY = 'finance-scraper-theme'
+	const THEME_STORAGE_WRITE_WARNING = 'Unable to save the theme preference'
+	const MISSING_THEME_LABEL_ERROR = 'Theme toggle labels are required'
+	const MISSING_THEME_ROOT_ERROR = 'The document root is required for theme toggling'
+	const $ = (selector: string) => document.querySelector(selector)
+	const $$ = (selector: string) => document.querySelectorAll(selector)
+	const $root = $('html') as HTMLElement | null
+	const $themeButtons = $$('[data-theme-toggle]') as NodeListOf<HTMLButtonElement>
+
+	if (!$root) {
+		throw new Error(MISSING_THEME_ROOT_ERROR)
+	}
+
+	const updateThemeButton = (button: HTMLButtonElement) => {
+		const isDark = $root.classList.contains('dark')
+		const label = isDark ? button.dataset.lightLabel : button.dataset.darkLabel
+
+		if (!label) {
+			throw new Error(MISSING_THEME_LABEL_ERROR)
+		}
+
+		button.setAttribute('aria-pressed', String(isDark))
+		button.setAttribute('aria-label', label)
+	}
+
+	$themeButtons.forEach((button) => {
+		updateThemeButton(button)
+		button.addEventListener('click', () => {
+			const isDark = $root.classList.toggle('dark')
+			$root.dataset.theme = isDark ? 'dark' : 'light'
+
+			try {
+				window.localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light')
+			} catch (error) {
+				console.warn(THEME_STORAGE_WRITE_WARNING, error)
+			}
+
+			$themeButtons.forEach(updateThemeButton)
+		})
+	})
+</script>

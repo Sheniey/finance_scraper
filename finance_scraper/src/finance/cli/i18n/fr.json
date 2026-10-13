@@ -1,0 +1,10 @@
+{
+  "signup.name": "Entrez votre nom : ",
+  "signup.email": "Entrez votre e-mail : ",
+  "signup.password": "Entrez votre mot de passe : ",
+  "signup.confirm_password": "Confirmez votre mot de passe : ",
+  "signup.language": "Choisissez votre langue : ",
+  "signup.style": "Choisissez le style de langue : ",
+  "signup.watchlist": "Choisissez les tickers de votre watchlist : ",
+  "signup.password_mismatch": "Les mots de passe ne correspondent pas."
+}

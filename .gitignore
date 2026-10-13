@@ -1,0 +1,8 @@
+
+# privacy-related files
+priv.md
+installer.iss
+*/bin/
+website/public/bin/FinanceScraperSetup-0.1.0-x64.exe
+finance_scraper/src/nexis/artifacts/nexis.joblib
+finance_scraper/src/tiny_predictor.joblib

@@ -1,0 +1,55 @@
+# Scraping Libraries
+yfinance==1.5.2
+
+# Clean Architecture Libraries
+designkit==0.2.4
+
+# API
+fastapi==0.141.1
+slowapi==0.1.10
+uvicorn==0.52.3
+python-multipart==0.0.32
+email-validator==2.3.0
+tzdata==2026.3
+
+# AI Libraries
+openai==3.0.0
+ollama==0.6.2
+PyYAML==6.0.3
+
+# Data Libraries
+pandas==3.0.5
+pydantic==2.13.4
+numpy==2.5.2
+scipy==1.18.0
+
+# DB Libraries
+libsql-morewheels==0.1.11
+pyturso==0.8.2; sys_platform != 'win32'
+keyring==25.7.0
+
+# UI Libraries
+typer==0.27.1
+rich==15.0.0
+reportlab==5.0.0
+openpyxl==3.1.5
+questionary==2.1.1
+
+# Machine Learning Libraries
+catboost==1.2.10
+lightgbm==4.7.0
+scikit-learn==1.9.0
+joblib==1.5.3
+psutil==7.2.2
+
+# Forecasting Libraries (TimesFM, used only for live forecasting/inference)
+torch
+timesfm @ git+https://github.com/google-research/timesfm.git
+
+# Security Libraries
+httpx==0.28.1
+
+# Doctor Libraries
+complexipy==7.0.1
+pytest==9.1.1
+nuitka

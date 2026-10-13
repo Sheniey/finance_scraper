@@ -1,0 +1,856 @@
+{
+    "fact.price": {
+        "rating": null,
+        "comparison": {
+            "thresholds": {
+                "excellent": 15,
+                "very_good": 8,
+                "good": 4,
+                "meh": 0,
+                "bad": -4,
+                "very_bad": -10,
+                "awful": -20
+            },
+            "type": "percentage"
+        },
+        "excellent_is_lowest": true
+    },
+    
+    "fact.dividend_rate": {
+        "rating": {
+            "thresholds": {
+                "excellent": 5,
+                "very_good": 4,
+                "good": 3,
+                "meh": 2,
+                "bad": 1,
+                "very_bad": 0.5,
+                "awful": 0
+            },
+            "type": "numeric"
+        },
+        "comparison": {
+            "thresholds": {
+                "excellent": 5,
+                "very_good": 4,
+                "good": 3,
+                "meh": 2,
+                "bad": 1,
+                "very_bad": 0.5,
+                "awful": 0
+            },
+            "type": "numeric"
+        },
+        "excellent_is_lowest": false
+    },
+
+    "fact.last_dividend": {
+        "rating": null,
+        "comparison": {
+            "thresholds": {
+                "excellent": 5,
+                "very_good": 4,
+                "good": 3,
+                "meh": 2,
+                "bad": 1,
+                "very_bad": 0.5,
+                "awful": 0
+            },
+            "type": "numeric"
+        },
+        "excellent_is_lowest": false
+    },
+
+    "fact.dividend_yield": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.05,
+                "very_good": 0.04,
+                "good": 0.03,
+                "meh": 0.02,
+                "bad": 0.01,
+                "very_bad": 0.005,
+                "awful": 0
+            },
+            "type": "numeric"
+        },
+        "comparison": {
+            "thresholds": {
+                "excellent": 0.05,
+                "very_good": 0.04,
+                "good": 0.03,
+                "meh": 0.02,
+                "bad": 0.01,
+                "very_bad": 0.005,
+                "awful": 0
+            },
+            "type": "numeric"
+        },
+        "excellent_is_lowest": false
+    },
+
+    "valuation.pe_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 0.5,
+                "good": 1.0,
+                "meh": 2.0,
+                "bad": 3.0,
+                "very_bad": 4.0,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.peg_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 0.5,
+                "good": 1.0,
+                "meh": 2.0,
+                "bad": 3.0,
+                "very_bad": 4.0,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.trailing_pe_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 10,
+                "very_good": 15,
+                "good": 20,
+                "meh": 30,
+                "bad": 40,
+                "very_bad": 60,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.forward_pe_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 8,
+                "very_good": 12,
+                "good": 18,
+                "meh": 25,
+                "bad": 35,
+                "very_bad": 50,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.ev2market_cap": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 0.5,
+                "good": 1.0,
+                "meh": 2.0,
+                "bad": 3.0,
+                "very_bad": 5.0,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "growth.revenue_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.earnings_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.eps_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.return_on_equity": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.return_on_assets": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.10,
+                "very_good": 0.07,
+                "good": 0.05,
+                "meh": 0,
+                "bad": -5,
+                "very_bad": -0.10,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.profit_margins": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.operating_margin": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.22,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "financial_health.debt_to_equity": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 0.5,
+                "good": 1.0,
+                "meh": 2.0,
+                "bad": 3.0,
+                "very_bad": 5.0,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "financial_health.current_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 2.0,
+                "very_good": 1.5,
+                "good": 1.0,
+                "meh": 0.75,
+                "bad": 0.5,
+                "very_bad": 0.25,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "financial_health.quick_ratio": {
+        "rating": {
+            "thresholds": {
+                "excellent": 1.5,
+                "very_good": 1.0,
+                "good": 0.75,
+                "meh": 0.5,
+                "bad": 0.25,
+                "very_bad": 0.1,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "financial_health.free_cash_flow": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.1,
+                "very_good": 0.08,
+                "good": 0.05,
+                "meh": 0.03,
+                "bad": 0.01,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "valuation.price_to_fcf": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 8,
+                "good": 12,
+                "meh": 18,
+                "bad": 25,
+                "very_bad": 40,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.ev_to_ebitda": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 8,
+                "good": 12,
+                "meh": 18,
+                "bad": 25,
+                "very_bad": 40,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.ev_to_ebit": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 8,
+                "good": 12,
+                "meh": 18,
+                "bad": 25,
+                "very_bad": 40,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.price_to_book": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 1,
+                "good": 2,
+                "meh": 3,
+                "bad": 5,
+                "very_bad": 8,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.price_to_sales": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 1,
+                "good": 2,
+                "meh": 4,
+                "bad": 8,
+                "very_bad": 15,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "valuation.earnings_yield": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.10,
+                "very_good": 0.075,
+                "good": 0.05,
+                "meh": 0.03,
+                "bad": 0.015,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.revenue_cagr_5y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.revenue_cagr_10y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.eps_cagr_5y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.eps_cagr_10y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.fcf_cagr_5y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.fcf_cagr_10y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.fcf_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.owner_earnings_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.15,
+                "good": 0.09,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "growth.shares_outstanding_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": -0.02,
+                "good": -0.05,
+                "meh": -0.10,
+                "bad": -0.20,
+                "very_bad": -0.30,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "growth.retained_earnings_growth": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.12,
+                "good": 0.08,
+                "meh": 0.04,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.roic": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.roce": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.return_on_equity_5y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.return_on_equity_10y": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.20,
+                "very_good": 0.15,
+                "good": 0.10,
+                "meh": 0.05,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.gross_margin": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.60,
+                "very_good": 0.45,
+                "good": 0.30,
+                "meh": 0.20,
+                "bad": 0.10,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "profitability.ebitda_margin": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.35,
+                "very_good": 0.25,
+                "good": 0.18,
+                "meh": 0.10,
+                "bad": 0.05,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "cash_flow.fcf_margin": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.18,
+                "good": 0.12,
+                "meh": 0.06,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "cash_flow.cash_conversion": {
+        "rating": {
+            "thresholds": {
+                "excellent": 1.20,
+                "very_good": 1.00,
+                "good": 0.80,
+                "meh": 0.60,
+                "bad": 0.40,
+                "very_bad": 0.20,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "cash_flow.operating_cash_flow_margin": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.25,
+                "very_good": 0.18,
+                "good": 0.12,
+                "meh": 0.06,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "cash_flow.owner_earnings_yield": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.10,
+                "very_good": 0.075,
+                "good": 0.05,
+                "meh": 0.03,
+                "bad": 0.015,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "financial_health.net_debt_to_ebitda": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0,
+                "very_good": 1,
+                "good": 2,
+                "meh": 3,
+                "bad": 4,
+                "very_bad": 6,
+                "awful": "inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": true
+    },
+
+    "capital_allocation.buyback_yield": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.08,
+                "very_good": 0.05,
+                "good": 0.03,
+                "meh": 0.01,
+                "bad": 0,
+                "very_bad": -0.05,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    },
+
+    "capital_allocation.shareholder_yield": {
+        "rating": {
+            "thresholds": {
+                "excellent": 0.10,
+                "very_good": 0.075,
+                "good": 0.05,
+                "meh": 0.03,
+                "bad": 0.015,
+                "very_bad": 0,
+                "awful": "-inf"
+            },
+            "type": "numeric"
+        },
+        "comparison": null,
+        "excellent_is_lowest": false
+    }
+}

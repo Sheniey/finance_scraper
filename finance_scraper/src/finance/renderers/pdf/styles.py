@@ -1,0 +1,221 @@
+# ================================================== #
+# MODULE: styles
+# ================================================== #
+
+
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+
+from finance.config import Theme
+from finance.renderers.pdf.colors import (
+    ACCENT_COLOR,
+    CARD_COLOR,
+    COVER_MUTED_COLOR,
+    DATE_COLOR,
+    INK_COLOR,
+    LINK_COLOR,
+    MUTED_COLOR,
+    NUMBER_COLOR,
+    RULE_COLOR,
+    SURFACE_COLOR,
+    WHITE_COLOR,
+)
+
+
+def build_styles() -> dict[str, ParagraphStyle]:
+    """Return the typography used by the PDF renderer."""
+    base = getSampleStyleSheet()
+    return {
+        'body': ParagraphStyle(
+            'PdfBody',
+            parent=base['BodyText'],
+            fontName=Theme.FONT_BODY,
+            fontSize=9.2,
+            leading=13,
+            textColor=INK_COLOR,
+            spaceAfter=5,
+        ),
+        'body_justified': ParagraphStyle(
+            'PdfBodyJustified',
+            parent=base['BodyText'],
+            fontName=Theme.FONT_BODY,
+            fontSize=9.2,
+            leading=13,
+            textColor=INK_COLOR,
+            spaceAfter=5,
+            alignment=TA_JUSTIFY,
+        ),
+        'body_muted': ParagraphStyle(
+            'PdfBodyMuted',
+            parent=base['BodyText'],
+            fontName=Theme.FONT_BODY,
+            fontSize=8.5,
+            leading=12,
+            textColor=MUTED_COLOR,
+        ),
+        'body_muted_justified': ParagraphStyle(
+            'PdfBodyMutedJustified',
+            parent=base['BodyText'],
+            fontName=Theme.FONT_BODY,
+            fontSize=8.5,
+            leading=12,
+            textColor=MUTED_COLOR,
+            alignment=TA_JUSTIFY,
+        ),
+        'cover_ticker': ParagraphStyle(
+            'CoverTicker',
+            fontName=Theme.FONT_COVER_TICKER,
+            fontSize=44,
+            leading=46,
+            textColor=WHITE_COLOR,
+            alignment=TA_LEFT,
+        ),
+        'cover_company': ParagraphStyle(
+            'CoverCompany',
+            fontName=Theme.FONT_COVER_COMPANY,
+            fontSize=17,
+            leading=23,
+            textColor=WHITE_COLOR,
+        ),
+        'cover_price': ParagraphStyle(
+            'CoverPrice',
+            fontName=Theme.FONT_COVER_PRICE,
+            fontSize=30,
+            leading=34,
+            textColor=WHITE_COLOR,
+            alignment=TA_RIGHT,
+        ),
+        'cover_meta': ParagraphStyle(
+            'CoverMeta',
+            fontName=Theme.FONT_COVER_META,
+            fontSize=9.5,
+            leading=14,
+            textColor=COVER_MUTED_COLOR,
+        ),
+        'eyebrow': ParagraphStyle(
+            'PdfEyebrow',
+            fontName=Theme.FONT_HEADER,
+            fontSize=7.5,
+            leading=10,
+            textColor=ACCENT_COLOR,
+            tracking=1.2,
+            uppercase=True,
+        ),
+        'title': ParagraphStyle(
+            'PdfTitle',
+            fontName=Theme.FONT_TITLE,
+            fontSize=22,
+            leading=26,
+            textColor=INK_COLOR,
+            spaceAfter=4,
+        ),
+        'section': ParagraphStyle(
+            'PdfSection',
+            fontName=Theme.FONT_TITLE,
+            fontSize=14,
+            leading=18,
+            textColor=INK_COLOR,
+        ),
+        'section_description': ParagraphStyle(
+            'PdfSectionDescription',
+            fontName=Theme.FONT_BODY,
+            fontSize=8.5,
+            leading=11,
+            textColor=MUTED_COLOR,
+        ),
+        'card_label': ParagraphStyle(
+            'PdfCardLabel',
+            fontName=Theme.FONT_TITLE,
+            fontSize=7.4,
+            leading=9,
+            textColor=MUTED_COLOR,
+            uppercase=True,
+        ),
+        'card_value': ParagraphStyle(
+            'PdfCardValue',
+            fontName=Theme.FONT_TITLE,
+            fontSize=14,
+            leading=17,
+            textColor=INK_COLOR,
+        ),
+        'card_note': ParagraphStyle(
+            'PdfCardNote',
+            fontName=Theme.FONT_BODY,
+            fontSize=7.5,
+            leading=10,
+            textColor=MUTED_COLOR,
+        ),
+        'metric_label': ParagraphStyle(
+            'PdfMetricLabel',
+            fontName=Theme.FONT_TITLE,
+            fontSize=8,
+            leading=10,
+            textColor=INK_COLOR,
+        ),
+        'metric_value': ParagraphStyle(
+            'PdfMetricValue',
+            fontName=Theme.FONT_TITLE,
+            fontSize=13,
+            leading=16,
+            textColor=NUMBER_COLOR,
+        ),
+        'metric_rating': ParagraphStyle(
+            'PdfMetricRating',
+            fontName=Theme.FONT_BODY,
+            fontSize=7.2,
+            leading=9,
+            textColor=MUTED_COLOR,
+        ),
+        'table_header': ParagraphStyle(
+            'PdfTableHeader',
+            fontName=Theme.FONT_TITLE,
+            fontSize=7.5,
+            leading=9,
+            textColor=MUTED_COLOR,
+        ),
+        'table_value': ParagraphStyle(
+            'PdfTableValue',
+            fontName=Theme.FONT_BODY,
+            fontSize=8.5,
+            leading=11,
+            textColor=INK_COLOR,
+        ),
+        'prediction_action': ParagraphStyle(
+            'PdfPredictionAction',
+            fontName=Theme.FONT_TITLE,
+            fontSize=22,
+            leading=25,
+            textColor=INK_COLOR,
+        ),
+        'prediction_probability': ParagraphStyle(
+            'PdfPredictionProbability',
+            fontName=Theme.FONT_TITLE,
+            fontSize=10,
+            leading=13,
+            textColor=INK_COLOR,
+            alignment=TA_RIGHT,
+        ),
+        'footer': ParagraphStyle(
+            'PdfFooter',
+            fontName=Theme.FONT_BODY,
+            fontSize=7.5,
+            leading=9,
+            textColor=MUTED_COLOR,
+            alignment=TA_RIGHT,
+        ),
+        'link': ParagraphStyle(
+            'PdfLink',
+            fontName=Theme.FONT_TITLE,
+            fontSize=8,
+            leading=10,
+            textColor=LINK_COLOR,
+        ),
+        'preformatted': ParagraphStyle(
+            'PdfPreformatted',
+            fontName=Theme.FONT_BODY,
+            fontSize=8.5,
+            leading=12,
+            textColor=MUTED_COLOR,
+            alignment=TA_JUSTIFY,
+        ),
+    }

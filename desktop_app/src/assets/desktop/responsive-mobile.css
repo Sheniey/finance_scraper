@@ -1,0 +1,151 @@
+@media (max-width: 720px) {
+    .auth-main {
+        padding: 28px 0;
+    }
+
+    .auth-intro {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .auth-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .auth-art-panel {
+        display: none;
+    }
+
+    .auth-form-panel {
+        min-height: 500px;
+        padding: 28px 24px;
+    }
+
+    .auth-bottom {
+        font-size: 12px;
+    }
+
+    .workspace-shell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .workspace-sidebar {
+        position: sticky;
+        z-index: 7;
+        top: 0;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 8px 12px;
+    }
+
+    .sidebar-brand-mark {
+        width: 34px;
+        height: 34px;
+    }
+
+    .workspace-switcher,
+    .sidebar-bottom,
+    .nav-section-label {
+        display: none;
+    }
+
+    .workspace-nav {
+        display: flex;
+        width: auto;
+        gap: 3px;
+    }
+
+    .workspace-nav-item {
+        width: 36px;
+        min-height: 36px;
+    }
+
+    .workspace-nav-item:nth-child(5) {
+        display: none;
+    }
+
+    .workspace-main {
+        min-height: calc(100vh - 52px);
+    }
+
+    .workspace-topbar {
+        height: 54px;
+        padding: 0 15px;
+    }
+
+    .date-label {
+        display: none;
+    }
+
+    .workspace-content {
+        padding: 19px 14px 28px;
+    }
+
+    .welcome-band {
+        min-height: 190px;
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 22px;
+    }
+
+    .welcome-band .button-primary {
+        min-height: 37px;
+    }
+
+    .welcome-orbit {
+        right: -160px;
+    }
+
+    .metric-grid {
+        gap: 9px;
+    }
+
+    .metric-card {
+        padding: 13px;
+    }
+
+    .metric-card strong {
+        font-size: 22px;
+    }
+
+    .content-panel {
+        padding: 15px;
+    }
+
+    .split-heading {
+        align-items: flex-start;
+    }
+
+    .report-total {
+        min-width: 72px;
+    }
+
+    .schedule-layout,
+    .analysis-layout,
+    .analysis-side,
+    .settings-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .settings-wide {
+        grid-column: auto;
+    }
+
+    .google-connection-card {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .google-connection-card .button-primary,
+    .google-connection-card .button-secondary {
+        margin-left: 56px;
+    }
+
+    .watchlist-add-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
+

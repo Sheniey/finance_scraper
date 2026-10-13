@@ -1,0 +1,15 @@
+---
+import { LOCALES } from '@/config'
+import { isLocale } from '@/i18n'
+
+export function getStaticPaths() {
+	return LOCALES.map((locale) => ({ params: { locale } }))
+}
+
+const locale = Astro.params.locale
+
+if (!isLocale(locale)) {
+	throw new Error(`Unsupported locale route: ${locale ?? 'missing'}`)
+}
+return Astro.redirect(`/${locale}/home`, 301)
+---

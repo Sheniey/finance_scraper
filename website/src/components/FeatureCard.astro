@@ -1,0 +1,35 @@
+---
+export interface Props {
+	index: number
+	tag: string
+	title: string
+	body: string
+}
+
+const { index, tag, title, body } = Astro.props as Props
+---
+
+<article class='group relative flex min-h-72 flex-col overflow-hidden rounded-[1.65rem] border border-border bg-card p-6 text-card-foreground shadow-[0_16px_50px_rgba(12,28,42,0.04)] transition-[transform,box-shadow] duration-300 hover:shadow-[0_22px_60px_rgba(12,28,42,0.1)] motion-reduce:transition-none sm:p-8'>
+	<div
+		aria-hidden='true'
+		class='absolute -right-12 -top-12 size-36 rounded-full border border-accent/10 transition-transform duration-500 group-hover:scale-125 motion-reduce:transition-none'
+	></div>
+	<div class='relative flex min-h-9 items-center justify-center'>
+		<span class='absolute left-0 font-code text-sm font-semibold tracking-[0.18em] text-muted-foreground'>
+			{index.toString().padStart(2, '0')}
+		</span>
+		<span class='rounded-full bg-accent/10 px-3.5 py-1.5 font-code text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-accent'>
+			{tag}
+		</span>
+	</div>
+	<div class='mt-auto pt-12'>
+		<h3 class='max-w-[16ch] font-heading text-[1.7rem] font-semibold leading-[1.08] tracking-tighter text-card-foreground sm:text-[1.85rem] lg:text-[2rem]'>
+			{title}
+		</h3>
+		<p class='mt-4 max-w-sm text-base leading-7 text-muted-foreground'>{body}</p>
+	</div>
+	<div
+		aria-hidden='true'
+		class='mt-7 h-px w-full origin-left scale-x-0 bg-accent/70 transition-transform duration-300 group-hover:scale-x-100 motion-reduce:transition-none'
+	></div>
+</article>

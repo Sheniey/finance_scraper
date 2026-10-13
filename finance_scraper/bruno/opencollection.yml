@@ -1,0 +1,54 @@
+opencollection: 1.0.0
+
+info:
+  name: bruno
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: oauth2
+    flow: resource_owner_password_credentials
+    accessTokenUrl: "{{BASE_URL}}/auth/login"
+    refreshTokenUrl: "{{BASE_URL}}/auth/refresh"
+    credentials:
+      clientId: "123456789"
+      clientSecret: holaminombreessecreto
+      placement: body
+    resourceOwner:
+      username: test@example.com
+      password: lamidupassword123
+    tokenConfig:
+      id: credentials
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true
+  variables:
+    - name: BASE_URL
+      value: http://localhost:8000
+  scripts:
+    - type: tests
+      code: |-
+        const response = res.getBody()
+
+        test('success must be a boolean value', () => {
+          expect(response.success).to.be.a('boolean');
+        });
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

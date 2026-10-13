@@ -1,0 +1,15 @@
+---
+interface Props {
+	stage: string
+	text: string
+}
+
+const { stage, text } = Astro.props as Props
+---
+
+<article class='border-b border-border pb-7 last:border-0 last:pb-0 sm:pb-9'>
+	<p class='font-code text-xs tracking-[0.18em] text-accent'>{stage}</p>
+	<p class='mt-4 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8'>
+		{text}
+	</p>
+</article>

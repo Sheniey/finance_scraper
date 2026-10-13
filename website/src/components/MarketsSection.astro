@@ -1,0 +1,93 @@
+---
+import TradingGlobe from '@/components/TradingGlobe'
+import { translations, type Locale } from '@/i18n'
+import Section from '@/components/Section.astro'
+
+interface Props {
+	locale: Locale
+}
+
+const { locale } = Astro.props as Props
+const t = translations(locale)
+
+const regions = [
+	'globe.region_americas',
+	'globe.region_europe',
+	'globe.region_asia_pacific',
+] as const
+---
+
+<Section
+	id='market-network'
+	ariaLabelledby='globe-title'
+	class='isolate overflow-hidden bg-[#102b34] text-white'
+	containerClass='grid items-center gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12'
+>
+	<div
+		aria-hidden='true'
+		class='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_22%_48%,rgba(21,70,77,0.34),transparent_38%),radial-gradient(circle_at_78%_18%,rgba(255,109,0,0.11),transparent_30%)]'
+	></div>
+	<div
+		aria-hidden='true'
+		class='pointer-events-none absolute -right-40 bottom-0 -z-10 size-120 rounded-full border border-white/5'
+	></div>
+
+		<div class='relative order-2 lg:order-1'>
+			<div class='relative mx-auto max-w-140'>
+				<div
+					aria-hidden='true'
+					class='absolute inset-[12%] rounded-full bg-[#2c7680]/15 blur-[70px]'
+				></div>
+				<TradingGlobe
+					client:visible
+					label={t({ mnemonic: 'globe.route_label' })}
+					cityMexico={t({ mnemonic: 'globe.city_mexico' })}
+					cityNewYork={t({ mnemonic: 'globe.market_new_york' })}
+					cityLondon={t({ mnemonic: 'globe.market_london' })}
+					cityTokyo={t({ mnemonic: 'globe.market_tokyo' })}
+				/>
+				<div
+					aria-hidden='true'
+					class='pointer-events-none absolute inset-[20%] z-10 rounded-full bg-[repeating-linear-gradient(0deg,rgba(0,0,0,0.26)_0px,rgba(0,0,0,0.26)_1px,transparent_2px,transparent_4px)] opacity-20 mix-blend-overlay'
+				></div>
+				<div class='relative mx-auto -mt-5 flex max-w-128 flex-wrap justify-center gap-2 px-3'>
+					{
+						regions.map((mnemonic) => (
+							<span class='rounded-full border border-white/10 bg-white/5.5 px-3 py-2 font-code text-[0.58rem] font-medium uppercase tracking-widest text-white/70'>
+								{t({ mnemonic })}
+							</span>
+						))
+					}
+				</div>
+			</div>
+		</div>
+
+		<div class='timeline-view animate-blurred-fade-in animate-range-[entry_10%_contain_30%] motion-reduce:animate-none order-1 lg:order-2'>
+			<h2
+				id='globe-title'
+				class='max-w-xl font-heading text-4xl font-medium leading-[1.02] tracking-[-0.06em] sm:text-5xl md:text-6xl'
+			>
+				{t({ mnemonic: 'globe.title' })}
+			</h2>
+			<p class='mt-6 max-w-xl text-base leading-7 text-white/68 sm:text-lg sm:leading-8'>
+				{t({ mnemonic: 'globe.description' })}
+			</p>
+			<div class='mt-8 flex items-center gap-3 rounded-2xl border border-white/11 bg-white/4 p-4'>
+				<span class='grid size-10 shrink-0 place-items-center rounded-full bg-accent/15 font-code text-xs text-[#ffab76]'>
+					48
+				</span>
+				<div>
+					<p class='font-code text-[0.58rem] uppercase tracking-[0.15em] text-white/50'>
+						{t({ mnemonic: 'globe.network_count' })}
+					</p>
+					<p class='mt-1 text-sm font-semibold text-white'>
+						{t({ mnemonic: 'globe.network_label' })}
+					</p>
+				</div>
+				<span aria-hidden='true' class='ml-auto text-accent'>↗</span>
+			</div>
+			<p class='mt-5 max-w-xl text-xs leading-5 text-white/55'>
+				{t({ mnemonic: 'globe.disclaimer' })}
+			</p>
+		</div>
+</Section>

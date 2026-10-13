@@ -1,15 +1,26 @@
 ---
-import { LOCALES } from '@/config';
-import Welcome from '@/components/Welcome.astro';
-import Layout from '@/layouts/Layout.astro';
+import { LOCALES } from '@/config'
+import { isLocale, translations } from '@/i18n'
+import HomePage from '@/components/HomePage.astro'
+import Layout from '@/layouts/Layout.astro'
 
 export function getStaticPaths() {
-	return LOCALES.map((locale) => ({ params: { locale } }));
+	return LOCALES.map((locale) => ({ params: { locale } }))
 }
 
-const locale = Astro.params.locale ?? 'en';
+const locale = Astro.params.locale
+
+if (!isLocale(locale)) {
+	throw new Error(`Unsupported locale home route: ${locale ?? 'missing'}`)
+}
+
+const t = translations(locale)
 ---
 
-<Layout locale={locale}>
-	<Welcome />
+<Layout
+	locale={locale}
+	title={t({ mnemonic: 'meta.title' })}
+	description={t({ mnemonic: 'meta.description' })}
+>
+	<HomePage locale={locale} />
 </Layout>

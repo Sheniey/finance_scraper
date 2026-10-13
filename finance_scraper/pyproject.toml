@@ -1,0 +1,85 @@
+
+[project]
+name = "finance_scraper"
+version = "0.1.0"
+description = "Financial analysis and reporting application"
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "yfinance==1.5.2",
+    "designkit==0.2.4",
+    "fastapi[standard]==0.141.1",
+    "slowapi==0.1.10",
+    "uvicorn==0.52.3",
+    "python-multipart==0.0.32",
+    "email-validator==2.3.0",
+    "tzdata==2026.3",
+    "openai==3.0.0",
+    "ollama==0.6.2",
+    "PyYAML==6.0.3",
+    "pandas==3.0.5",
+    "pydantic==2.13.4",
+    "numpy==2.5.2",
+    "scipy==1.18.0",
+    "libsql-morewheels==0.1.11",
+    "pyturso==0.8.2; sys_platform != 'win32'",
+    "typer==0.27.1",
+    "rich==15.0.0",
+    "reportlab==5.0.0",
+    "questionary==2.1.1",
+    "catboost==1.2.10",
+    "lightgbm==4.7.0",
+    "scikit-learn==1.9.0",
+    "joblib==1.5.3",
+    "psutil==7.2.2",
+    "torch",
+    "timesfm @ git+https://github.com/google-research/timesfm.git",
+    "python-dotenv==1.2.3",
+    "httpx==0.28.1",
+    "pytest>=9.1.1",
+    "duckdb>=1.5.5",
+    "phonenumbers>=9.0.39",
+    "finance-core",
+    "openpyxl>=3.1.5",
+    "keyring>=25.7.0",
+]
+
+[dependency-groups]
+build = [
+    "pyinstaller==6.22.3",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.scripts]
+dev = ["python -m finance-cli analyze AAPL --name testing --to console"]
+build = ["python -m nuitka --standalone --include-package-data=fastapi --include-package=starlette --include-package=uvicorn --include-package=finance --include-package=finance_core --include-package=nexis --include-package=datatypes --include-package-data=src:nexis:artifacts:nexis.joblib --output-dir=build finance-cli.py"]
+test = ["python -m pytest tests -q"]
+api-dev = ["fastapi dev api/main.py --host 0.0.0.0"]
+api-build = ["fastapi build"]
+complexipy = ['complexipy . --failed --suggest-refactors --check-script --plain --output-format json']
+perftest = ["python -m cProfile -o reports/perftest -s cumulative scripts/perftest.py", "python -m pstats reports/perftest"]
+coding_count = ["python -m scripts.coding_count"]
+train_model = ["python -m scripts.ml.training"]
+deeptrain_model = ["python -m scripts.ml.deep_training"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+finance = ["**/*.json", "**/*.sql", "**/*.yaml"]
+nexis = ["**/*.yaml"]
+
+[tool.uv.workspace]
+members = [
+    "src/finance_core",
+]
+
+[tool.uv.sources]
+finance-core = { workspace = true, editable = true }
+
+[project.scripts]
+finance-scraper = "finance:main"

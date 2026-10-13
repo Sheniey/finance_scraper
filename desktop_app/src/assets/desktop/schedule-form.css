@@ -1,0 +1,106 @@
+.google-connection-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 17px 19px;
+    border: 1px solid rgba(13, 23, 38, 0.065);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: var(--shadow-card);
+}
+
+.google-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--orange-wash);
+    color: #c75a12;
+}
+
+.google-copy {
+    display: grid;
+    flex: 1;
+    gap: 4px;
+}
+
+.google-copy h2 {
+    font-size: 15px;
+}
+
+.google-copy > p:last-of-type {
+    margin: 0;
+    color: #7c8791;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.inline-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 3px;
+    color: #526c69;
+    font-size: 12px;
+}
+
+.schedule-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.schedule-form {
+    display: grid;
+    gap: 15px;
+}
+
+.schedule-form .panel-heading-row {
+    margin-bottom: 2px;
+}
+
+.field-with-icon {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 9px;
+    padding: 0 10px;
+    border: 1px solid rgba(13, 23, 38, 0.12);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.75);
+    color: #86919b;
+}
+
+.field-with-icon:focus-within {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(36, 122, 119, 0.11);
+}
+
+.field-with-icon input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 13px;
+}
+
+.timezone-note {
+    margin: -4px 0 0;
+    color: #818c97;
+    font-size: 12px;
+}
+
+.timezone-note code {
+    color: #586777;
+    font-family: 'Fira Code', monospace;
+}
+
+.schedule-list-panel .panel-heading-row {
+    margin-bottom: 12px;
+}
+

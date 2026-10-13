@@ -1,0 +1,36 @@
+# Non-secret application preferences. Keep API keys and other credentials in .env.
+# This file contains default settings for training of Nexis, the model financial predictor.
+
+forecast:
+    default_checkpoint: 'google/timesfm-3.0-pytorch'
+    default_move_threshold: 0.02
+    min_context: 64
+    return_checkpoints_days: [1, 5, 10, 20, 30]
+    quantile_levels: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    median_quantile_index: 4
+
+training:
+    asset_lookback_days: 2520
+    mae: null
+    rmse: null
+    horizon_days: 10
+    trained_at: null
+    trained_tickers: []
+
+hyperparameters:
+    rf:
+        n_estimators: 575
+        max_depth: 12
+        min_samples_leaf: 1
+    lgbm:
+        n_estimators: 450
+        learning_rate: 0.04
+        num_leaves: 34
+        max_depth: 10
+        subsample: 0.8
+        colsample_bytree: 0.8
+    catboost:
+        iterations: 375
+        learning_rate: 0.05
+        depth: 6
+        min_data_in_leaf: 1

@@ -1,121 +1,314 @@
 ---
-import { Activity, ArrowUp, ArrowUpRight } from "lucide-astro";
-
-import { APP_NAME, MEDIA, SITE, formatLocalePath } from "@/config";
+import { APP_NAME, MEDIA, SITE } from "@/config";
+import { translations, type Locale } from "@/i18n";
+import { getNavigationItems, localizedRoute } from "@/lib/navigation";
 
 export interface Props {
-	locale?: string;
+	locale: Locale;
 }
 
-const { locale = "en" } = Astro.props as Props;
-
-const navItems = [
-	{ label: "Home", href: formatLocalePath(locale, "home") },
-	{ label: "About", href: formatLocalePath(locale, "about") },
-	{ label: "Products", href: formatLocalePath(locale, "products") },
-	{ label: "Contact", href: formatLocalePath(locale, "contact") },
+const { locale } = Astro.props as Props;
+const t = translations(locale);
+const navigationItems = getNavigationItems(locale);
+const exploreItems = navigationItems.flatMap((item) =>
+	"children" in item ? item.children : [item],
+);
+const socialLinks = [
+	{ label: "Instagram", href: SITE.authorIg, icon: "instagram" },
+	{ label: "LinkedIn", href: SITE.authorLinkedIn, icon: "linkedin" },
+	{ label: "X", href: SITE.authorX, icon: "x" },
+	{ label: "YouTube", href: SITE.authorYoutube, icon: "youtube" },
+	{ label: "Spotify", href: SITE.authorSpotify, icon: "spotify" },
 ];
+
+const legalItems =
+	locale === "es"
+		? [
+				{
+					label: t({ mnemonic: "footer.privacy" }),
+					href: "/es/legal/privacidad",
+				},
+				{
+					label: t({ mnemonic: "footer.terms" }),
+					href: "/es/legal/terminos",
+				},
+				{
+					label: t({ mnemonic: "footer.financial" }),
+					href: "/es/legal/aviso-financiero",
+				},
+			]
+		: [
+				{
+					label: t({ mnemonic: "footer.privacy" }),
+					href: "/en/legal/privacy",
+				},
+				{
+					label: t({ mnemonic: "footer.terms" }),
+					href: "/en/legal/terms",
+				},
+				{
+					label: t({ mnemonic: "footer.financial" }),
+					href: "/en/legal/financial-disclaimer",
+				},
+			];
 ---
 
-<footer class="relative isolate overflow-hidden border-t border-white/[0.08] bg-[#07101f] text-white">
+<footer class="relative isolate overflow-hidden bg-[#05080c] text-white">
 	<div
 		aria-hidden="true"
-		class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_0%,rgba(255,109,0,0.16),transparent_28%),radial-gradient(circle_at_92%_18%,rgba(49,94,153,0.22),transparent_30%)]"
-	></div>
+		class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_0%,rgba(255,109,0,0.14),transparent_28%),radial-gradient(circle_at_92%_18%,rgba(49,94,153,0.19),transparent_30%)]"
+	>
+	</div>
 	<div
 		aria-hidden="true"
-		class="pointer-events-none absolute -right-24 top-24 -z-10 size-72 rounded-full bg-[#ff6d00]/[0.07] blur-3xl"
-	></div>
+		class="pointer-events-none absolute -right-24 top-24 -z-10 size-72 rounded-full bg-accent/8 blur-3xl"
+	>
+	</div>
 
-	<div class="mx-auto max-w-7xl px-5 pb-7 pt-14 sm:px-8 md:pt-20">
-		<div class="relative mb-16 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] sm:p-8 md:flex md:items-end md:justify-between md:gap-10 md:p-10">
-			<div
-				aria-hidden="true"
-				class="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-[#ff6d00]/10 blur-3xl"
-			></div>
-			<div class="relative max-w-2xl">
-				<p class="mb-4 font-code text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#ff8a38]">
-					Financial clarity, without the noise
-				</p>
-				<h2 class="max-w-xl font-heading text-3xl font-semibold tracking-[-0.045em] text-white sm:text-4xl md:text-5xl">
-					Make your next move with better data.
+	<div class="mx-auto max-w-310 px-5 pb-7 pt-14 sm:px-8 md:pt-20">
+		<div
+			class="mb-12 flex flex-col gap-8 md:mb-14 md:flex-row md:items-end md:justify-between"
+		>
+			<div class="max-w-2xl">
+				<h2
+					class="max-w-2xl font-heading text-3xl font-medium tracking-[-0.055em] text-white sm:text-4xl md:text-5xl"
+				>
+					{t({ mnemonic: "cta.title" })}
 				</h2>
 			</div>
-			<div class="relative mt-7 flex shrink-0 items-center gap-3 rounded-full border border-white/10 bg-[#07101f]/65 px-4 py-3 text-sm text-white/70 md:mt-0">
-				<span class="grid size-8 place-items-center rounded-full bg-[#ff6d00]/15 text-[#ff8a38]">
-					<Activity size={16} strokeWidth={2.25} aria-hidden="true" />
+			<a
+				href={SITE.repo}
+				rel="noreferrer"
+				class="group inline-flex w-fit shrink-0 items-center gap-3 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#10151a] outline-none transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-[#ffede0] focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-[#05080c] motion-reduce:transition-none"
+			>
+				{t({ mnemonic: "cta.button" })}
+				<span
+					aria-hidden="true"
+					class="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
+				>
+					↗
 				</span>
-				<span>Signal over noise.</span>
-			</div>
+			</a>
 		</div>
 
-		<div class="grid gap-12 lg:grid-cols-[1.2fr_0.65fr_0.8fr] lg:gap-16">
-			<div>
-				<img
-					src={MEDIA.logo.banner}
-					alt={APP_NAME.fullname}
-					width="1277"
-					height="473"
-					loading="lazy"
-					class="w-full max-w-[22rem] object-contain object-left"
-				/>
-				<p class="mt-6 max-w-sm text-sm leading-6 text-white/55">
-					An open, focused way to turn market data into a clearer point of view.
-				</p>
-				<a
-					href={SITE.authorIg}
-					target="_blank"
-					rel="noreferrer"
-					class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-white/65 outline-none transition-colors duration-200 hover:text-[#ff8a38] focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
-				>
-					Built by {SITE.authorPseudonym}
-					<ArrowUpRight size={15} aria-hidden="true" />
-				</a>
+		<div class="border-y border-white/11">
+			<!-- Footer Sections -->
+			<div
+				class="grid gap-10 py-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.7fr_0.9fr_0.95fr] lg:gap-12"
+			>
+				<div class="max-w-sm">
+					<a
+						href={localizedRoute(locale, "home")}
+						aria-label={t({ mnemonic: "nav.home_label" })}
+						class="inline-flex rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent"
+					>
+						<img
+							src={MEDIA.logo.banner}
+							alt={APP_NAME.fullname}
+							width="1277"
+							height="473"
+							loading="lazy"
+							class="w-full max-w-52 object-contain object-left"
+						/>
+					</a>
+					<p class="mt-5 text-sm leading-6 text-white/55">
+						{t({ mnemonic: "footer.summary" })}
+					</p>
+				</div>
+
+				<!-- Explore Section -->
+				<div>
+					<p
+						class="mb-5 font-code text-[0.70rem] font-semibold uppercase tracking-[0.25em] text-white/40"
+					>
+						{t({ mnemonic: "footer.explore" })}
+					</p>
+					<nav
+						class="grid justify-start gap-3"
+						aria-label={t({ mnemonic: "nav.primary_label" })}
+					>
+						{
+							exploreItems.map((item) => (
+								<a
+									href={item.href}
+									class="group inline-flex w-fit items-center gap-2 text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none"
+								>
+									<span>{item.label}</span>
+									<span
+										aria-hidden="true"
+										class="opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100 motion-reduce:transition-none"
+									>
+										↗
+									</span>
+								</a>
+							))
+						}
+					</nav>
+				</div>
+
+				<!-- Legal Section -->
+				<div>
+					<p
+						class="mb-5 font-code text-[0.70rem] font-semibold uppercase tracking-[0.25em] text-white/40"
+					>
+						{t({ mnemonic: "footer.legal" })}
+					</p>
+					<nav
+						class="grid justify-start gap-3"
+						aria-label={t({ mnemonic: "footer.legal" })}
+					>
+						{
+							legalItems.map((item) => (
+								<a
+									href={item.href}
+									class="w-fit text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none"
+								>
+									{item.label}
+								</a>
+							))
+						}
+					</nav>
+				</div>
+
+				<!-- Repository Section -->
+				<div>
+					<p
+						class="mb-5 font-code text-[0.70rem] font-semibold uppercase tracking-[0.25em] text-white/40"
+					>
+						{t({ mnemonic: "footer.repo" })}
+					</p>
+					<div class="grid justify-start gap-3">
+						<a
+							href="https://github.com/Sheniey/finance_scraper"
+							rel="noreferrer"
+							class="w-fit text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none"
+						>
+							{t({ mnemonic: "footer.github" })}
+						</a>
+						<a
+							href="https://github.com/Sheniey/finance_scraper/issues"
+							rel="noreferrer"
+							class="w-fit text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none"
+						>
+							{t({ mnemonic: "footer.issues" })}
+						</a>
+					</div>
+					<p class="mt-6 max-w-xs text-xs leading-5 text-white/40">
+						{t({ mnemonic: "disclaimer" })}
+					</p>
+				</div>
 			</div>
 
-			<div>
-				<p class="mb-5 font-code text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-white/35">
-					Explore
+			<div
+				class="flex flex-col gap-5 border-t border-white/9 py-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between"
+			>
+				<p>
+					© {new Date().getFullYear()}
+					{' ' + APP_NAME.fullname}. {t({ mnemonic: "footer.rights" })}
 				</p>
-				<nav class="grid justify-start gap-3" aria-label="Footer navigation">
-					{
-						navItems.map((item) => (
-							<a
-								href={item.href}
-								class="group inline-flex w-fit items-center gap-2 text-sm text-white/65 outline-none transition-colors duration-200 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
-							>
-								<span>{item.label}</span>
-								<ArrowUpRight
-									size={14}
-									class="opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
-									aria-hidden="true"
-								/>
-							</a>
-						))
-					}
-				</nav>
+				<div class="flex flex-wrap items-center gap-3">
+					<p class="font-medium text-white/75">
+						{t({ mnemonic: "footer.follow_us" })}
+					</p>
+					<nav
+						aria-label={t({ mnemonic: "footer.social_links_label" })}
+						class="flex items-center gap-2"
+					>
+						{
+							socialLinks.map((social) => (
+								<a
+									href={social.href}
+									aria-label={social.label}
+									title={social.label}
+									target="_blank"
+									rel="me noopener noreferrer"
+									class="group grid size-9 place-items-center rounded-full border border-white/12 text-white outline-none transition-[transform,border-color,background-color] duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none"
+								>
+									{social.icon === "instagram" && (
+										<svg
+											aria-hidden="true"
+											class="size-6"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="1.7"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										>
+											<rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5.5" />
+											<circle cx="12" cy="12" r="4.25" />
+											<circle cx="17.75" cy="6.5" r="1" fill="currentColor" stroke="none" />
+										</svg>
+									)}
+									{social.icon === "linkedin" && (
+										<svg
+											aria-hidden="true"
+											class="size-6"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+										>
+											<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.95v5.66H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.26 2.37 4.26 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z" />
+										</svg>
+									)}
+									{social.icon === "x" && (
+										<svg
+											aria-hidden="true"
+											class="size-6"
+											viewBox="0 0 24 24"
+											fill="currentColor"
+										>
+											<path d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.8-6.3L6.5 22H3.4l7.3-8.4L3 2h6.3l4.3 5.7L18.9 2zm-1.1 18h1.7L8.3 3.9H6.5L17.8 20z" />
+										</svg>
+									)}
+									{social.icon === "youtube" && (
+										<svg
+											aria-hidden="true"
+											class="size-6"
+											viewBox="0 0 24 24"
+										>
+											<path
+												fill="currentColor"
+												d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8z"
+											/>
+											<path d="m9.6 15.6 5.2-3.6-5.2-3.6v7.2z" fill="#05080c" />
+										</svg>
+									)}
+									{social.icon === "spotify" && (
+										<svg
+											aria-hidden="true"
+											class="size-6"
+											viewBox="0 0 24 24"
+										>
+											<circle cx="12" cy="12" r="10" fill="currentColor" />
+											<path
+												d="M6.4 9.3c3.7-1.1 8.2-.6 11.3 1.2"
+												fill="none"
+												stroke="#05080c"
+												stroke-width="1.6"
+												stroke-linecap="round"
+											/>
+											<path
+												d="M7.2 12.2c3.1-.8 6.7-.4 9.5 1.1"
+												fill="none"
+												stroke="#05080c"
+												stroke-width="1.5"
+												stroke-linecap="round"
+											/>
+											<path
+												d="M8 15c2.5-.6 5.1-.2 7.3 1"
+												fill="none"
+												stroke="#05080c"
+												stroke-width="1.4"
+												stroke-linecap="round"
+											/>
+										</svg>
+									)}
+								</a>
+							))
+						}
+					</nav>
+				</div>
 			</div>
-
-			<div>
-				<p class="mb-5 font-code text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-white/35">
-					Stay curious
-				</p>
-				<p class="max-w-xs text-sm leading-6 text-white/55">
-					Research smarter, keep your edge, and let the numbers tell the story.
-				</p>
-				<a
-					href="#site-header"
-					class="mt-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/75 outline-none transition-[background-color,border-color,color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#ff6d00]/40 hover:bg-[#ff6d00]/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
-				>
-					Back to top
-					<ArrowUp size={15} aria-hidden="true" />
-				</a>
-			</div>
-		</div>
-
-		<div class="mt-14 flex flex-col gap-4 border-t border-white/[0.09] pt-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
-			<p>© {new Date().getFullYear()} {APP_NAME.fullname}. All rights reserved.</p>
-			<p class="font-code tracking-[-0.04em]">finance_scraper / market intelligence</p>
 		</div>
 	</div>
 </footer>

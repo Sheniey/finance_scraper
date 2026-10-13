@@ -1,94 +1,129 @@
 ---
-import { Download } from "lucide-astro";
-
-import { APP_NAME, MEDIA, formatLocalePath } from "@/config";
-import { Button } from "@/components/ui/button";
+import { APP_NAME, MEDIA } from '@/config'
+import { translations, type Locale } from '@/i18n'
+import { getNavigationItems, localizedRoute } from '@/lib/navigation'
+import Download from '@/components/Download.astro'
+import LanguageToggle from '@/components/LanguageToggle.astro'
+import MobileNavigation from '@/components/MobileNavigation.astro'
+import ThemeToggle from '@/components/ThemeToggle.astro'
 
 export interface Props {
-	locale?: string;
+	locale: Locale
+	currentVersion: string
 }
 
-const { locale = "en" } = Astro.props as Props;
-
-const navItems = [
-	{ label: "Home", href: formatLocalePath(locale, "home") },
-	{ label: "About", href: formatLocalePath(locale, "about") },
-	{ label: "Products", href: formatLocalePath(locale, "products") },
-	{ label: "Contact", href: formatLocalePath(locale, "contact") },
-];
+const { locale, currentVersion } = Astro.props as Props
+const t = translations(locale)
+const navItems = getNavigationItems(locale)
 ---
 
 <header
-	id="site-header"
+	id='site-header'
 	data-site-header
-	data-scrolled="false"
-	class="fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[background-color,border-color,box-shadow] duration-300 ease-out md:px-6 md:pt-5"
+	class='fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-5 motion-reduce:transition-none'
 >
 	<nav
 		data-nav-shell
-		data-scrolled="false"
-		class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#0d1726]/55 p-2.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-300 ease-out data-[scrolled=true]:border-white/[0.14] data-[scrolled=true]:bg-[#0d1726]/95 data-[scrolled=true]:shadow-[0_18px_50px_rgba(0,0,0,0.28)] md:flex-nowrap md:gap-3 md:rounded-full md:px-3"
-		aria-label="Primary navigation"
+		data-scrolled='false'
+		class='relative mx-auto flex max-w-310 items-center gap-1 rounded-2xl border border-white/10 bg-[#07101f]/45 p-2.5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.14)] backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-300 ease-out data-[scrolled=true]:border-white/[0.14] data-[scrolled=true]:bg-[#07101f]/95 data-[scrolled=true]:shadow-[0_18px_50px_rgba(0,0,0,0.28)] md:gap-3 md:rounded-full md:px-3'
+		aria-label={t({ mnemonic: 'nav.primary_label' })}
 	>
 		<a
-			class="group flex shrink-0 items-center gap-2.5 rounded-full px-2 py-1.5 outline-none transition-colors duration-200 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70"
-			href={formatLocalePath(locale, "home")}
-			aria-label={`${APP_NAME.fullname} home`}
+			class='group flex shrink-0 items-center gap-2.5 rounded-full px-2 py-1.5 outline-none transition-colors duration-200 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none'
+			href={localizedRoute(locale, 'home')}
+			aria-label={t({ mnemonic: 'nav.home_label' })}
 		>
-			<span class="grid size-10 place-items-center rounded-xl bg-white/[0.07] ring-1 ring-inset ring-white/[0.12] transition-transform duration-300 group-hover:scale-105">
+			<span class='grid size-9 place-items-center rounded-xl bg-white/[0.07] ring-1 ring-inset ring-white/12 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none sm:size-10'>
 				<img
 					src={MEDIA.logo.minimal}
-					alt=""
-					width="32"
-					height="32"
-					loading="eager"
-					class="size-8 object-contain"
+					alt=''
+					width='32'
+					height='32'
+					loading='eager'
+					class='size-7 object-contain sm:size-8'
 				/>
 			</span>
-			<span class="font-code text-[0.78rem] font-semibold tracking-[-0.08em] text-white sm:text-sm">
+			<span class='hidden font-code text-[0.7rem] font-semibold tracking-[-0.08em] text-white sm:inline sm:text-sm'>
 				{APP_NAME.styled}
 			</span>
 		</a>
 
-		<div class="order-3 flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:order-none md:ml-5 md:overflow-visible">
+		<div class='ml-2 hidden min-w-0 flex-1 items-center gap-0.5 md:flex'>
 			{
-				navItems.map((item) => (
-					<a
-						href={item.href}
-						class="group relative shrink-0 rounded-full px-3 py-2 text-[0.78rem] font-medium tracking-wide text-white/65 outline-none transition-[background-color,color] duration-200 hover:bg-white/[0.08] hover:text-white focus-visible:ring-2 focus-visible:ring-[#ff6d00]/70 sm:px-3.5 sm:text-sm"
-					>
-						<span class="relative z-10">{item.label}</span>
-						<span class="absolute inset-x-3 bottom-1 h-px origin-center scale-x-0 bg-[#ff6d00] transition-transform duration-200 group-hover:scale-x-100" />
-					</a>
-				))
+				navItems.map((item) =>
+					'children' in item ? (
+						<details class='group relative shrink-0' data-navigation-dropdown>
+							<summary class='flex cursor-pointer list-none items-center gap-1.5 rounded-full px-3 py-2 text-[0.78rem] font-medium tracking-wide text-white/65 outline-none transition-[background-color,color] duration-200 hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none sm:px-3.5 sm:text-sm [&::-webkit-details-marker]:hidden'>
+								{item.label}
+								<svg
+									aria-hidden='true'
+									class='size-3 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none'
+									viewBox='0 0 16 16'
+									fill='none'
+									stroke='currentColor'
+									stroke-width='1.5'
+									stroke-linecap='round'
+									stroke-linejoin='round'
+								>
+									<path d='m3.5 6 4.5 4 4.5-4' />
+								</svg>
+							</summary>
+							<div class='absolute left-0 top-[calc(100%+0.75rem)] z-50 grid min-w-64 gap-1 rounded-2xl border border-white/10 bg-[#07101f]/96 p-2 text-white shadow-2xl backdrop-blur-2xl'>
+								{
+									item.children.map((child) => (
+										<a
+											href={child.href}
+											class='rounded-xl px-3 py-2.5 text-sm text-white/75 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none'
+										>
+											{child.label}
+										</a>
+									))
+								}
+							</div>
+						</details>
+					) : (
+						<a
+							href={item.href}
+							class='group relative shrink-0 rounded-full px-3 py-2 text-[0.78rem] font-medium tracking-wide text-white/65 outline-none transition-[background-color,color] duration-200 hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none sm:px-3.5 sm:text-sm'
+						>
+							<span class='relative z-10'>{item.label}</span>
+							<span class='absolute inset-x-3 bottom-1 h-px origin-center scale-x-0 bg-accent transition-transform duration-200 group-hover:scale-x-100 motion-reduce:transition-none' />
+						</a>
+					),
+				)
 			}
 		</div>
 
-		<div class="ml-auto flex shrink-0 items-center">
-			<Button
-				type="button"
-				variant="default"
-				size="lg"
-				className="h-10 rounded-full !bg-[#ff6d00] px-3.5 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(255,109,0,0.28)] transition-[background-color,box-shadow,transform] duration-200 hover:!bg-[#ff7d1a] hover:shadow-[0_10px_28px_rgba(255,109,0,0.38)] hover:-translate-y-0.5 sm:px-4 sm:text-sm"
-				aria-label={`Download ${APP_NAME.fullname}`}
-			>
-				<Download size={16} strokeWidth={2.25} aria-hidden="true" />
-				<span>Download</span>
-			</Button>
+		<div class='ml-auto flex shrink-0 items-center gap-1'>
+			<Download
+				currentVersion={currentVersion}
+				label={t({ mnemonic: 'download.button' })}
+				ariaLabel={t({ mnemonic: 'download.button_aria' })}
+				detectingLabel={t({ mnemonic: 'download.detecting' })}
+				readyLabel={t({ mnemonic: 'download.ready' })}
+				unsupportedPlatformLabel={t({ mnemonic: 'download.unsupported_platform' })}
+				unsupportedArchitectureLabel={t({ mnemonic: 'download.unsupported_architecture' })}
+				unknownPlatformLabel={t({ mnemonic: 'download.unknown_platform' })}
+				class='order-first md:order-0'
+			/>
+			<LanguageToggle locale={locale} />
+			<ThemeToggle locale={locale} />
+			<MobileNavigation items={navItems} locale={locale} />
 		</div>
 	</nav>
 </header>
 
 <script>
-	const header = document.querySelector<HTMLElement>("[data-site-header]");
-	const nav = header?.querySelector<HTMLElement>("[data-nav-shell]");
+	const $ = (selector: string) => document.querySelector(selector)
+	const $header = $('[data-site-header]') as HTMLElement | null
+	const $nav = $('[data-nav-shell]') as HTMLElement | null
 
-	if (header && nav) {
+	if ($header && $nav) {
 		const updateHeaderState = () => {
-			nav.dataset.scrolled = window.scrollY > 16 ? "true" : "false";
-		};
+			$nav.dataset.scrolled = String(window.scrollY > 16)
+		}
 
-		updateHeaderState();
-		window.addEventListener("scroll", updateHeaderState, { passive: true });
+		updateHeaderState()
+		window.addEventListener('scroll', updateHeaderState, { passive: true })
 	}
 </script>

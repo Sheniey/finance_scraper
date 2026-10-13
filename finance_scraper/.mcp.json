@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"Turso MCP Server": {
+			"url": "https://mcp.turso.ai/mcp",
+			"type": "http"
+		}
+	}
+}

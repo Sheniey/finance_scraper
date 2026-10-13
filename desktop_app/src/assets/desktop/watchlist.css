@@ -1,0 +1,59 @@
+.watchlist-add-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.watchlist-add-form .form-field {
+    flex: 1;
+}
+
+.watchlist-items {
+    display: grid;
+    gap: 8px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.watchlist-items li {
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border: 1px solid rgba(13, 23, 38, 0.07);
+    border-radius: 9px;
+    background: #fff;
+}
+
+.ticker-monogram {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 9px;
+    background: var(--orange-wash);
+    color: #b9500c;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+.watchlist-item-copy {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+}
+
+.watchlist-item-copy strong {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+.watchlist-item-copy small,
+.watchlist-item-state {
+    color: #84909b;
+    font-size: 12px;
+}
+

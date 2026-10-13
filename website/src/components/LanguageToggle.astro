@@ -1,0 +1,67 @@
+---
+import { translations, type Locale } from '@/i18n'
+
+interface Props {
+	locale: Locale
+}
+
+const { locale } = Astro.props as Props
+const t = translations(locale)
+const isHome =
+	Astro.url.pathname === '/' ||
+	Astro.url.pathname === `/${locale}/` ||
+	Astro.url.pathname === `/${locale}` ||
+	Astro.url.pathname === `/${locale}/home`
+
+const languageHref = (targetLocale: Locale) => {
+	if (targetLocale === locale && isHome) {
+		return Astro.url.pathname
+	}
+
+	return `/${targetLocale}/`
+}
+
+const languages = [
+	{ locale: 'es' as const, label: t({ mnemonic: 'language.spanish' }) },
+	{ locale: 'en' as const, label: t({ mnemonic: 'language.english' }) },
+]
+---
+
+<details class='group relative' data-language-menu>
+	<summary
+		aria-label={t({ mnemonic: 'nav.languages_label' })}
+		class='flex h-9 cursor-pointer list-none items-center gap-1.5 rounded-full px-2.5 text-[0.68rem] font-semibold tracking-[0.12em] text-white/75 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none sm:h-10 [&::-webkit-details-marker]:hidden'
+	>
+		{locale.toUpperCase()}
+		<svg
+			aria-hidden='true'
+			class='size-3 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none'
+			viewBox='0 0 16 16'
+			fill='none'
+			stroke='currentColor'
+			stroke-width='1.5'
+			stroke-linecap='round'
+			stroke-linejoin='round'
+		>
+			<path d='m3.5 6 4.5 4 4.5-4' />
+		</svg>
+	</summary>
+	<div class='absolute right-0 top-[calc(100%+0.75rem)] z-50 grid min-w-44 gap-1 rounded-2xl border border-white/10 bg-[#07101f]/95 p-2 text-white shadow-2xl backdrop-blur-2xl'>
+		{
+			languages.map((item) => (
+				<a
+					href={languageHref(item.locale)}
+					lang={item.locale}
+					aria-current={locale === item.locale ? 'page' : undefined}
+					class='flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm outline-none transition-colors hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none'
+				>
+					<span class='w-6 font-code text-[0.62rem] text-white/45'>
+						{item.locale.toUpperCase()}
+					</span>
+					<span class='flex-1'>{item.label}</span>
+					{locale === item.locale && <span aria-hidden='true' class='text-accent'>✓</span>}
+				</a>
+			))
+		}
+	</div>
+</details>

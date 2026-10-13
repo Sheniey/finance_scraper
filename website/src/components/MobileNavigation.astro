@@ -1,0 +1,194 @@
+---
+import { translations, type Locale } from '@/i18n'
+import type { NavigationItem } from '@/lib/navigation'
+import ThemeToggle from '@/components/ThemeToggle.astro'
+
+interface Props {
+	items: NavigationItem[]
+	locale: Locale
+}
+
+const { items, locale } = Astro.props as Props
+const t = translations(locale)
+---
+
+<div class='relative md:hidden'>
+	<button
+		type='button'
+		data-mobile-menu-button
+		data-open='false'
+		data-open-label={t({ mnemonic: 'nav.open_menu' })}
+		data-close-label={t({ mnemonic: 'nav.close_menu' })}
+		aria-label={t({ mnemonic: 'nav.open_menu' })}
+		aria-expanded='false'
+		aria-controls='mobile-navigation'
+		class='group grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-white/75 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none sm:size-10'
+	>
+		<svg
+			aria-hidden='true'
+			class='size-5 transition-transform duration-200 group-data-[open=true]:rotate-90 motion-reduce:transition-none'
+			viewBox='0 0 24 24'
+			fill='none'
+			stroke='currentColor'
+			stroke-width='1.8'
+			stroke-linecap='round'
+		>
+			<path d='M4 7h16M4 12h16M4 17h16' />
+		</svg>
+	</button>
+
+	<div
+		id='mobile-navigation'
+		data-mobile-menu
+		data-open='false'
+		aria-hidden='true'
+		inert
+		class='pointer-events-none absolute right-0 top-[calc(100%+0.75rem)] z-40 max-h-0 w-[min(20rem,calc(100vw-1.5rem))] -translate-y-2 scale-[0.98] overflow-hidden opacity-0 transition-[max-height,opacity,transform] duration-300 ease-out data-[open=true]:pointer-events-auto data-[open=true]:max-h-112 data-[open=true]:translate-y-0 data-[open=true]:scale-100 data-[open=true]:opacity-100 motion-reduce:transition-none'
+	>
+		<div class='rounded-2xl border border-white/10 bg-[#07101f]/96 p-2 text-white shadow-2xl backdrop-blur-2xl'>
+			<nav aria-label={t({ mnemonic: 'nav.primary_label' })} class='grid gap-1'>
+				{
+					items.map((item) => (
+						'children' in item ? (
+							<details class='group rounded-xl' data-navigation-dropdown>
+								<summary class='flex cursor-pointer list-none items-center justify-between rounded-xl px-4 py-3 text-sm text-white/75 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none [&::-webkit-details-marker]:hidden'>
+									{item.label}
+									<svg
+										aria-hidden='true'
+										class='size-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none'
+										viewBox='0 0 16 16'
+										fill='none'
+										stroke='currentColor'
+										stroke-width='1.5'
+										stroke-linecap='round'
+										stroke-linejoin='round'
+									>
+										<path d='m3.5 6 4.5 4 4.5-4' />
+									</svg>
+								</summary>
+								<div class='grid gap-1 pb-1 pl-3 pr-2'>
+									{
+										item.children.map((child) => (
+											<a
+												href={child.href}
+												class='rounded-lg px-4 py-2.5 text-sm text-white/65 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none'
+											>
+												{child.label}
+											</a>
+										))
+									}
+								</div>
+							</details>
+						) : (
+							<a
+								href={item.href}
+								class='rounded-xl px-4 py-3 text-sm text-white/75 outline-none transition-colors hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-accent/70 motion-reduce:transition-none'
+							>
+								{item.label}
+							</a>
+						)
+					))
+				}
+			</nav>
+			<div class='mt-2 border-t border-white/10 pt-2'>
+				<ThemeToggle locale={locale} compact={true} />
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	const MOBILE_MENU_LABEL_ERROR = 'Mobile navigation labels are required'
+	const MOBILE_MENU_BUTTON_ERROR = 'Mobile navigation controls are required'
+	const $ = (selector: string) => document.querySelector(selector)
+	const $$ = (selector: string, root: ParentNode = document) =>
+		root.querySelectorAll(selector)
+	const $mobileMenuButton = $('[data-mobile-menu-button]') as HTMLButtonElement | null
+	const $mobileMenu = $('[data-mobile-menu]') as HTMLDivElement | null
+	const $languageMenus = $$('[data-language-menu]') as NodeListOf<HTMLDetailsElement>
+	const $navigationMenus = $$('[data-navigation-dropdown]') as NodeListOf<HTMLDetailsElement>
+
+	if (!$mobileMenuButton || !$mobileMenu) {
+		throw new Error(MOBILE_MENU_BUTTON_ERROR)
+	}
+
+	const updateMobileMenu = (isOpen: boolean, restoreFocus = false) => {
+		const label = isOpen
+			? $mobileMenuButton.dataset.closeLabel
+			: $mobileMenuButton.dataset.openLabel
+
+		if (!label) {
+			throw new Error(MOBILE_MENU_LABEL_ERROR)
+		}
+
+		$mobileMenuButton.dataset.open = String(isOpen)
+		$mobileMenuButton.setAttribute('aria-expanded', String(isOpen))
+		$mobileMenuButton.setAttribute('aria-label', label)
+		$mobileMenu.dataset.open = String(isOpen)
+		$mobileMenu.setAttribute('aria-hidden', String(!isOpen))
+		$mobileMenu.inert = !isOpen
+
+		if (isOpen) {
+			$languageMenus.forEach((menu) => {
+				menu.open = false
+			})
+		}
+
+		if (restoreFocus) {
+			$mobileMenuButton.focus()
+		}
+	}
+
+	$mobileMenuButton.addEventListener('click', () => {
+		const isOpen = $mobileMenuButton.getAttribute('aria-expanded') === 'true'
+		updateMobileMenu(!isOpen)
+	})
+
+	const $mobileMenuLinks = $$('a', $mobileMenu) as NodeListOf<HTMLAnchorElement>
+
+	$mobileMenuLinks.forEach((link) => {
+		link.addEventListener('click', () => updateMobileMenu(false))
+	})
+
+	document.addEventListener('click', (event) => {
+		const target = event.target
+
+		if (!(target instanceof Node)) {
+			return
+		}
+
+		$languageMenus.forEach((menu) => {
+			if (!menu.contains(target)) {
+				menu.open = false
+			}
+		})
+
+		$navigationMenus.forEach((menu) => {
+			if (!menu.contains(target)) {
+				menu.open = false
+			}
+		})
+
+		if (!$mobileMenu.contains(target) && !$mobileMenuButton.contains(target)) {
+			updateMobileMenu(false)
+		}
+	})
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key !== 'Escape') {
+			return
+		}
+
+		const openNavigationMenu = Array.from($navigationMenus).find((menu) => menu.open)
+
+		if (openNavigationMenu) {
+			openNavigationMenu.open = false
+			openNavigationMenu.querySelector('summary')?.focus()
+			return
+		}
+
+		if ($mobileMenuButton.getAttribute('aria-expanded') === 'true') {
+			updateMobileMenu(false, true)
+		}
+	})
+</script>

@@ -1,0 +1,18 @@
+paths = ["."]
+max-complexity-allowed = 10
+snapshot-create = false
+snapshot-ignore = false
+quiet = false
+ignore-complexity = false
+failed = false
+suggest_refactors = true
+color = "auto"
+sort = "asc"
+exclude = ["venv/**", "venv\\**", "__pycache__/**", "tests/**", "api/**"]
+check-script = true
+no-ignore = false
+report-ignored = false
+plain = true
+output-format = ["json"]
+output = "reports/"
+

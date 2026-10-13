@@ -1,0 +1,298 @@
+---
+export interface Props {
+	currentVersion: string
+	label: string
+	ariaLabel: string
+	detectingLabel: string
+	readyLabel: string
+	unsupportedPlatformLabel: string
+	unsupportedArchitectureLabel: string
+	unknownPlatformLabel: string
+	class?: string
+}
+
+const {
+	currentVersion,
+	label,
+	ariaLabel,
+	detectingLabel,
+	readyLabel,
+	unsupportedPlatformLabel,
+	unsupportedArchitectureLabel,
+	unknownPlatformLabel,
+	class: className,
+} = Astro.props as Props
+
+const releasesUrl = 'https://github.com/Sheniey/finance_scraper/releases'
+const x64Installer = `/bin/FinanceScraperSetup-${currentVersion}-x64.exe`
+---
+
+<a
+	href={releasesUrl}
+	data-download-link
+	data-ready='false'
+	data-x64-installer={x64Installer}
+	data-releases-url={releasesUrl}
+	data-aria-label={ariaLabel}
+	data-ready-label={readyLabel}
+	data-unsupported-platform-label={unsupportedPlatformLabel}
+	data-unsupported-architecture-label={unsupportedArchitectureLabel}
+	data-unknown-platform-label={unknownPlatformLabel}
+	aria-label={ariaLabel}
+	aria-describedby='download-status'
+	class:list={[
+		'download-button group relative isolate inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-accent text-white outline-none transition-[box-shadow,background-color] duration-200 hover:bg-[#ff7d1a] hover:shadow-[0_8px_24px_rgba(255,109,0,0.35)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-[#07101b] data-[ready=true]:animate-pop data-[ready=true]:animate-iteration-count-once sm:h-10 sm:w-auto sm:gap-2 sm:px-4 motion-reduce:transition-none',
+		className,
+	]}
+>
+	<span
+		aria-hidden='true'
+		class='pointer-events-none absolute inset-y-0 -left-1/2 z-0 w-1/3 -skew-x-12 bg-white/30 transition-transform duration-700 group-hover:translate-x-[450%] motion-reduce:transition-none'
+	></span>
+	<svg
+		aria-hidden='true'
+		class='relative z-10 size-[1.05rem]'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		stroke-width='1.8'
+		stroke-linecap='round'
+		stroke-linejoin='round'
+	>
+		<path d='M12 3v11m0 0 4-4m-4 4-4-4M5 16v4h14v-4' />
+	</svg>
+	<span class='relative z-10 hidden text-sm font-semibold sm:inline'>
+		{label}
+	</span>
+</a>
+<span
+	id='download-status'
+	data-download-status
+	role='status'
+	aria-live='polite'
+	class='sr-only'
+>
+	{detectingLabel}
+</span>
+
+<script>
+	const HIGH_ENTROPY_HINTS_WARNING = 'Unable to read high entropy platform hints'
+	const DOWNLOAD_DETECTION_ERROR = 'Unable to determine a release for this device'
+	const MISSING_DOWNLOAD_BUTTON_ERROR = 'The download link is required'
+	const MISSING_DOWNLOAD_STATUS_ERROR = 'The download status element is required'
+	const MISSING_RELEASES_URL_ERROR = 'The releases page URL is required'
+	const MISSING_INSTALLER_PATH_ERROR = 'The detected installer path is required'
+	const MISSING_DOWNLOAD_MESSAGE_ERROR = 'A localized download message is required'
+	
+	const $ = (selector: string) => document.querySelector(selector)
+	const $downloadButton = $('[data-download-link]') as HTMLAnchorElement | null
+	const $downloadStatus = $('[data-download-status]') as HTMLElement | null
+
+	interface ArchitectureHints {
+		architecture?: string
+		bitness?: string
+		platform?: string
+	}
+
+	interface UserAgentData extends ArchitectureHints {
+		getHighEntropyValues?: (hints: string[]) => Promise<ArchitectureHints>
+	}
+
+	type OperatingSystem =
+		| 'android'
+		| 'chromeos'
+		| 'ios'
+		| 'linux'
+		| 'macos'
+		| 'unknown'
+		| 'windows'
+	
+	const detectOperatingSystem = (platformHint: string, userAgent: string) => {
+		const platform = `${platformHint} ${navigator.platform} ${userAgent}`.toLowerCase()
+
+		if (/(iphone|ipad|ipod|ios)/.test(platform)) {
+			return 'ios' as const
+		}
+
+		if (platform.includes('android')) {
+			return 'android' as const
+		}
+
+		if (/(cros|chrome ?os)/.test(platform)) {
+			return 'chromeos' as const
+		}
+
+		if (/(windows|win32|win64)/.test(platform)) {
+			return 'windows' as const
+		}
+
+		if (/(macintosh|mac os|darwin|macintel)/.test(platform)) {
+			return 'macos' as const
+		}
+
+		if (/(linux|x11)/.test(platform)) {
+			return 'linux' as const
+		}
+
+		return 'unknown' as const
+	}
+
+	const detectArchitecture = (hints: ArchitectureHints, userAgent: string) => {
+		const hintedArchitecture = hints.architecture?.toLowerCase()
+
+		if (hintedArchitecture === 'arm' && hints.bitness === '64') {
+			return 'arm64' as const
+		}
+
+		if (hintedArchitecture === 'arm64') {
+			return 'arm64' as const
+		}
+
+		if (hintedArchitecture === 'x86' && hints.bitness === '64') {
+			return 'x64' as const
+		}
+
+		if (hintedArchitecture === 'x86' && hints.bitness === '32') {
+			return 'x86' as const
+		}
+
+		if (/(?:x64|x86_64|amd64|win64|wow64)/.test(userAgent)) {
+			return 'x64' as const
+		}
+
+		if (/(?:arm64|aarch64|armv8)/.test(userAgent)) {
+			return 'arm64' as const
+		}
+
+		if (/(?:i[3-6]86|x86)/.test(userAgent)) {
+			return 'x86' as const
+		}
+
+		return 'unknown' as const
+	}
+
+	const platformLabels: Record<OperatingSystem, string> = {
+		android: 'Android',
+		chromeos: 'ChromeOS',
+		ios: 'iOS',
+		linux: 'Linux',
+		macos: 'macOS',
+		unknown: '',
+		windows: 'Windows',
+	}
+
+	const setReleaseFallback = (message: string) => {
+		if (!$downloadButton) {
+			throw new Error(MISSING_DOWNLOAD_BUTTON_ERROR)
+		}
+
+		if (!$downloadStatus) {
+			throw new Error(MISSING_DOWNLOAD_STATUS_ERROR)
+		}
+
+		const releasesUrl = $downloadButton.dataset.releasesUrl
+
+		if (!releasesUrl) {
+			throw new Error(MISSING_RELEASES_URL_ERROR)
+		}
+
+		$downloadButton.href = releasesUrl
+		$downloadButton.removeAttribute('download')
+		$downloadButton.dataset.ready = 'false'
+		$downloadButton.setAttribute('aria-label', message)
+		$downloadButton.title = message
+		$downloadStatus.textContent = message
+	}
+
+	const configureDownload = async () => {
+		if (!$downloadButton) {
+			throw new Error(MISSING_DOWNLOAD_BUTTON_ERROR)
+		}
+
+		if (!$downloadStatus) {
+			throw new Error(MISSING_DOWNLOAD_STATUS_ERROR)
+		}
+
+		const userAgentData = (
+			navigator as Navigator & { userAgentData?: UserAgentData }
+		).userAgentData
+		let hints: ArchitectureHints = {}
+
+		if (userAgentData?.getHighEntropyValues) {
+			try {
+				hints = await userAgentData.getHighEntropyValues([
+					'architecture',
+					'bitness',
+					'platform',
+				])
+			} catch (error) {
+				console.warn(HIGH_ENTROPY_HINTS_WARNING, error)
+			}
+		}
+
+		const userAgent = navigator.userAgent.toLowerCase()
+		const system = detectOperatingSystem(
+			hints.platform ?? userAgentData?.platform ?? '',
+			userAgent,
+		)
+		const architecture = detectArchitecture(hints, `${userAgent} ${navigator.platform}`.toLowerCase())
+		const installerKey = `${system}-${architecture}`
+		const availableInstallers: Partial<Record<string, string>> = {
+			'windows-x64': $downloadButton.dataset.x64Installer,
+		}
+		const installer = availableInstallers[installerKey]
+
+		$downloadButton.dataset.operatingSystem = system
+		$downloadButton.dataset.architecture = architecture
+
+		if (installer) {
+			const fileName = installer.split('/').pop()
+			const readyMessage = $downloadButton.dataset.readyLabel
+			const ariaLabel = $downloadButton.dataset.ariaLabel
+
+			if (!fileName) {
+				throw new Error(MISSING_INSTALLER_PATH_ERROR)
+			}
+
+			if (!readyMessage || !ariaLabel) {
+				throw new Error(MISSING_DOWNLOAD_MESSAGE_ERROR)
+			}
+
+			$downloadButton.href = installer
+			$downloadButton.download = fileName
+			$downloadButton.dataset.ready = 'true'
+			$downloadButton.setAttribute('aria-label', ariaLabel)
+			$downloadButton.title = readyMessage
+			$downloadStatus.textContent = readyMessage
+			return
+		}
+
+		const platformLabel = platformLabels[system]
+		const messageTemplate =
+			system === 'unknown'
+				? $downloadButton.dataset.unknownPlatformLabel
+				: system === 'windows'
+					? $downloadButton.dataset.unsupportedArchitectureLabel
+					: $downloadButton.dataset.unsupportedPlatformLabel
+
+		if (!messageTemplate) {
+			throw new Error(MISSING_DOWNLOAD_MESSAGE_ERROR)
+		}
+
+		const message = messageTemplate
+			.replaceAll('{{platform}}', platformLabel)
+			.replaceAll('{{architecture}}', architecture)
+
+		setReleaseFallback(message)
+	}
+
+	void configureDownload().catch((error: unknown) => {
+		console.error(DOWNLOAD_DETECTION_ERROR, error)
+
+		const message = $downloadButton?.dataset.unknownPlatformLabel
+
+		if ($downloadStatus && message) {
+			setReleaseFallback(message)
+		}
+	})
+</script>

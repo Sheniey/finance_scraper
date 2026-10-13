@@ -1,0 +1,144 @@
+.analysis-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(250px, 0.7fr);
+    align-items: start;
+    gap: 18px;
+}
+
+.analysis-form {
+    display: grid;
+    gap: 17px;
+}
+
+.analysis-form .panel-heading-row {
+    margin-bottom: 2px;
+}
+
+.panel-symbol {
+    width: 34px;
+    height: 34px;
+    background: var(--orange-wash);
+    color: #247a77;
+}
+
+.form-field > small,
+.field-hint {
+    color: #9099a2;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.form-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ticker-field input {
+    min-height: 54px;
+    font-family: 'Fira Code', monospace;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+}
+
+.horizon-field {
+    max-width: 230px;
+}
+
+.choice-row {
+    position: relative;
+    display: flex;
+    min-height: 60px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid rgba(13, 23, 38, 0.08);
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.choice-icon {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 8px;
+    background: #f3f5f7;
+    color: #657383;
+}
+
+.choice-copy {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+}
+
+.choice-copy strong {
+    color: #344150;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.choice-copy small {
+    color: #8b959e;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.choice-row input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.toggle-track {
+    position: relative;
+    width: 34px;
+    height: 19px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #d5d9dd;
+    transition: background 140ms ease;
+}
+
+.toggle-track::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(13, 23, 38, 0.17);
+    content: '';
+    transition: transform 140ms ease;
+}
+
+.choice-row input:checked + .toggle-track {
+    background: var(--orange);
+}
+
+.choice-row input:checked + .toggle-track::after {
+    transform: translateX(15px);
+}
+
+.choice-row input:focus-visible + .toggle-track {
+    outline: 3px solid rgba(36, 122, 119, 0.28);
+    outline-offset: 2px;
+}
+
+.form-primary {
+    width: 100%;
+    margin-top: 2px;
+}
+
+.analysis-side {
+    display: grid;
+    gap: 12px;
+}

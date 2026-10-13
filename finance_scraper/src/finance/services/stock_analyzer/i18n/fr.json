@@ -1,0 +1,1148 @@
+{
+    "analyzer": {
+        "title": "Analyse"
+    },
+    "analyzer.fact.price": {
+        "title": "Prix",
+        "rating_thresholds": {
+            "excellent": "Très bon marché",
+            "very_good": "Bon marché",
+            "good": "À un prix raisonnable",
+            "meh": "Prix juste",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.fact.last_dividend": {
+        "title": "Dernier dividende",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Aucun dividende"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.fact.dividend_rate": {
+        "title": "Taux de dividende",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Aucun dividende"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.fact.dividend_yield": {
+        "title": "Rendement du dividende",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Aucun dividende"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation": {
+        "title": "Valorisation",
+        "description": "Quel est le niveau de valorisation du titre ?"
+    },
+    "analyzer.valuation.pe_ratio": {
+        "title": "Ratio P/E",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "fully_valued": "Valorisé à son juste niveau",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.peg_ratio": {
+        "title": "Ratio PEG",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "fully_valued": "Valorisé à son juste niveau",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.trailing_pe_ratio": {
+        "title": "P/E historique",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.forward_pe_ratio": {
+        "title": "P/E prévisionnel",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.ev2market_cap": {
+        "title": "Valeur d’entreprise / capitalisation boursière",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Plutôt cher",
+            "very_bad": "Cher",
+            "awful": "Très cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.revenue_growth": {
+        "title": "Croissance du chiffre d’affaires",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Croissance correcte",
+            "bad": "Plutôt faible",
+            "very_bad": "Faible",
+            "awful": "Very Poor"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.earnings_growth": {
+        "title": "Croissance des bénéfices",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.eps_growth": {
+        "title": "Croissance du BPA",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.return_on_equity": {
+        "title": "Rentabilité des capitaux propres",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.return_on_assets": {
+        "title": "Rentabilité des actifs",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.profit_margins": {
+        "title": "Marges bénéficiaires",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.operating_margin": {
+        "title": "Marge opérationnelle",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.debt_to_equity": {
+        "title": "Dette / capitaux propres",
+        "rating_thresholds": {
+            "excellent": "Très faible",
+            "very_good": "Faible",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Élevé",
+            "very_bad": "Très Élevé",
+            "awful": "Excessif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.current_ratio": {
+        "title": "Ratio de liquidité générale",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Critique"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.quick_ratio": {
+        "title": "Ratio de liquidité réduite",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Critique"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.free_cash_flow": {
+        "title": "Flux de trésorerie disponible",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.price_to_fcf": {
+        "title": "Prix / flux de trésorerie disponible",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Cher",
+            "very_bad": "Très cher",
+            "awful": "Extrêmement cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.ev_to_ebitda": {
+        "title": "VE / EBITDA",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Cher",
+            "very_bad": "Très cher",
+            "awful": "Extrêmement cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.ev_to_ebit": {
+        "title": "VE / EBIT",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Cher",
+            "very_bad": "Très cher",
+            "awful": "Extrêmement cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.price_to_book": {
+        "title": "Prix / valeur comptable",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Cher",
+            "very_bad": "Très cher",
+            "awful": "Extrêmement cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.price_to_sales": {
+        "title": "Prix / chiffre d’affaires",
+        "rating_thresholds": {
+            "excellent": "Très attractif",
+            "very_good": "Attractif",
+            "good": "Valorisation raisonnable",
+            "meh": "Prix juste",
+            "bad": "Cher",
+            "very_bad": "Très cher",
+            "awful": "Extrêmement cher"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.valuation.earnings_yield": {
+        "title": "Rendement des bénéfices",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Saine",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth": {
+        "title": "Croissance",
+        "description": "À quelle vitesse l’entreprise se développe-t-elle ?"
+    },
+    "analyzer.growth.revenue_cagr_5y": {
+        "title": "CAGR du chiffre d’affaires (5 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.revenue_cagr_10y": {
+        "title": "CAGR du chiffre d’affaires (10 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.eps_cagr_5y": {
+        "title": "CAGR du BPA (5 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.eps_cagr_10y": {
+        "title": "CAGR du BPA (10 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.fcf_cagr_5y": {
+        "title": "CAGR du flux de trésorerie disponible (5 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.fcf_cagr_10y": {
+        "title": "CAGR du flux de trésorerie disponible (10 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.fcf_growth": {
+        "title": "Croissance du flux de trésorerie disponible",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.owner_earnings_growth": {
+        "title": "Croissance du bénéfice propriétaire",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.shares_outstanding_growth": {
+        "title": "Évolution du nombre d’actions",
+        "rating_thresholds": {
+            "excellent": "Rachats importants",
+            "very_good": "Rachats",
+            "good": "Légers rachats",
+            "meh": "Stable",
+            "bad": "Dilution",
+            "very_bad": "Forte dilution",
+            "awful": "Dilution sévère"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.growth.retained_earnings_growth": {
+        "title": "Croissance des bénéfices non distribués",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "En baisse",
+            "awful": "En forte baisse"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.roic": {
+        "title": "ROIC",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "Négatif",
+            "awful": "Très négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.roce": {
+        "title": "ROCE",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "Négatif",
+            "awful": "Très négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.return_on_equity_5y": {
+        "title": "ROE moyen (5 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "Négatif",
+            "awful": "Très négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.return_on_equity_10y": {
+        "title": "ROE moyen (10 ans)",
+        "rating_thresholds": {
+            "excellent": "Exceptionnelle",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Faible",
+            "very_bad": "Négatif",
+            "awful": "Très négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.gross_margin": {
+        "title": "Marge brute",
+        "rating_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.ebitda_margin": {
+        "title": "Marge EBITDA",
+        "rating_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability.gross_profit": {
+        "title": "Bénéfice brut"
+    },
+    "analyzer.profitability.ebitda": {
+        "title": "EBITDA"
+    },
+    "analyzer.cash_flow.capital_expenditures": {
+        "title": "Dépenses d’investissement"
+    },
+    "analyzer.cash_flow.fcf_margin": {
+        "title": "Marge de flux de trésorerie disponible",
+        "rating_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.cash_flow.cash_conversion": {
+        "title": "Conversion de trésorerie",
+        "rating_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.cash_flow.operating_cash_flow_margin": {
+        "title": "Marge de flux de trésorerie opérationnel",
+        "rating_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.cash_flow.owner_earnings_yield": {
+        "title": "Rendement du bénéfice propriétaire (estimé)",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Saine",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health": {
+        "title": "Santé financière",
+        "description": "Quelle est la solidité financière de l’entreprise ?"
+    },
+    "analyzer.financial_health.debt_to_ebitda": {
+        "title": "Dette / EBITDA",
+        "rating_thresholds": {
+            "excellent": "Très faible",
+            "very_good": "Faible",
+            "good": "Raisonnable",
+            "meh": "Moyen",
+            "bad": "Élevé",
+            "very_bad": "Très Élevé",
+            "awful": "Excessif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.net_debt_to_ebitda": {
+        "title": "Dette nette / EBITDA",
+        "rating_thresholds": {
+            "excellent": "Très solide",
+            "very_good": "Forte",
+            "good": "Saine",
+            "meh": "Modérée",
+            "bad": "Endetté",
+            "very_bad": "Très endetté",
+            "awful": "Extrêmement endetté"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.financial_health.net_debt": {
+        "title": "Dette nette"
+    },
+    "analyzer.capital_allocation.buyback_yield": {
+        "title": "Rendement des rachats d’actions",
+        "rating_thresholds": {
+            "excellent": "Rachats importants",
+            "very_good": "Rachats",
+            "good": "Légers rachats",
+            "meh": "Stable",
+            "bad": "Dilution",
+            "very_bad": "Forte dilution",
+            "awful": "Dilution sévère"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.capital_allocation.shareholder_yield": {
+        "title": "Rendement pour l’actionnaire",
+        "rating_thresholds": {
+            "excellent": "Très Élevé",
+            "very_good": "Élevé",
+            "good": "Saine",
+            "meh": "Moyen",
+            "bad": "Faible",
+            "very_bad": "Très faible",
+            "awful": "Négatif"
+        },
+        "comparison_thresholds": {
+            "excellent": "Excellent",
+            "very_good": "Très bon",
+            "good": "Bon",
+            "meh": "Moyen",
+            "bad": "Mauvais",
+            "very_bad": "Très mauvais",
+            "awful": "Catastrophique"
+        }
+    },
+    "analyzer.profitability": {
+        "title": "Rentabilité",
+        "description": "Quelle est la rentabilité de l’entreprise ?"
+    },
+    "analyzer.cash_flow": {
+        "title": "Flux de trésorerie",
+        "description": "L’entreprise génère-t-elle de la trésorerie ?"
+    },
+    "analyzer.cash_flow.operating_cash_flow": {
+        "title": "Flux de trésorerie opérationnel"
+    },
+    "analyzer.cash_flow.owner_earnings": {
+        "title": "Bénéfice propriétaire*"
+    },
+    "analyzer.capital_allocation": {
+        "title": "Allocation du capital",
+        "description": "Comment l’entreprise alloue-t-elle son capital ?"
+    },
+    "analyzer.capital_allocation.shares_outstanding": {
+        "title": "Actions en circulation"
+    },
+    "analyzer.capital_allocation.retained_earnings": {
+        "title": "Bénéfices non distribués"
+    },
+    "analyzer.capital_allocation.acquisition_spending": {
+        "title": "Dépenses d’acquisition"
+    },
+    "analyzer.working_capital": {
+        "title": "Fonds de roulement",
+        "description": "Comment l’entreprise gère-t-elle son fonds de roulement ?"
+    },
+    "analyzer.working_capital.working_capital": {
+        "title": "Fonds de roulement"
+    },
+    "analyzer.working_capital.change_in_working_capital": {
+        "title": "Variation du fonds de roulement"
+    },
+    "analyzer.working_capital.receivables": {
+        "title": "Créances clients"
+    },
+    "analyzer.working_capital.inventory": {
+        "title": "Stocks"
+    },
+    "analyzer.working_capital.accounts_payable": {
+        "title": "Dettes fournisseurs"
+    },
+    "analyzer.fact.splits": {
+        "title": "Fractionnements"
+    },
+    "analyzer.prediction": {
+        "title": "Prédiction générée par l’IA"
+    },
+    "analyzer.prediction_empty": {
+        "title": "Aucun point disponible."
+    },
+    "analyzer.dividends_and_splits": {
+        "title": "Dividendes et fractionnements"
+    },
+    "analyzer.business_summary": {
+        "title": "Résumé de l’activité"
+    },
+    "analyzer.business_summary.no_website": {
+        "title": "Aucun site web disponible."
+    },
+    "analyzer.recent_news": {
+        "title": "Actualités récentes"
+    }
+}
