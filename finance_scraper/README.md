@@ -25,16 +25,25 @@ Finance Scraper is a tool for generating **financial reports** and insights from
 
 ## 🗂️ API & CLI Section
 
-This project folder contains the Finance Scraper's core, so it includes the API and CLI official components.
+This project folder contains the Finance Scraper's core, so it includes the API and CLI official components. The pipeline for handle a new report request by api follow these steps:
 
-The localized Home page is served at `/{locale}/home`. Visiting `/` selects a supported browser language (falling back to Spanish), and `/{locale}` redirects to that locale's Home page.
-
-The website is built with Astro.js and Tailwind CSS and is responsible for:
-- Shared, localized site navigation
-- Product information and executable downloads
-- Documentation access
-- SEO optimization
-- Internationalization
+```json
+API
+---
+1. POST `/login`
+   - Request: { "email": "fulanito@example.com", "password": "12345678" }
+   - Response: { "access_token": "q1wet31qwq.sa3gdh864ryre.n2ffdgs3" }
+2. POST `/reports`
+   - Headers: { "Authorization": "Bearer q1wet31qwq.sa3gdh864ryre.n2ffdgs3" }
+   - Request: { "ticker": "AAPL", "llm_explanation": true, "filename": "report.pdf", ... }
+   - Response: { "report_id": "rpt_1234567890" }
+3. GET `/reports/rep_1234567890`
+   - Headers: { "Authorization": "Bearer q1wet31qwq.sa3gdh864ryre.n2ffdgs3" }
+   - Response: { "status": "completed" }
+4. GET `/reports/rep_1234567890/download`
+   - Headers: { "Authorization": "Bearer q1wet31qwq.sa3gdh864ryre.n2ffdgs3" }
+   - Response: report.pdf
+```
 
 <p align="right">
     <strong><a href="#readme-top">↑ To Top ↑</a></strong>
