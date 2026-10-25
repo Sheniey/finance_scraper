@@ -5,6 +5,7 @@ import { DB_URI, DB_TOKEN, DB_TYPE, DB_PROVIDER } from 'astro:env/server';
 export const GET: APIRoute = async () => {
     return new Response(
         JSON.stringify({
+            success: true,
             uri: DB_URI,
             token: DB_TOKEN,
             type: DB_TYPE,
