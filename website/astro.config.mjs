@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config'
+import { defineConfig, envField } from 'astro/config'
 import react from '@astrojs/react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -15,4 +15,15 @@ export default defineConfig({
 		plugins: [tailwindcss()],
 	},
 	integrations: [react()],
+	env: {
+		schema: {
+			DB_URI: envField.string({ context: 'server', access: 'secret', optional: false }),
+			DB_TOKEN: envField.string({ context: 'server', access: 'secret', optional: false }),
+			DB_TYPE: envField.string({ context: 'server', access: 'secret', optional: true, default: 'sqlite' }),
+			DB_PROVIDER: envField.string({ 'context': 'server', access: 'secret', optional: true }),
+
+			BINARY_DOWNLOAD_URL: envField.string({ context: 'client', access: 'public', optional: true, default: '/' }),
+			BINARY_CURRENT_VERSION: envField.string({ context: 'client', access: 'public', optional: true })
+		}
+	}
 })
