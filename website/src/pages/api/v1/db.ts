@@ -6,10 +6,12 @@ export const GET: APIRoute = async () => {
     return new Response(
         JSON.stringify({
             success: true,
-            uri: DB_URI,
-            token: DB_TOKEN,
-            type: DB_TYPE,
-            provider: DB_PROVIDER
+            payload: {
+                uri: DB_URI,
+                token: DB_TOKEN,
+                type: DB_TYPE,
+                provider: DB_PROVIDER
+            }
         }),
         {
             status: 200,
