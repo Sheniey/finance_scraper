@@ -11,7 +11,8 @@ export const GET: APIRoute = async () => {
                 token: DB_TOKEN,
                 type: DB_TYPE,
                 provider: DB_PROVIDER
-            }
+            },
+            error: null // this never occurs, dang
         }),
         {
             status: 200,

@@ -10,7 +10,8 @@ export const GET: APIRoute = async () => {
                 downloadUrl:
                     BINARY_DOWNLOAD_URL.replace('{baseUrl}', import.meta.env.BASE_URL),
                 currentVersion: BINARY_CURRENT_VERSION,
-            }
+            },
+            error: null // this never occurs, dang
         }),
         {
             status: 200,
