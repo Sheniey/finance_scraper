@@ -2,6 +2,7 @@
 export const APP_NAME = {
     fullname: 'Finance Scraper',
     styled: 'finance_scraper',
+    code: 'finance-scraper',
     shorted: 'Finscrap',
     abbreviation: 'FS',
 } as const;
@@ -23,6 +24,8 @@ export const SITE = {
     authorYoutube: 'https://www.youtube.com/@SheñeyBy2010',
     authorSpotify: 'https://open.spotify.com/user/314cwtw27o6cycian3ql6txxjh5m?si=f7c421ef53a8453e',
 
+    contactEmail: 'financescraper.dev@gmail.com',
+
     favicon1: '/favicon.svg',
     favicon1Type: 'image/svg+xml',
     favicon2: '/favicon.ico',
@@ -39,7 +42,12 @@ export const SITE = {
     repo: 'https://github.com/Sheniey/finance_scraper',
 } as const;
 
-export const DEFAULT_API_VERSION = 'v1';
+export const BINARY_CURRENT_VERSION = '0.1.0';
+export const BINARY_INSTALLERS = {
+    'x64': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x64.exe`,
+    'x86': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x86.exe`,
+    'arm64': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-arm64.exe`,
+} as const;
 
 export const formatPath = (path: string) => `/${path.replace(/^\/+/, '')}`;
 export const formatStrictPath = (path: string) => `${SITE.baseURL}${formatPath(path)}`;

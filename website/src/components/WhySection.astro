@@ -35,7 +35,7 @@ const storyItems = [
 		<div>
 			<h2
 				id='why-title'
-				class='max-w-lg font-heading text-5xl font-medium leading-[0.96] tracking-[-0.07em] sm:text-6xl md:text-7xl'
+				class='timeline-view animate-blurred-fade-in animate-range-[entry_10%_contain_30%] motion-reduce:animate-none max-w-lg font-heading text-5xl font-medium leading-[0.96] tracking-[-0.07em] sm:text-6xl md:text-7xl'
 			>
 				{t({ mnemonic: 'why.title' })}
 			</h2>
@@ -70,7 +70,7 @@ const storyItems = [
 			</div>
 		</div>
 
-		<div class='timeline-view animate-blurred-fade-in animate-range-[entry_10%_contain_30%] motion-reduce:animate-none grid content-start gap-7 sm:gap-9'>
+		<div class='grid content-start gap-7 sm:gap-9'>
 			{storyItems.map((item) => <WhyStoryItem stage={item.stage} text={item.text} />)}
 		</div>
 	</div>

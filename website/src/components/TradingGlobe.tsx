@@ -218,7 +218,7 @@ function createNetwork({
 	return { arcs, labels, points }
 }
 
-export default function TradingGlobe(props: TradingGlobeProps) {
+export function TradingGlobe(props: TradingGlobeProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const globeRef = useRef<GlobeHandle | undefined>(undefined)
 	const globeMaterialRef = useRef<ShaderMaterial | null>(null)
