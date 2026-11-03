@@ -1,1 +1,98 @@
 @import 'tailwindcss';
+
+@font-face {
+    font-family: 'Geist';
+    src: url('/fonts/Geist-Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('/fonts/Geist-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope-Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/Manrope-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Fira Code';
+    src: url('/fonts/FiraCode-Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Fira Code';
+    src: url('/fonts/FiraCode-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+
+
+:root {
+    color-scheme: light;
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    --ink: #0d1726;
+    --ink-deep: #09111e;
+    --ink-soft: #172438;
+    --paper: #f4f6f4;
+    --paper-warm: #fffaf1;
+    --surface: #ffffff;
+    --orange: #247a77;
+    --orange-wash: #e5f1ef;
+    --muted: #667085;
+    --muted-soft: #97a0ae;
+    --line: rgba(13, 23, 38, 0.1);
+    --green: #187a58;
+    --green-wash: #e8f5ef;
+    --red: #a8393e;
+    --red-wash: #fff0ef;
+    --blue-wash: #edf3f9;
+    --shadow-card: 0 18px 50px rgba(13, 23, 38, 0.06);
+    --shadow-float: 0 24px 80px rgba(4, 12, 23, 0.32);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    min-width: 320px;
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+}

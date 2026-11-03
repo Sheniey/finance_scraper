@@ -1,0 +1,209 @@
+.custom-report-builder {
+    display: grid;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid rgba(13, 23, 38, 0.09);
+    border-radius: 12px;
+    background:
+        linear-gradient(120deg, rgba(36, 122, 119, 0.055), transparent 52%),
+        #f8faf9;
+}
+
+.custom-report-builder-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.custom-report-builder-heading .field-kicker {
+    margin-bottom: 5px;
+}
+
+.custom-report-builder-heading h3 {
+    margin: 0 0 5px;
+    color: var(--ink);
+    font-size: 15px;
+}
+
+.custom-report-builder-heading p:last-child {
+    margin: 0;
+    color: #828d97;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.custom-section-count {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border: 1px solid rgba(36, 122, 119, 0.12);
+    border-radius: 999px;
+    background: rgba(36, 122, 119, 0.07);
+    color: #3f7772;
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+}
+
+.custom-report-section-list {
+    display: grid;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 1px 4px 1px 1px;
+    list-style: none;
+}
+
+.custom-report-section {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px 6px 10px;
+    border: 1px solid rgba(13, 23, 38, 0.07);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.78);
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        opacity 140ms ease,
+        transform 140ms ease;
+}
+
+.custom-report-section.selected {
+    border-color: rgba(36, 122, 119, 0.22);
+    background: #fff;
+}
+
+.custom-report-section.dragging {
+    opacity: 0.48;
+    transform: scale(0.99);
+}
+
+.custom-report-section-label {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.custom-section-check {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #c4cdd0;
+    border-radius: 5px;
+    color: #fff;
+}
+
+.custom-report-section-label:focus-within .custom-section-check {
+    outline: 3px solid rgba(36, 122, 119, 0.28);
+    outline-offset: 2px;
+}
+
+.custom-section-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.custom-section-copy strong {
+    overflow: hidden;
+    color: #344150;
+    font-size: 12px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-section-copy small {
+    color: #a34d35;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.custom-section-order {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 2px;
+    color: #92a0a8;
+}
+
+.custom-section-order button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #6c7b84;
+    cursor: pointer;
+}
+
+.custom-section-order button:hover:not(:disabled) {
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.custom-section-order button:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.custom-section-grip {
+    display: grid;
+    width: 23px;
+    height: 28px;
+    place-items: center;
+    cursor: grab;
+}
+
+.custom-section-grip:active {
+    cursor: grabbing;
+}
+
+.custom-report-builder-hint {
+    margin: 0;
+    color: #929ca4;
+    font-size: 11px;
+}
+
+.custom-report-builder-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 3px;
+}
+
+.custom-report-builder-footer > span {
+    color: #458367;
+    font-size: 11px;
+}
+
+.choice-row.locked {
+    cursor: not-allowed;
+}
+
+.choice-row.locked .choice-copy small {
+    color: #9c6453;
+}
+
+.choice-row input:disabled + .toggle-track {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .custom-report-section {
+        transition: none;
+    }
+}

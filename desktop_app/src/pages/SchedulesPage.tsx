@@ -1,25 +1,34 @@
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import { Check, ShieldCheck } from 'lucide-react';
 
 import type {
+    AiProviderStatus,
     GoogleAccountStatus,
     Locale,
+    OllamaStatus,
     ReportSchedule,
 } from '#/types.js';
-import { formatError, translate } from '@/i18n/messages.js';
-import { GoogleConnectionCard } from '@/pages/schedules/GoogleConnectionCard.js';
-import { ScheduleForm } from '@/pages/schedules/ScheduleForm.js';
-import { ScheduleList } from '@/pages/schedules/ScheduleList.js';
-import { useGoogleOAuthFlow } from '@/pages/schedules/useGoogleOAuthFlow.js';
-import { useScheduleCreation } from '@/pages/schedules/useScheduleCreation.js';
+import type { ToastKind } from '@/features/common/types/index.js';
+import { formatError, translate } from '@/features/common/i18n/messages.js';
+import { GoogleConnectionCard } from '@/features/schedules/components/GoogleConnectionCard.js';
+import { ScheduleForm } from '@/features/schedules/components/ScheduleForm.js';
+import { ScheduleList } from '@/features/schedules/components/ScheduleList.js';
+import { useGoogleOAuthFlow } from '@/features/schedules/hooks/useGoogleOAuthFlow.js';
+import { useScheduleCreation } from '@/features/schedules/hooks/useScheduleCreation.js';
+import PageTitle from '@/features/common/components/PageTitle.js';
+import { APP_NAME } from '@/config.js';
+
+
 
 interface SchedulesPageProps {
     locale: Locale;
     googleStatus: GoogleAccountStatus | null;
     schedules: ReportSchedule[];
     onRefresh: () => Promise<void>;
-    onNotify: (message: string) => void;
+    onNotify: (message: string, kind?: ToastKind) => void;
 }
+
 
 export function SchedulesPage({
     locale,
@@ -29,7 +38,12 @@ export function SchedulesPage({
     onNotify,
 }: SchedulesPageProps) {
     const [error, setError] = useState<string | null>(null);
-    const t = (key: string) => translate(locale, key);
+    const [isCheckingAi, setIsCheckingAi] = useState(true);
+    const [aiAvailable, setAiAvailable] = useState(false);
+    const t = (
+        key: string,
+        values?: Record<string, string | number>,
+    ) => translate(locale, key, values);
     const oauth = useGoogleOAuthFlow({
         locale,
         onRefresh,
@@ -43,6 +57,44 @@ export function SchedulesPage({
         onError: setError,
     });
 
+    useEffect(() => {
+        let isCurrent = true;
+        void Promise.all([
+            window.desktopApi.getAiProviderStatus(),
+            window.desktopApi.getOllamaStatus(),
+        ])
+            .then(
+                ([providerStatus, ollamaStatus]: [
+                    AiProviderStatus,
+                    OllamaStatus,
+                ]) => {
+                    if (isCurrent) {
+                        const isAvailable =
+                            Object.values(providerStatus).some(Boolean) ||
+                            (ollamaStatus.running &&
+                                ollamaStatus.models.length > 0);
+                        setAiAvailable(isAvailable);
+                        if (!isAvailable) {
+                            form.setExplain(false);
+                        }
+                    }
+                },
+            )
+            .catch((statusError: unknown) => {
+                if (isCurrent) {
+                    setError(formatError(locale, statusError));
+                }
+            })
+            .finally(() => {
+                if (isCurrent) {
+                    setIsCheckingAi(false);
+                }
+            });
+        return () => {
+            isCurrent = false;
+        };
+    }, [locale, form.setExplain]);
+
     async function setScheduleEnabled(
         schedule: ReportSchedule,
         enabled: boolean,
@@ -54,17 +106,16 @@ export function SchedulesPage({
                 enabled,
             );
             await onRefresh();
-            onNotify(t('toast.scheduleUpdated'));
+            onNotify(t('toast.scheduleUpdated'), 'success');
         } catch (updateError) {
             setError(formatError(locale, updateError));
         }
     }
 
     async function deleteSchedule(schedule: ReportSchedule) {
-        const confirmation =
-            locale === 'es'
-                ? `¿Eliminar el envío programado de ${schedule.tickers.join(', ')}?`
-                : `Delete the scheduled delivery for ${schedule.tickers.join(', ')}?`;
+        const confirmation = t('schedules.confirmDelete', {
+            tickers: schedule.tickers.join(', '),
+        });
         if (!window.confirm(confirmation)) {
             return;
         }
@@ -81,12 +132,11 @@ export function SchedulesPage({
     return (
         <div className='page-stack'>
             <header className='page-heading'>
-                <p className='eyebrow dark'>
-                    <span className='signal-mark' />
-                    {t('nav.schedules')}
-                </p>
-                <h1>{t('schedules.title')}</h1>
-                <p>{t('schedules.copy')}</p>
+                <PageTitle
+                    sectionName={t('nav.schedules')}
+                    title={t('schedules.title')}
+                    copy={t('schedules.copy')}
+                />
             </header>
 
             <GoogleConnectionCard
@@ -109,6 +159,7 @@ export function SchedulesPage({
                     <ScheduleForm
                         charts={form.charts}
                         explain={form.explain}
+                        aiAvailable={aiAvailable && !isCheckingAi}
                         format={form.format}
                         isSaving={form.isSaving}
                         locale={locale}
@@ -137,7 +188,7 @@ export function SchedulesPage({
             <section className='schedule-trust-note'>
                 <ShieldCheck size={16} aria-hidden='true' />
                 <div>
-                    <strong>{t('schedules.keepRunning')}</strong>
+                    <strong>{t('schedules.keepRunning', { app_name: APP_NAME })}</strong>
                     <p>{t('schedules.systemRequirement')}</p>
                 </div>
                 <Check size={16} aria-hidden='true' />

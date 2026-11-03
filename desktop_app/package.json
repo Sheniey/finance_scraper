@@ -5,7 +5,7 @@
   "main": "electron/main.js",
   "type": "module",
   "scripts": {
-    "build": "vite build && pnpm run build:preload && electron-builder",
+    "build": "vite build && pnpm run build:preload && node electron/prepare-google-oauth-config.js && electron-builder",
     "build:ui": "vite build",
     "build:preload": "tsc -p tsconfig.preload.json",
     "dev": "pnpm run build:preload && concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron --import=tsx/esm .\"",
@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "Sheñey",
   "license": "ISC",
-  "packageManager": "pnpm@10.26.2",
+  "packageManager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61",
   "devDependencies": {
     "@electron/typescript-definitions": "9.2.0",
     "@types/node": "^26.6.3",
@@ -32,7 +32,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "kmenu": "^2.0.4",
     "lucide-react": "^1.48.0",
+    "motion": "^14.6.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3"
@@ -47,11 +49,19 @@
       {
         "from": "../finance_scraper/dist/finance-scraper",
         "to": "finance-scraper",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/google-oauth-client.json",
+        "to": "google-oauth-client.json"
       }
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {

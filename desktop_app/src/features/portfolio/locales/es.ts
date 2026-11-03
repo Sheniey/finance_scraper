@@ -1,0 +1,32 @@
+
+const messages = {
+    'nav.portfolio': 'Portafolio',
+    'portfolio.title': 'Tu portafolio, con contexto.',
+    'portfolio.copy': 'Registra compras y ventas para que cada análisis de IA tenga en cuenta tus posiciones reales.',
+    'portfolio.positions': 'Posiciones abiertas',
+    'portfolio.positionsHint': 'Acciones con saldo distinto de cero',
+    'portfolio.tradesCount': 'Movimientos registrados',
+    'portfolio.aiContext': 'Este contexto influye en las explicaciones de IA.',
+    'portfolio.newTrade': 'NUEVO MOVIMIENTO',
+    'portfolio.recordTrade': 'Registrar compra o venta',
+    'portfolio.action': 'Movimiento',
+    'portfolio.buy': 'Compra',
+    'portfolio.sell': 'Venta',
+    'portfolio.ticker': 'Ticker',
+    'portfolio.region': 'Región',
+    'portfolio.currency': 'Moneda',
+    'portfolio.quantity': 'Cantidad de acciones',
+    'portfolio.price': 'Precio por acción',
+    'portfolio.date': 'Fecha',
+    'portfolio.saveTrade': 'Guardar movimiento',
+    'portfolio.saved': 'Movimiento guardado en tu portafolio.',
+    'portfolio.tickerRequired': 'Escribe un ticker válido.',
+    'portfolio.priceInvalid': 'El precio debe ser mayor que cero.',
+    'portfolio.quantityInvalid': 'La cantidad debe ser un entero mayor que cero.',
+    'portfolio.activity': 'ACTIVIDAD',
+    'portfolio.tradeHistory': 'Historial de movimientos',
+    'portfolio.empty': 'Todavía no hay movimientos.',
+    'portfolio.emptyCopy': 'Registra una compra o venta para añadir contexto a tus análisis.',
+} as const;
+
+export default messages;

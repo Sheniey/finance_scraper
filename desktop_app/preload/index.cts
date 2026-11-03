@@ -1,3 +1,4 @@
+
 import electron = require('electron');
 import type {
     AiProviderKeyUpdates,
@@ -5,7 +6,10 @@ import type {
     DesktopBridge,
 } from '#/types.js';
 
+
+
 const { contextBridge, ipcRenderer } = electron;
+
 
 function subscribe<T>(
     channel: string,
@@ -22,7 +26,6 @@ const desktopBridge: DesktopBridge = {
     bootstrap: () => ipcRenderer.invoke('app:bootstrap'),
     retryApi: () => ipcRenderer.invoke('api:retry'),
     login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
-    loginWithGoogle: () => ipcRenderer.invoke('auth:google-login'),
     register: (credentials) => ipcRenderer.invoke('auth:register', credentials),
     logout: () => ipcRenderer.invoke('auth:logout'),
     updateProfile: (profile) => ipcRenderer.invoke('account:update', profile),
@@ -31,6 +34,11 @@ const desktopBridge: DesktopBridge = {
     getReport: (reportId) => ipcRenderer.invoke('reports:get', reportId),
     openReport: (reportId) => ipcRenderer.invoke('reports:open', reportId),
     deleteReport: (reportId) => ipcRenderer.invoke('reports:delete', reportId),
+    exportReport: (reportId) =>
+        ipcRenderer.invoke('reports:export', reportId),
+    getPortfolio: () => ipcRenderer.invoke('portfolio:get'),
+    createPortfolioTrade: (request) =>
+        ipcRenderer.invoke('portfolio:trade', request),
     getGoogleStatus: () => ipcRenderer.invoke('google:status'),
     connectGoogle: () => ipcRenderer.invoke('google:connect'),
     getGoogleFlow: (flowId) => ipcRenderer.invoke('google:flow', flowId),
@@ -52,6 +60,9 @@ const desktopBridge: DesktopBridge = {
             'integrations:ai-provider-keys',
             updates,
         ),
+    getOllamaStatus: () => ipcRenderer.invoke('integrations:ollama-status'),
+    installOllama: () => ipcRenderer.invoke('integrations:ollama-install'),
+    startOllama: () => ipcRenderer.invoke('integrations:ollama-start'),
     onApiState: (callback) =>
         subscribe<ApiStatus>('desktop:api-state', callback),
     onNotification: (callback) =>

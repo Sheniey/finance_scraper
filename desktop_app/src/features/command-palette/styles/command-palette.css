@@ -1,0 +1,527 @@
+
+.command-palette-backdrop {
+    position: fixed;
+    z-index: 14000;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: min(14vh, 118px) 16px 24px;
+    background: rgba(4, 10, 16, 0.58);
+    backdrop-filter: blur(5px);
+}
+
+.command-palette {
+    display: flex;
+    width: min(590px, 100%);
+    max-height: min(74vh, 650px);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 15px;
+    background: var(--ink-deep); /* alt: #11161c */
+    color: #eef1f2;
+    box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.5),
+        inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.command-palette-search {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+    color: #a8b1ba;
+}
+
+.command-palette-search > svg {
+    flex: 0 0 auto;
+    color: #88939d;
+}
+
+.command-palette-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 56px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #f1f3f4;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+}
+
+.command-palette-search input::placeholder {
+    color: #77828c;
+}
+
+.command-palette-search input:focus-visible {
+    outline: 0;
+}
+
+.command-palette kbd {
+    display: inline-grid;
+    min-width: 21px;
+    height: 21px;
+    place-items: center;
+    padding: 0 5px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.045);
+    color: #a6b0b9;
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.command-search-hint {
+    flex: 0 0 auto;
+}
+
+.command-palette-list {
+    min-height: 100px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 6px 8px 9px;
+    scrollbar-color: #36404a transparent;
+    scrollbar-width: thin;
+}
+
+.command-palette-group + .command-palette-group {
+    margin-top: 4px;
+}
+
+.command-group-label {
+    margin: 0;
+    padding: 9px 10px 6px;
+    color: #737f89;
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+}
+
+.command-group-items {
+    display: grid;
+    gap: 2px;
+}
+
+.command-palette-item {
+    display: flex;
+    width: 100%;
+    min-height: 49px;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #e5e8ea;
+    text-align: left;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease;
+}
+
+.command-palette-item:hover,
+.command-palette-item[aria-selected='true'] {
+    border-color: rgba(255, 255, 255, 0.045);
+    background: #1f222e; /* alt: #20262c */
+    color: #fff;
+}
+
+.command-palette-item:focus-visible {
+    outline: 2px solid #64aaa4;
+    outline-offset: -2px;
+}
+
+.command-item-icon {
+    display: grid;
+    width: 22px;
+    flex: 0 0 auto;
+    place-items: center;
+    color: #8c9aa4;
+}
+
+.command-palette-item[aria-selected='true'] .command-item-icon {
+    color: #9ed0ca;
+}
+
+.command-item-copy {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 1px;
+}
+
+.command-item-label {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.command-item-description {
+    overflow: hidden;
+    color: #88939b;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.command-shortcut {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 3px;
+}
+
+.command-empty-state {
+    display: grid;
+    min-height: 104px;
+    place-items: center;
+    color: #8b969f;
+    font-size: 12px;
+}
+
+.command-palette-footer {
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 16px;
+    padding: 0 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+    color: #77828c;
+    font-family: 'Fira Code', monospace;
+    font-size: 9px;
+}
+
+.command-palette-footer > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.command-palette-footer > span > kbd + kbd {
+    margin-left: -3px;
+}
+
+.command-footer-open {
+    margin-left: auto;
+}
+
+.command-dialog-backdrop {
+    position: fixed;
+    z-index: 15000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: clamp(14px, 3vw, 34px);
+    background: rgba(4, 10, 16, 0.62);
+    backdrop-filter: blur(5px);
+}
+
+.command-dialog-panel {
+    width: min(540px, 100%);
+    max-height: min(82vh, 760px);
+    overflow: auto;
+    padding: clamp(20px, 3vw, 28px);
+    border: 1px solid rgba(255, 255, 255, 0.66);
+    border-radius: 17px;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 30px 90px rgba(4, 12, 23, 0.38);
+}
+
+.command-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.command-dialog-header h2 {
+    margin: 3px 0 6px;
+    font-family: 'Geist', sans-serif;
+    font-size: clamp(22px, 3vw, 29px);
+    font-weight: 600;
+    letter-spacing: -0.045em;
+}
+
+.command-dialog-header p:last-child {
+    max-width: 410px;
+    margin: 0;
+    color: #77838d;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.command-dialog-kicker {
+    margin: 0;
+    color: #5a8a85;
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.command-dialog-close {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    color: #687581;
+}
+
+.command-dialog-close:hover {
+    border-color: rgba(36, 122, 119, 0.32);
+    color: var(--ink);
+}
+
+.command-dialog-body .ai-provider-panel {
+    gap: 15px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.command-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding-top: 4px;
+}
+
+.command-language-options {
+    display: grid;
+    gap: 8px;
+}
+
+.command-language-option {
+    display: flex;
+    width: 100%;
+    min-height: 52px;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    border: 1px solid rgba(13, 23, 38, 0.1);
+    border-radius: 10px;
+    background: #fff;
+    text-align: left;
+}
+
+.command-language-option[aria-checked='true'] {
+    border-color: rgba(36, 122, 119, 0.38);
+    background: #f0f8f6;
+}
+
+.command-language-option:focus-visible {
+    outline: 3px solid rgba(36, 122, 119, 0.28);
+    outline-offset: 2px;
+}
+
+.command-language-icon {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--orange-wash);
+    color: var(--orange);
+}
+
+.command-language-code {
+    width: 26px;
+    color: #73808b;
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+}
+
+.command-language-name {
+    flex: 1;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.command-language-check {
+    color: var(--green);
+}
+
+.command-watchlist-form {
+    display: grid;
+    gap: 18px;
+}
+
+.resource-context-menu {
+    position: fixed;
+    z-index: 13000;
+    display: grid;
+    min-width: 226px;
+    max-width: min(280px, calc(100vw - 16px));
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 11px;
+    background: #11161c;
+    color: #e9edef;
+    box-shadow:
+        0 18px 54px rgba(0, 0, 0, 0.44),
+        inset 0 1px rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(16px);
+}
+
+.resource-context-menu button {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 38px;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #dce1e4;
+    font-size: 12px;
+    text-align: left;
+}
+
+.resource-context-menu button > svg {
+    flex: 0 0 auto;
+    color: #8e9ba4;
+}
+
+.resource-context-menu button:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.045);
+    background: #20262c;
+    color: #fff;
+}
+
+.resource-context-menu button:hover:not(:disabled) > svg {
+    color: #a4d3cd;
+}
+
+.resource-context-menu button.danger {
+    color: #f0a39b;
+}
+
+.resource-context-menu button.danger > svg {
+    color: #d8776e;
+}
+
+.resource-context-menu button.danger:hover:not(:disabled) {
+    background: rgba(168, 57, 62, 0.15);
+    color: #ffc1bb;
+}
+
+.resource-context-menu button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+}
+
+.resource-menu-separator {
+    position: absolute;
+    top: -4px;
+    right: 4px;
+    left: 4px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.resource-context-menu button.has-separator {
+    margin-top: 5px;
+}
+
+.ollama-command-content {
+    display: grid;
+    gap: 16px;
+}
+
+.ollama-command-status {
+    display: flex;
+    min-height: 64px;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    border: 1px solid rgba(13, 23, 38, 0.09);
+    border-radius: 11px;
+    background: #fff;
+}
+
+.ollama-command-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 9px;
+    background: var(--orange-wash);
+    color: var(--orange);
+}
+
+.ollama-command-copy {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 2px;
+}
+
+.ollama-command-copy strong {
+    color: var(--ink);
+    font-size: 13px;
+}
+
+.ollama-command-copy small,
+.ollama-command-models {
+    color: #7a8791;
+    font-size: 11px;
+}
+
+.ollama-command-ready {
+    color: var(--green);
+}
+
+.ollama-command-ready-copy {
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ollama-command-models {
+    margin: -7px 0 0;
+    line-height: 1.5;
+}
+
+@media (max-width: 540px) {
+    .command-palette-backdrop {
+        padding: 8vh 10px 12px;
+    }
+
+    .command-palette-footer {
+        gap: 9px;
+        padding: 0 8px;
+        font-size: 8px;
+    }
+
+    .command-palette-footer > span {
+        gap: 3px;
+    }
+
+    .command-item-description {
+        display: none;
+    }
+}

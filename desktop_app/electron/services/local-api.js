@@ -1,4 +1,4 @@
-import { app } from 'electron';
+
 import { spawn } from 'node:child_process';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import net from 'node:net';
@@ -6,9 +6,11 @@ import path from 'node:path';
 
 import {
     getAiProviderStatus,
+    readGoogleOAuthClientId,
     readAiProviderKeys,
     saveAiProviderKeys,
 } from './provider-keys.js';
+import { APP_NAME } from './../config.js';
 
 const STARTUP_TIMEOUT_MS = 90_000;
 const HEALTH_CHECK_INTERVAL_MS = 500;
@@ -104,6 +106,8 @@ export class LocalApiManager {
         this.healthTimer = null;
         this.output = '';
         this.state = 'stopped';
+        this.providerKeyDirectory = null;
+        this.providerKeyDirectoryPromise = null;
     }
 
     getStatus() {
@@ -122,15 +126,73 @@ export class LocalApiManager {
         return command.workingDirectory;
     }
 
+    async #getProviderKeyDirectory() {
+        if (this.providerKeyDirectory) {
+            return this.providerKeyDirectory;
+        }
+        if (this.providerKeyDirectoryPromise) {
+            return this.providerKeyDirectoryPromise;
+        }
+        this.providerKeyDirectoryPromise = this.#resolveProviderKeyDirectory();
+        try {
+            this.providerKeyDirectory = await this.providerKeyDirectoryPromise;
+            return this.providerKeyDirectory;
+        } catch (error) {
+            this.providerKeyDirectoryPromise = null;
+            throw error;
+        }
+    }
+
+    async #resolveProviderKeyDirectory() {
+        const userData = this.app.getPath('userData');
+        const migrationMarker = path.join(
+            userData,
+            'provider-keys-migrated',
+        );
+        try {
+            await access(migrationMarker);
+        } catch (error) {
+            if (error.code !== 'ENOENT') {
+                throw error;
+            }
+
+            const currentKeys = await readAiProviderKeys(userData);
+            if (!Object.values(currentKeys).some(Boolean)) {
+                const workingDirectory = await this.#getWorkingDirectory();
+                if (path.resolve(workingDirectory) !== path.resolve(userData)) {
+                    const legacyKeys = await readAiProviderKeys(
+                        workingDirectory,
+                    );
+                    if (Object.values(legacyKeys).some(Boolean)) {
+                        await saveAiProviderKeys(userData, legacyKeys);
+                    }
+                }
+            }
+            await mkdir(userData, { recursive: true });
+            try {
+                await writeFile(migrationMarker, 'migrated\n', {
+                    encoding: 'utf8',
+                    flag: 'wx',
+                    mode: 0o600,
+                });
+            } catch (error) {
+                if (error.code !== 'EEXIST') {
+                    throw error;
+                }
+            }
+        }
+        return userData;
+    }
+
     async getAiProviderStatus() {
-        const workingDirectory = await this.#getWorkingDirectory();
-        return getAiProviderStatus(workingDirectory);
+        const providerKeyDirectory = await this.#getProviderKeyDirectory();
+        return getAiProviderStatus(providerKeyDirectory);
     }
 
     async saveAiProviderKeys(updates) {
-        const workingDirectory = await this.#getWorkingDirectory();
+        const providerKeyDirectory = await this.#getProviderKeyDirectory();
         const providerStatus = await saveAiProviderKeys(
-            workingDirectory,
+            providerKeyDirectory,
             updates,
         );
         if (this.state !== 'online') {
@@ -154,7 +216,7 @@ export class LocalApiManager {
                 await access(executable);
             } catch (error) {
                 throw new Error(
-                    `Finance Scraper executable was not found: ${executable}`,
+                    `${APP_NAME} executable was not found: ${executable}`,
                     { cause: error },
                 );
             }
@@ -230,14 +292,19 @@ export class LocalApiManager {
             };
         }
         throw new Error(
-            'Finance Scraper executable was not found. Select finance-scraper.exe in Settings.',
+            `${APP_NAME} executable was not found. Select finance-scraper.exe in Settings.`,
         );
     }
 
     async #buildEnvironment(settings, secrets) {
         const userData = this.app.getPath('userData');
         const dataDirectory = path.join(userData, 'data');
-        const providerKeys = await readAiProviderKeys(this.workingDirectory);
+        const providerKeyDirectory = await this.#getProviderKeyDirectory();
+        const providerKeys = await readAiProviderKeys(providerKeyDirectory);
+        const googleClientIdFromEnvironment =
+            process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ?? '';
+        const googleOAuthClientId = googleClientIdFromEnvironment
+            || await readGoogleOAuthClientId(this.workingDirectory);
         await mkdir(dataDirectory, { recursive: true });
         const apiConfigPath = path.join(userData, 'desktop-api.json');
         await writeFile(
@@ -259,7 +326,7 @@ export class LocalApiManager {
             FINANCE_DESKTOP_LOCAL_ONLY: '1',
             FINANCE_API_FOREGROUND: '1',
             FINANCE_DESKTOP_CONTROL_TOKEN: secrets.controlToken,
-            GOOGLE_OAUTH_CLIENT_ID: settings.googleClientId,
+            GOOGLE_OAUTH_CLIENT_ID: googleOAuthClientId,
             JWT_SECRET_KEY: secrets.jwtSecretKey,
             OPENAI_API_KEY: providerKeys.openai ?? '',
             CHATGPT_API_KEY: providerKeys.openai ?? '',
@@ -333,7 +400,7 @@ export class LocalApiManager {
             pidFile,
         ];
         console.info(
-            'Starting Finance Scraper API with:',
+            `Starting ${APP_NAME} API with:`,
             this.executable,
             ...args,
             'desktop-local-only=',
@@ -376,7 +443,7 @@ export class LocalApiManager {
                     child.signalCode !== null
                 ) {
                     throw new Error(
-                        `Finance Scraper API stopped during startup.\n${this.output}`,
+                        `${APP_NAME} API stopped during startup.\n${this.output}`,
                     );
                 }
                 try {
@@ -431,7 +498,7 @@ export class LocalApiManager {
             }
 
             throw new Error(
-                `Finance Scraper API did not become ready in time.\n${this.output}`,
+                `${APP_NAME} API did not become ready in time.\n${this.output}`,
             );
         } catch (error) {
             try {
@@ -631,7 +698,7 @@ export class LocalApiManager {
             }
         }
         if (!serverStopped) {
-            throw new Error('Finance Scraper API did not stop after api close.');
+            throw new Error(`${APP_NAME} API did not stop after api close.`);
         }
         if (child && child.exitCode === null) {
             child.kill();

@@ -1,0 +1,32 @@
+
+const messages = {
+    'auth.login': 'Sign in',
+    'auth.register': 'Create account',
+    'auth.loginTitle': 'Welcome back! Nice to see you again',
+    'auth.registerTitle': 'Start with intention',
+    'auth.loginCopy': 'Please sign in to access your research workspace.',
+    'auth.registerCopy': 'Create a private profile for your reports.',
+    'auth.name': 'Name',
+    'auth.email': 'Email address',
+    'auth.password': 'Password',
+    'auth.confirmPassword': 'Confirm password',
+    'auth.loginAction': 'Enter my workspace',
+    'auth.registerAction': 'Create my account',
+    'auth.toRegister': 'New here?',
+    'auth.toLogin': 'Already have an account?',
+    'auth.createAccount': 'Create account',
+    'auth.backToLogin': 'Sign in',
+    'auth.passwordMismatch': 'Passwords do not match.',
+    'auth.registered': 'Account created. You can sign in now.',
+    'auth.apiRequired': 'Wait for the app to finish getting ready, then try again.',
+    'auth.chooseExecutable': 'Locate finance-scraper.exe',
+    'auth.footer': 'Information for research; not financial advice.',
+    'auth.showPassword': 'Show password',
+    'auth.hidePassword': 'Hide password',
+    'auth.signedOut': 'Signed out. Your schedules remain active.',
+    'error.invalidCredentials': 'The email or password is incorrect.',
+    'error.duplicateAccount': 'A local account already exists for that email.',
+    'error.rateLimit': 'Too many attempts. Wait a moment and try again.',
+} as const;
+
+export default messages;

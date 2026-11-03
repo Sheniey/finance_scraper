@@ -1,0 +1,32 @@
+
+const messages = {
+    'nav.portfolio': 'Portefeuille',
+    'portfolio.title': 'Votre portefeuille, avec du contexte.',
+    'portfolio.copy': 'Enregistrez vos achats et ventes pour que chaque analyse par IA tienne compte de vos positions réelles.',
+    'portfolio.positions': 'Positions ouvertes',
+    'portfolio.positionsHint': 'Actions dont le solde est non nul',
+    'portfolio.tradesCount': 'Opérations enregistrées',
+    'portfolio.aiContext': 'Ce contexte influence les explications de l’IA.',
+    'portfolio.newTrade': 'NOUVELLE OPÉRATION',
+    'portfolio.recordTrade': 'Enregistrer un achat ou une vente',
+    'portfolio.action': 'Opération',
+    'portfolio.buy': 'Acheter',
+    'portfolio.sell': 'Vendre',
+    'portfolio.ticker': 'Ticker',
+    'portfolio.region': 'Région',
+    'portfolio.currency': 'Devise',
+    'portfolio.quantity': 'Quantité d’actions',
+    'portfolio.price': 'Prix par action',
+    'portfolio.date': 'Date',
+    'portfolio.saveTrade': 'Enregistrer l’opération',
+    'portfolio.saved': 'Opération enregistrée dans votre portefeuille.',
+    'portfolio.tickerRequired': 'Saisissez un ticker valide.',
+    'portfolio.priceInvalid': 'Le prix doit être supérieur à zéro.',
+    'portfolio.quantityInvalid': 'La quantité doit être un nombre entier positif.',
+    'portfolio.activity': 'ACTIVITÉ',
+    'portfolio.tradeHistory': 'Historique des opérations',
+    'portfolio.empty': 'Aucune opération pour le moment.',
+    'portfolio.emptyCopy': 'Enregistrez un achat ou une vente pour ajouter du contexte à vos analyses.',
+} as const;
+
+export default messages;

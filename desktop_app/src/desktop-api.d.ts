@@ -1,3 +1,4 @@
+
 import type { DesktopBridge } from '#/types.js';
 
 declare global {

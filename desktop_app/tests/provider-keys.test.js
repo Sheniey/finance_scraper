@@ -6,6 +6,7 @@ import test from 'node:test';
 
 import {
     getAiProviderStatus,
+    readGoogleOAuthClientId,
     readAiProviderKeys,
     saveAiProviderKeys,
 } from '../electron/services/provider-keys.js';
@@ -17,7 +18,7 @@ test('provider key updates preserve unrelated .env values', async (context) => {
     context.after(() => rm(directory, { recursive: true, force: true }));
     await writeFile(
         path.join(directory, '.env'),
-        'EMAIL_ADDRESS=private@example.com\nOPENAI_API_KEY=old-key\nOTHER_VALUE=keep\n',
+        'UNRELATED_SETTING=keep-this\nOPENAI_API_KEY=old-key\nOTHER_VALUE=keep\n',
         'utf8',
     );
 
@@ -36,7 +37,7 @@ test('provider key updates preserve unrelated .env values', async (context) => {
         deepseek: 'deep-key',
     });
     const contents = await readFile(path.join(directory, '.env'), 'utf8');
-    assert.match(contents, /EMAIL_ADDRESS=private@example\.com/);
+    assert.match(contents, /UNRELATED_SETTING=keep-this/);
     assert.match(contents, /OTHER_VALUE=keep/);
     assert.match(contents, /OPENAI_API_KEY="new-key"/);
 });
@@ -78,4 +79,21 @@ test('provider key updates reject invalid keys without writing them', async (con
         deepseek: false,
         anthropic: false,
     });
+});
+
+test('publisher Google OAuth client ID is read from the local runtime environment', async (context) => {
+    const directory = await mkdtemp(
+        path.join(os.tmpdir(), 'finance-scraper-oauth-config-'),
+    );
+    context.after(() => rm(directory, { recursive: true, force: true }));
+    await writeFile(
+        path.join(directory, '.env'),
+        'GOOGLE_OAUTH_CLIENT_ID="1234567890-client.apps.googleusercontent.com"\n',
+        'utf8',
+    );
+
+    assert.equal(
+        await readGoogleOAuthClientId(directory),
+        '1234567890-client.apps.googleusercontent.com',
+    );
 });

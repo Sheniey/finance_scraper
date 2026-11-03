@@ -1,3 +1,4 @@
+
 import {
     app,
     BrowserWindow,
@@ -9,35 +10,39 @@ import path from 'node:path';
 
 import { FinanceApiClient } from './services/api-client.js';
 import {
+    getOllamaStatus,
+    installOllama,
+    startOllama,
+} from './services/ollama-manager.js';
+import {
     readAppSettings,
     writeAppSettings,
 } from './services/app-settings.js';
 import { LocalApiManager } from './services/local-api.js';
 import { WindowsTaskScheduler } from './services/task-scheduler.js';
 import { getInstallationSecrets } from './services/secure-vault.js';
+import {
+    APP_NAME,
+    API_BACKEND_URL,
+    USER_APPDATA_PATH,
+    SESSION_DATA_PATH,
+} from './config.js';
 
-app.setName('Finance Scraper');
-const isolatedUserDataPath =
-    !app.isPackaged && process.env.FINANCE_DESKTOP_USER_DATA;
-const financeScraperUserData = isolatedUserDataPath
-    ? path.resolve(isolatedUserDataPath)
-    : path.join(app.getPath('appData'), 'Finance Scraper');
-app.setPath('userData', financeScraperUserData);
-app.setPath('sessionData', path.join(financeScraperUserData, 'Session Data'));
+
+app.setName(APP_NAME);
+app.setPath('userData', USER_APPDATA_PATH);
+app.setPath('sessionData', SESSION_DATA_PATH);
+
+
 
 const SINGLE_INSTANCE_LOCK = app.requestSingleInstanceLock();
 const BACKGROUND_SCHEDULE_PREFIX = '--scheduled-task=';
-const TRUSTED_DEV_ORIGINS = new Set([
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-]);
 
 let mainWindow = null;
 let appSettings = {
     locale: 'es',
     reportRetentionSeconds: 15 * 24 * 60 * 60,
     workerMaxConcurrency: 4,
-    googleClientId: '',
     financeScraperExecutable: '',
     registeredScheduleIds: [],
 };
@@ -52,12 +57,12 @@ let ipcHandlersRegistered = false;
 const activeScheduledRuns = new Set();
 const pendingSecondInstanceArguments = [];
 
+
 function publicSettings(settings) {
     return {
         locale: settings.locale,
         reportRetentionSeconds: settings.reportRetentionSeconds,
         workerMaxConcurrency: settings.workerMaxConcurrency,
-        googleClientId: settings.googleClientId,
         financeScraperExecutable: settings.financeScraperExecutable,
     };
 }
@@ -76,7 +81,7 @@ function assertTrustedRenderer(event) {
         }
         return;
     }
-    if (!TRUSTED_DEV_ORIGINS.has(new URL(senderUrl).origin)) {
+    if (!API_BACKEND_URL.has(new URL(senderUrl).origin)) {
         throw new Error('Untrusted renderer origin.');
     }
 }
@@ -236,7 +241,7 @@ function createWindow() {
     mainWindow.webContents.on('will-navigate', (event, url) => {
         const trusted = app.isPackaged
             ? url.startsWith('file://')
-            : TRUSTED_DEV_ORIGINS.has(new URL(url).origin);
+            : API_BACKEND_URL.has(new URL(url).origin);
         if (!trusted) {
             event.preventDefault();
         }
@@ -285,7 +290,7 @@ async function openReport(reportId) {
     const { content } = await requireApiClient().downloadReport(reportId);
     const profileDirectory = path.join(
         app.getPath('temp'),
-        'Finance Scraper',
+        APP_NAME,
         profileId,
     );
     const filename = `${reportId}-${safeFilename}`;
@@ -309,7 +314,6 @@ async function saveSettings(patch) {
         'locale',
         'reportRetentionSeconds',
         'workerMaxConcurrency',
-        'googleClientId',
         'financeScraperExecutable',
     ]);
     for (const key of Object.keys(patch)) {
@@ -325,7 +329,6 @@ async function saveSettings(patch) {
     const restartRequired = [
         'reportRetentionSeconds',
         'workerMaxConcurrency',
-        'googleClientId',
         'financeScraperExecutable',
     ].some((key) => nextSettings[key] !== previousSettings[key]);
     appSettings = nextSettings;
@@ -375,7 +378,7 @@ function getBootstrap() {
 function requireApiClient() {
     if (!apiClient) {
         throw new Error(
-            bootstrapError || 'Finance Scraper API is not available.',
+            bootstrapError || `${APP_NAME} API is not available.`,
         );
     }
     return apiClient;
@@ -401,12 +404,6 @@ function registerIpcHandlers() {
         const profile = await requireApiClient().login(credentials);
         return profile;
     });
-    registerHandler('auth:google-login', async () => {
-        const client = requireApiClient();
-        const flow = await client.startGoogleLogin();
-        await shell.openExternal(flow.authorization_url);
-        return client.waitForGoogleLogin(flow.flow_id);
-    });
     registerHandler('auth:register', async (credentials) =>
         requireApiClient().register(credentials),
     );
@@ -430,6 +427,57 @@ function registerIpcHandlers() {
     );
     registerHandler('reports:delete', async (reportId) =>
         requireApiClient().deleteReport(reportId),
+    );
+    registerHandler('reports:export', async (reportId) => {
+        const client = requireApiClient();
+        const report = await client.getReport(reportId);
+        if (report.status !== 'COMPLETED' || !report.download_url) {
+            throw new Error('This report is not ready to export yet.');
+        }
+        const extension = report.report_format.toLowerCase();
+        if (!['pdf', 'json', 'yaml', 'txt', 'xlsx'].includes(extension)) {
+            throw new Error('The report format is not supported by the desktop app.');
+        }
+        const safeFilename = path
+            .basename(report.filename)
+            .replace(/[^A-Za-z0-9._ -]/g, '_');
+        if (
+            !safeFilename ||
+            path.extname(safeFilename).toLowerCase() !== `.${extension}`
+        ) {
+            throw new Error('The report filename is invalid.');
+        }
+
+        const options = {
+            title: 'Export report',
+            defaultPath: path.join(app.getPath('downloads'), safeFilename),
+            filters: [
+                {
+                    name: `${extension.toUpperCase()} report`,
+                    extensions: [extension],
+                },
+            ],
+        };
+        const result = mainWindow
+            ? await dialog.showSaveDialog(mainWindow, options)
+            : await dialog.showSaveDialog(options);
+        if (result.canceled || !result.filePath) {
+            return null;
+        }
+        if (path.extname(result.filePath).toLowerCase() !== `.${extension}`) {
+            throw new Error(`Choose a .${extension} file name to export this report.`);
+        }
+
+        const { content } = await client.downloadReport(reportId);
+        const { writeFile } = await import('node:fs/promises');
+        await writeFile(result.filePath, content, { mode: 0o600 });
+        return { path: result.filePath };
+    });
+    registerHandler('portfolio:get', async () =>
+        requireApiClient().getPortfolio(),
+    );
+    registerHandler('portfolio:trade', async (request) =>
+        requireApiClient().createPortfolioTrade(request),
     );
     registerHandler('google:status', async () =>
         requireApiClient().getGoogleStatus(),
@@ -518,11 +566,20 @@ function registerIpcHandlers() {
         }
         return apiManager.saveAiProviderKeys(updates);
     });
+    registerHandler('integrations:ollama-status', async () =>
+        getOllamaStatus(),
+    );
+    registerHandler('integrations:ollama-install', async () =>
+        installOllama(),
+    );
+    registerHandler('integrations:ollama-start', async () =>
+        startOllama(),
+    );
     registerHandler('settings:choose-executable', async () => {
         const options = {
-            title: 'Choose finance-scraper.exe',
+            title: `Choose ${APP_NAME_CODING_2}.exe`,
             properties: ['openFile'],
-            filters: [{ name: 'Finance Scraper', extensions: ['exe'] }],
+            filters: [{ name: APP_NAME, extensions: ['exe'] }],
         };
         const result = mainWindow
             ? await dialog.showOpenDialog(mainWindow, options)
@@ -531,14 +588,15 @@ function registerIpcHandlers() {
         if (result.canceled || !selectedPath) {
             return null;
         }
-        if (path.basename(selectedPath).toLowerCase() !== 'finance-scraper.exe') {
-            throw new Error('Choose the finance-scraper.exe application.');
+        if (path.basename(selectedPath).toLowerCase() !== `${APP_NAME_CODING_2}.exe`) {
+            throw new Error(`Choose the ${APP_NAME_CODING_2}.exe application.`);
         }
         return selectedPath;
     });
 }
 
 async function initializeRuntime() {
+    await loadPackagedGoogleOAuthClientId();
     installationSecrets ??= await getInstallationSecrets();
     appSettings = await readAppSettings();
     if (!apiManager) {
@@ -556,6 +614,42 @@ async function initializeRuntime() {
     bootstrapError = null;
 }
 
+async function loadPackagedGoogleOAuthClientId() {
+    if (process.env.GOOGLE_OAUTH_CLIENT_ID?.trim()) {
+        return;
+    }
+    const configPath = app.isPackaged
+        ? path.join(process.resourcesPath, 'google-oauth-client.json')
+        : path.join(app.getAppPath(), 'electron', 'google-oauth-client.json');
+    let contents;
+    try {
+        const { readFile } = await import('node:fs/promises');
+        contents = await readFile(configPath, 'utf8');
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return;
+        }
+        throw error;
+    }
+    let configuration;
+    try {
+        configuration = JSON.parse(contents);
+    } catch (error) {
+        throw new Error(
+            'The packaged Google OAuth configuration is invalid.',
+            { cause: error },
+        );
+    }
+    if (
+        !configuration ||
+        typeof configuration !== 'object' ||
+        typeof configuration.clientId !== 'string'
+    ) {
+        throw new Error('The packaged Google OAuth configuration is invalid.');
+    }
+    process.env.GOOGLE_OAUTH_CLIENT_ID = configuration.clientId.trim();
+}
+
 async function initializeApplication() {
     const backgroundCommand = parseBackgroundCommand(process.argv);
     registerIpcHandlers();
@@ -563,7 +657,7 @@ async function initializeApplication() {
         await initializeRuntime();
     } catch (error) {
         bootstrapError = error.message;
-        console.error('Finance Scraper API could not start:', error.message);
+        console.error(`${APP_NAME} API could not start: ${error.message}`);
     }
 
     try {
@@ -595,7 +689,7 @@ async function initializeApplication() {
         }
     } catch (error) {
         bootstrapError = error.message;
-        console.error('Finance Scraper desktop initialization failed:', error.message);
+        console.error(`${APP_NAME} desktop initialization failed: ${error.message}`);
         if (backgroundCommand) {
             app.exit(1);
             return;
@@ -669,7 +763,7 @@ if (!SINGLE_INSTANCE_LOCK) {
         isShuttingDown = true;
         shutdownApplication()
             .catch((error) => {
-                console.error('Finance Scraper shutdown failed:', error.message);
+                console.error(`${APP_NAME} shutdown failed: ${error.message}`);
             })
             .finally(() => {
                 shutdownComplete = true;

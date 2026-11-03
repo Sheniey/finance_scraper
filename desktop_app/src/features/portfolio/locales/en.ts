@@ -1,0 +1,32 @@
+
+const messages = {
+    'nav.portfolio': 'Portfolio',
+    'portfolio.title': 'Your portfolio, with context.',
+    'portfolio.copy': 'Record buys and sells so every AI analysis can account for your real positions.',
+    'portfolio.positions': 'Open positions',
+    'portfolio.positionsHint': 'Stocks with a non-zero balance',
+    'portfolio.tradesCount': 'Trades recorded',
+    'portfolio.aiContext': 'This context influences AI explanations.',
+    'portfolio.newTrade': 'NEW TRADE',
+    'portfolio.recordTrade': 'Record a buy or sell',
+    'portfolio.action': 'Action',
+    'portfolio.buy': 'Buy',
+    'portfolio.sell': 'Sell',
+    'portfolio.ticker': 'Ticker',
+    'portfolio.region': 'Region',
+    'portfolio.currency': 'Currency',
+    'portfolio.quantity': 'Share quantity',
+    'portfolio.price': 'Price per share',
+    'portfolio.date': 'Date',
+    'portfolio.saveTrade': 'Save trade',
+    'portfolio.saved': 'Trade saved to your portfolio.',
+    'portfolio.tickerRequired': 'Enter a valid ticker.',
+    'portfolio.priceInvalid': 'Price must be greater than zero.',
+    'portfolio.quantityInvalid': 'Quantity must be a positive whole number.',
+    'portfolio.activity': 'ACTIVITY',
+    'portfolio.tradeHistory': 'Trade history',
+    'portfolio.empty': 'There are no trades yet.',
+    'portfolio.emptyCopy': 'Record a buy or sell to add context to your analyses.',
+} as const;
+
+export default messages;

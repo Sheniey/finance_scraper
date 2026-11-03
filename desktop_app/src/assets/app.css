@@ -1,0 +1,12 @@
+
+@import '../features/application/styles/main.css';
+@import '../features/auth/styles/main.css';
+@import '../features/ai-providers/styles/main.css';
+@import '../features/workspace/styles/main.css';
+@import '../features/reports/styles/main.css';
+@import '../features/analysis/styles/main.css';
+@import '../features/watchlist/styles/main.css';
+@import '../features/portfolio/styles/main.css';
+@import '../features/schedules/styles/main.css';
+@import '../features/settings/styles/main.css';
+@import '../features/common/styles/main.css';

@@ -1,0 +1,32 @@
+
+const messages = {
+    'auth.login': 'Se connecter',
+    'auth.register': 'Créer un compte',
+    'auth.loginTitle': 'Heureux de vous revoir !',
+    'auth.registerTitle': 'Commencez avec intention',
+    'auth.loginCopy': 'Connectez-vous pour accéder à votre espace de recherche.',
+    'auth.registerCopy': 'Créez un profil privé pour vos rapports.',
+    'auth.name': 'Nom',
+    'auth.email': 'Adresse e-mail',
+    'auth.password': 'Mot de passe',
+    'auth.confirmPassword': 'Confirmer le mot de passe',
+    'auth.loginAction': 'Accéder à mon espace',
+    'auth.registerAction': 'Créer mon compte',
+    'auth.toRegister': 'Nouveau ici ?',
+    'auth.toLogin': 'Vous avez déjà un compte ?',
+    'auth.createAccount': 'Créer un compte',
+    'auth.backToLogin': 'Se connecter',
+    'auth.passwordMismatch': 'Les mots de passe ne correspondent pas.',
+    'auth.registered': 'Compte créé. Vous pouvez maintenant vous connecter.',
+    'auth.apiRequired': 'Attendez que l’application termine de se préparer, puis réessayez.',
+    'auth.chooseExecutable': 'Localiser finance-scraper.exe',
+    'auth.footer': 'Informations à des fins de recherche ; ceci ne constitue pas un conseil financier.',
+    'auth.showPassword': 'Afficher le mot de passe',
+    'auth.hidePassword': 'Masquer le mot de passe',
+    'auth.signedOut': 'Déconnexion réussie. Vos planifications restent actives.',
+    'error.invalidCredentials': 'L’adresse e-mail ou le mot de passe est incorrect.',
+    'error.duplicateAccount': 'Un compte local existe déjà pour cette adresse e-mail.',
+    'error.rateLimit': 'Trop de tentatives. Patientez un instant, puis réessayez.',
+} as const;
+
+export default messages;
