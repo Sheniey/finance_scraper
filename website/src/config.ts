@@ -1,4 +1,9 @@
 
+import {
+    BINARY_CURRENT_VERSION as EnvBinaryCurrentVersion,
+    BINARY_DOWNLOAD_URL as EnvBinaryDownloadUrl
+} from 'astro:env/client';
+
 export const APP_NAME = {
     fullname: 'Finance Scraper',
     styled: 'finance_scraper',
@@ -42,7 +47,8 @@ export const SITE = {
     repo: 'https://github.com/Sheniey/finance_scraper',
 } as const;
 
-export const BINARY_CURRENT_VERSION = '0.1.0';
+export const BINARY_CURRENT_VERSION = EnvBinaryCurrentVersion || '0.1.0';
+export const BINARY_DOWNLOAD_URL = EnvBinaryDownloadUrl?.replace('{baseUrl}', import.meta.env.BASE_URL) || '/';
 export const BINARY_INSTALLERS = {
     'x64': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x64.exe`,
     'x86': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x86.exe`,

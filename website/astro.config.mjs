@@ -20,10 +20,10 @@ export default defineConfig({
 			DB_URI: envField.string({ context: 'server', access: 'secret', optional: false }),
 			DB_TOKEN: envField.string({ context: 'server', access: 'secret', optional: false }),
 			DB_TYPE: envField.string({ context: 'server', access: 'secret', optional: true, default: 'sqlite' }),
-			DB_PROVIDER: envField.string({ 'context': 'server', access: 'secret', optional: true }),
+			DB_PROVIDER: envField.string({ context: 'server', access: 'secret', optional: true }),
 
-			BINARY_DOWNLOAD_URL: envField.string({ context: 'server', access: 'public', optional: true, default: '/' }),
-			BINARY_CURRENT_VERSION: envField.string({ context: 'server', access: 'public', optional: true })
+			BINARY_DOWNLOAD_URL: envField.string({ context: 'client', access: 'public', optional: true, default: '/' }),
+			BINARY_CURRENT_VERSION: envField.string({ context: 'client', access: 'public', optional: true })
 		}
 	}
 })
