@@ -101,6 +101,8 @@
 @theme {
     --color-primary: #0D1726;
     --color-accent: #FF6D00;
+    --color-accent-secondary: #FF7D1A;
+    --color-accent-tertiary: #FFD0AD;
 
     --color-background-light: #F5F5F5;
     --color-background-dark: #0A0A0A;
@@ -312,4 +314,15 @@ body {
     body {
         @apply bg-background text-foreground;
     }
+}
+
+#site-header .site-header-actions [data-language-menu] > summary,
+#site-header .site-header-actions > [data-theme-toggle] {
+    color: inherit;
+}
+
+#site-header .site-header-actions [data-language-menu] > summary:hover,
+#site-header .site-header-actions > [data-theme-toggle]:hover {
+    background-color: color-mix(in srgb, currentColor 5%, transparent);
+    color: inherit;
 }

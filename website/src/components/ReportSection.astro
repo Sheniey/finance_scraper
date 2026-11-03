@@ -21,7 +21,7 @@ const reportPoints: Mnemonic[] = [
 <Section
 	id='reports'
 	ariaLabelledby='report-title'
-	class='overflow-hidden bg-primary text-primary-foreground'
+	class='overflow-hidden bg-surface-light text-foreground dark:bg-background-dark'
 	containerClass='grid gap-14 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:gap-20'
 >
 	<div>
@@ -31,14 +31,14 @@ const reportPoints: Mnemonic[] = [
 			>
 				{t({ mnemonic: 'report.title' })}
 			</h2>
-			<p class='mt-6 max-w-xl text-base leading-7 text-white/68 sm:text-lg sm:leading-8'>
+			<p class='mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8'>
 				{t({ mnemonic: 'report.description' })}
 			</p>
 
 			<ul class='mt-8 grid gap-x-6 gap-y-3 sm:grid-cols-2'>
 				{
 					reportPoints.map((mnemonic) => (
-						<li class='flex items-center gap-3 text-sm text-white/80'>
+						<li class='flex items-center gap-3 text-sm text-foreground/80'>
 							<span class='grid size-5 shrink-0 place-items-center rounded-full border border-[#ffab76]/45 text-[0.6rem] text-[#ffab76]'>
 								✓
 							</span>
@@ -48,7 +48,7 @@ const reportPoints: Mnemonic[] = [
 				}
 			</ul>
 
-			<p class='mt-8 max-w-lg border-l border-[#ffab76]/55 pl-4 text-xs leading-5 text-white/48'>
+			<p class='mt-8 max-w-lg border-l border-accent/55 pl-4 text-xs leading-5 text-muted-foreground'>
 				{t({ mnemonic: 'report.small_note' })}
 			</p>
 		</div>
