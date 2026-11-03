@@ -1,0 +1,32 @@
+
+const messages = {
+    'auth.signedOut': 'Sesión cerrada. Tus programaciones permanecen activas.',
+    'auth.login': 'Iniciar sesión',
+    'auth.register': 'Crear cuenta',
+    'auth.loginTitle': 'Bienvenido de nuevo!',
+    'auth.registerTitle': 'Le damos la bienvenida!',
+    'auth.loginCopy': 'Por favor, inicie sesión para acceder a su espacio de investigación.',
+    'auth.registerCopy': 'Cree un perfil para guardar sus reportes generados.',
+    'auth.name': 'Nombre',
+    'auth.email': 'Correo electrónico',
+    'auth.password': 'Contraseña',
+    'auth.confirmPassword': 'Confirmar contraseña',
+    'auth.loginAction': 'Entrar a su panel',
+    'auth.registerAction': 'Crear mi cuenta',
+    'auth.toRegister': '¿Aún no tienes una cuenta?',
+    'auth.toLogin': '¿Ya tienes una cuenta?',
+    'auth.createAccount': 'Crear cuenta',
+    'auth.backToLogin': 'Iniciar sesión',
+    'auth.passwordMismatch': 'Las contraseñas no coinciden.',
+    'auth.registered': 'Cuenta creada. Ahora puedes iniciar sesión.',
+    'auth.apiRequired': 'Espera a que la aplicación termine de prepararse y vuelve a intentarlo.',
+    'auth.chooseExecutable': 'Buscar finance-scraper.exe',
+    'auth.footer': 'Información para investigación; no es asesoría financiera.',
+    'auth.showPassword': 'Mostrar contraseña',
+    'auth.hidePassword': 'Ocultar contraseña',
+    'error.invalidCredentials': 'El correo o la contraseña no son correctos.',
+    'error.duplicateAccount': 'Ya existe una cuenta local con ese correo.',
+    'error.rateLimit': 'Demasiados intentos. Espera un momento y vuelve a probar.',
+} as const;
+
+export default messages;

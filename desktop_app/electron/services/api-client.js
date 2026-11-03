@@ -1,3 +1,8 @@
+
+import { getLocaleMetadata } from '../../shared/locales.js';
+import { APP_NAME } from '../config.js';
+
+
 class ApiRequestError extends Error {
     constructor(message, status, code) {
         super(message);
@@ -22,10 +27,6 @@ async function parseResponse(response) {
     }
 }
 
-function delay(milliseconds) {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
 export class FinanceApiClient {
     constructor(apiManager) {
         this.api = apiManager;
@@ -44,7 +45,7 @@ export class FinanceApiClient {
         if (auth) {
             if (!this.session?.accessToken) {
                 throw new ApiRequestError(
-                    'Sign in to Finance Scraper to continue.',
+                    `Sign in to ${APP_NAME} to continue.`,
                     401,
                     'SESSION_REQUIRED',
                 );
@@ -72,7 +73,7 @@ export class FinanceApiClient {
         if (!this.session?.refreshToken) {
             this.session = null;
             throw new ApiRequestError(
-                'Your Finance Scraper session has expired. Sign in again.',
+                `Your ${APP_NAME} session has expired. Sign in again.`,
                 401,
                 'SESSION_EXPIRED',
             );
@@ -97,7 +98,7 @@ export class FinanceApiClient {
     async #ensureFreshAccessToken() {
         if (!this.session) {
             throw new ApiRequestError(
-                'Sign in to Finance Scraper to continue.',
+                `Sign in to ${APP_NAME} to continue.`,
                 401,
                 'SESSION_REQUIRED',
             );
@@ -131,52 +132,6 @@ export class FinanceApiClient {
         return this.#completeSession(pair);
     }
 
-    async startGoogleLogin() {
-        return this.request('/auth/google/authorize', {
-            method: 'POST',
-            internal: true,
-        });
-    }
-
-    async getGoogleLoginFlow(flowId) {
-        return this.request(
-            `/auth/google/flow/${encodeURIComponent(flowId)}`,
-            { internal: true },
-        );
-    }
-
-    async waitForGoogleLogin(flowId) {
-        const deadline = Date.now() + 10 * 60 * 1_000;
-        while (Date.now() < deadline) {
-            const flow = await this.getGoogleLoginFlow(flowId);
-            if (flow.status === 'completed') {
-                return this.loginWithGoogle(flowId);
-            }
-            if (flow.status === 'failed') {
-                throw new ApiRequestError(
-                    'Google sign-in could not be completed. Try again.',
-                    400,
-                    'GOOGLE_SIGNIN_FAILED',
-                );
-            }
-            await delay(750);
-        }
-        throw new ApiRequestError(
-            'Google sign-in timed out. Try again.',
-            408,
-            'GOOGLE_SIGNIN_TIMEOUT',
-        );
-    }
-
-    async loginWithGoogle(flowId) {
-        const pair = await this.request('/auth/google/login', {
-            method: 'POST',
-            body: { flow_id: flowId },
-            internal: true,
-        });
-        return this.#completeSession(pair);
-    }
-
     async #completeSession(pair) {
         this.session = {
             accessToken: pair.access_token,
@@ -205,7 +160,7 @@ export class FinanceApiClient {
                     password,
                     language: {
                         code: language,
-                        name: language === 'en' ? 'English' : 'Español',
+                        name: getLocaleMetadata(language).name,
                         style: 'friendly',
                     },
                 },
@@ -305,6 +260,18 @@ export class FinanceApiClient {
             `/reports/${encodeURIComponent(reportId)}`,
             { method: 'DELETE', auth: true },
         );
+    }
+
+    getPortfolio() {
+        return this.request('/portfolio/me', { auth: true });
+    }
+
+    createPortfolioTrade(request) {
+        return this.request('/portfolio/me/trades', {
+            method: 'POST',
+            auth: true,
+            body: request,
+        });
     }
 
     getGoogleStatus() {

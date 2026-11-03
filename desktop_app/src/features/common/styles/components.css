@@ -1,0 +1,82 @@
+.brand-mark,
+.sidebar-brand-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-mark img,
+.sidebar-brand-mark img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.eyebrow,
+.field-kicker,
+.nav-section-label,
+.art-label,
+.side-card-index,
+.welcome-coordinate {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 12px;
+    color: #b6d7d3;
+}
+
+.eyebrow.dark {
+    color: #9b714f;
+}
+
+.field-kicker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 5px;
+    color: #557b77;
+    letter-spacing: 0.08em;
+}
+
+.signal-mark {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 0 4px rgba(36, 122, 119, 0.13);
+}
+
+.panel-symbol,
+.metric-icon,
+.schedule-icon,
+.empty-mark {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 11px;
+}
+
+.panel-heading-row h2,
+.google-copy h2,
+.analysis-side-card h2 {
+    margin: 0;
+    font-family: 'Geist', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+}

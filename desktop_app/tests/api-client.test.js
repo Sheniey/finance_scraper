@@ -25,13 +25,6 @@ class FakeApiManager {
                 expires_in: 900,
             });
         }
-        if (endpoint === '/auth/google/login') {
-            return jsonResponse({
-                access_token: 'google-access',
-                refresh_token: 'google-refresh',
-                expires_in: 900,
-            });
-        }
         if (endpoint === '/auth/refresh') {
             return jsonResponse({
                 access_token: 'access-two',
@@ -52,6 +45,15 @@ class FakeApiManager {
         }
         if (endpoint === '/reports/me') {
             return jsonResponse({ items: [], pagination: { total: 0 } });
+        }
+        if (endpoint === '/portfolio/me') {
+            return jsonResponse({ success: true, portfolio: [] });
+        }
+        if (endpoint === '/portfolio/me/trades') {
+            return jsonResponse(
+                { success: true, portfolio: [] },
+                201,
+            );
         }
         if (endpoint === '/auth/logout') {
             return jsonResponse({ success: true });
@@ -135,20 +137,33 @@ test('local registration uses the internal bridge and does not expose session to
     assert.equal(apiManager.calls[0].options.internal, true);
 });
 
-test('Google sign-in exchanges a flow for a main-process session', async () => {
+test('portfolio reads and trades use the authenticated account API', async () => {
     const apiManager = new FakeApiManager();
     const client = new FinanceApiClient(apiManager);
-
-    const profile = await client.loginWithGoogle('verified-google-flow');
-
-    assert.equal(profile.id, 'account-one');
-    assert.equal(client.getProfile().email, 'owner@example.com');
-    const googleLoginRequest = apiManager.calls.find(
-        (call) => call.endpoint === '/auth/google/login',
-    );
-    assert.deepEqual(googleLoginRequest.options.body, {
-        flow_id: 'verified-google-flow',
+    await client.login({
+        email: 'owner@example.com',
+        password: 'password',
     });
-    assert.equal(googleLoginRequest.options.internal, true);
-    assert.equal(apiManager.calls.at(-1).endpoint, '/accounts/me');
+
+    const trade = {
+        action: 'BUY',
+        ticker: 'AAPL',
+        region: 'US',
+        currency: 'USD',
+        price: 184.5,
+        quantity: 2,
+        date: '2026-10-18',
+    };
+    await client.getPortfolio();
+    await client.createPortfolioTrade(trade);
+
+    const portfolioRead = apiManager.calls.find(
+        (call) => call.endpoint === '/portfolio/me',
+    );
+    const tradeWrite = apiManager.calls.find(
+        (call) => call.endpoint === '/portfolio/me/trades',
+    );
+    assert.equal(portfolioRead.options.headers.Authorization, 'Bearer access-one');
+    assert.equal(tradeWrite.options.headers.Authorization, 'Bearer access-one');
+    assert.deepEqual(tradeWrite.options.body, trade);
 });

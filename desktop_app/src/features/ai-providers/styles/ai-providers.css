@@ -1,0 +1,131 @@
+.reports-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.ai-provider-panel {
+    margin-bottom: 2px;
+}
+
+.ollama-panel {
+    gap: 15px;
+}
+
+.ollama-status {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: #7a858e;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.ollama-status .health-dot {
+    width: 7px;
+    height: 7px;
+    background: #a7afb6;
+}
+
+.ollama-status.running {
+    border-color: rgba(64, 144, 105, 0.18);
+    background: rgba(64, 144, 105, 0.055);
+    color: #458367;
+}
+
+.ollama-status.running .health-dot {
+    background: #4caa76;
+}
+
+.ollama-model-list {
+    display: grid;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgba(13, 23, 38, 0.07);
+    border-radius: 10px;
+    background: #fafbfb;
+    color: #5b6873;
+    font-size: 12px;
+}
+
+.ollama-model-list ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ollama-model-list li {
+    padding: 5px 8px;
+    border: 1px solid rgba(36, 122, 119, 0.12);
+    border-radius: 7px;
+    background: #fff;
+    color: #497570;
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+}
+
+.ollama-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 9px;
+}
+
+.ollama-spinner {
+    animation: ollama-spin 900ms linear infinite;
+}
+
+.ollama-install-dialog {
+    width: min(460px, 100%);
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.62);
+    border-radius: 16px;
+    background: var(--paper);
+    box-shadow: 0 28px 80px rgba(8, 17, 30, 0.3);
+}
+
+.ollama-install-dialog h2 {
+    margin: 4px 0 10px;
+    color: var(--ink);
+    font-family: 'Geist', sans-serif;
+    font-size: 23px;
+    letter-spacing: -0.045em;
+}
+
+.ollama-install-dialog > p:not(.field-kicker, .form-message) {
+    margin: 0 0 20px;
+    color: #78838e;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@keyframes ollama-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 620px) {
+    .reports-heading-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .ollama-status {
+        font-size: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ollama-spinner {
+        animation: none;
+    }
+}

@@ -1,14 +1,17 @@
-export type Locale = 'es' | 'en';
+
+import type { SupportedLocale } from './locales.js';
+
+export type Locale = SupportedLocale;
 export type AiProviderName = 'openai' | 'deepseek' | 'anthropic';
-export type ReportFormat = 'pdf' | 'json' | 'yaml' | 'txt' | 'xlsx';
+export type ReportFormat = 'pdf' | 'json' | 'yaml' | 'toml' | 'llm' | 'txt' | 'xlsx';
 export type ReportStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
 export type DashboardView =
     | 'overview'
-    | 'analysis'
-    | 'reports'
     | 'watchlist'
+    | 'portfolio'
     | 'schedules'
-    | 'settings';
+    | 'settings'
+    | 'aiProviders';
 
 export interface WatchlistItem {
     ticker: string;
@@ -60,6 +63,34 @@ export interface ReportPage {
     };
 }
 
+export interface PortfolioAction {
+    action: 'BUY' | 'SELL';
+    price: number;
+    quantity: number;
+    date: string;
+}
+
+export interface PortfolioHolding {
+    ticker: string;
+    region: string;
+    currency: string;
+    actions: PortfolioAction[];
+}
+
+export interface PortfolioResponse {
+    portfolio: PortfolioHolding[];
+}
+
+export interface CreatePortfolioTradeRequest {
+    action: 'BUY' | 'SELL';
+    ticker: string;
+    region: string;
+    currency: string;
+    price: number;
+    quantity: number;
+    date: string;
+}
+
 export interface GoogleAccountStatus {
     connected: boolean;
     email: string | null;
@@ -73,15 +104,14 @@ export interface GoogleOAuthFlow {
     error: string | null;
 }
 
-export interface GoogleLoginFlow {
-    flow_id: string;
-    status: 'pending' | 'completed' | 'failed';
-    email: string | null;
-    name: string | null;
-    error: string | null;
+export type AiProviderStatus = Record<AiProviderName, boolean>;
+export interface OllamaStatus {
+    installed: boolean;
+    running: boolean;
+    models: string[];
+    platform: string;
 }
 
-export type AiProviderStatus = Record<AiProviderName, boolean>;
 export type AiProviderKeyUpdates = Partial<
     Record<AiProviderName, string | null>
 >;
@@ -106,7 +136,6 @@ export interface AppSettings {
     locale: Locale;
     reportRetentionSeconds: number;
     workerMaxConcurrency: number;
-    googleClientId: string;
     financeScraperExecutable: string;
 }
 
@@ -149,7 +178,6 @@ export interface DesktopBridge {
     bootstrap(): Promise<DesktopBootstrap>;
     retryApi(): Promise<ApiStatus>;
     login(credentials: { email: string; password: string }): Promise<UserProfile>;
-    loginWithGoogle(): Promise<UserProfile>;
     register(credentials: {
         name: string;
         email: string;
@@ -163,6 +191,11 @@ export interface DesktopBridge {
     getReport(reportId: string): Promise<ReportEntry>;
     openReport(reportId: string): Promise<{ path: string }>;
     deleteReport(reportId: string): Promise<void>;
+    exportReport(reportId: string): Promise<{ path: string } | null>;
+    getPortfolio(): Promise<PortfolioResponse>;
+    createPortfolioTrade(
+        request: CreatePortfolioTradeRequest,
+    ): Promise<PortfolioResponse>;
     getGoogleStatus(): Promise<GoogleAccountStatus>;
     connectGoogle(): Promise<{ flow_id: string }>;
     getGoogleFlow(flowId: string): Promise<GoogleOAuthFlow>;
@@ -180,6 +213,9 @@ export interface DesktopBridge {
     saveAiProviderKeys(
         updates: AiProviderKeyUpdates,
     ): Promise<AiProviderStatus>;
+    getOllamaStatus(): Promise<OllamaStatus>;
+    installOllama(): Promise<OllamaStatus>;
+    startOllama(): Promise<OllamaStatus>;
     onApiState(callback: (status: ApiStatus) => void): () => void;
     onNotification(callback: (message: string) => void): () => void;
 }

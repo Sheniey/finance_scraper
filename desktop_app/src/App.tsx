@@ -1,17 +1,22 @@
-import { AuthScreen } from '@/components/AuthScreen.js';
-import { BootScreen } from '@/components/BootScreen.js';
-import { DesktopBridgeUnavailable } from '@/components/DesktopBridgeUnavailable.js';
-import { ToastMessage } from '@/components/ToastMessage.js';
-import { WorkspacePage } from '@/components/WorkspacePage.js';
-import { WorkspaceShell } from '@/components/WorkspaceShell.js';
-import { hasCompleteDesktopBridge } from '@/desktopBridge.js';
-import { useAppBootstrap } from '@/hooks/useAppBootstrap.js';
-import { useAppNotifications } from '@/hooks/useAppNotifications.js';
-import { useDesktopActions } from '@/hooks/useDesktopActions.js';
-import { useReportActions } from '@/hooks/useReportActions.js';
-import { useWorkspaceData } from '@/hooks/useWorkspaceData.js';
 
-export default function App() {
+import { useCallback, useState } from 'react';
+
+import { AuthScreen } from '@/features/auth/components/AuthScreen.js';
+import { BootScreen } from '@/features/application/components/BootScreen.js';
+import { DesktopBridgeUnavailable } from '@/features/application/components/DesktopBridgeUnavailable.js';
+import { ToastStack } from '@/features/common/components/ToastStack.js';
+import { CommandPalette } from '@/features/command-palette/components/CommandPalette.js';
+import { WorkspacePage } from '@/features/workspace/components/WorkspacePage.js';
+import { WorkspaceShell } from '@/features/workspace/components/WorkspaceShell.js';
+import { hasCompleteDesktopBridge } from '@/features/common/lib/desktopBridge.js';
+import { useAppBootstrap } from '@/features/application/hooks/useAppBootstrap.js';
+import { useAppNotifications } from '@/features/application/hooks/useAppNotifications.js';
+import { useDesktopActions } from '@/features/application/hooks/useDesktopActions.js';
+import { useReportActions } from '@/features/reports/hooks/useReportActions.js';
+import { useWorkspaceData } from '@/features/workspace/hooks/useWorkspaceData.js';
+
+
+export function App() {
     if (!hasCompleteDesktopBridge(window.desktopApi)) {
         return <DesktopBridgeUnavailable />;
     }
@@ -19,8 +24,14 @@ export default function App() {
     return <DesktopApplication />;
 }
 
+
 function DesktopApplication() {
-    const { dismissToast, notify, toast } = useAppNotifications();
+    const { dismissToast, notify, toasts } = useAppNotifications();
+    const [portfolioRefreshToken, setPortfolioRefreshToken] = useState(0);
+    const notifyPortfolioChanged = useCallback(
+        () => setPortfolioRefreshToken((token) => token + 1),
+        [],
+    );
     const bootstrap = useAppBootstrap(notify);
     const workspace = useWorkspaceData({
         accountEpoch: bootstrap.accountEpoch,
@@ -65,28 +76,21 @@ function DesktopApplication() {
             <>
                 <AuthScreen
                     apiStatus={bootstrap.apiStatus}
-                    googleClientId={bootstrap.settings.googleClientId}
                     initialError={bootstrap.bootstrapError}
                     locale={bootstrap.locale}
                     onChooseExecutable={actions.chooseExecutable}
-                    onGoogleLogin={actions.loginWithGoogle}
                     onLocaleChange={(locale) =>
                         void actions.changeLocale(locale)
                     }
                     onLogin={actions.login}
                     onRegister={actions.register}
                     onRetryApi={actions.retryApi}
-                    onSaveGoogleClientId={(clientId) =>
-                        actions.saveSettings({ googleClientId: clientId })
-                    }
                 />
-                {toast && (
-                    <ToastMessage
-                        locale={bootstrap.locale}
-                        message={toast}
-                        onClose={dismissToast}
-                    />
-                )}
+                <ToastStack
+                    locale={bootstrap.locale}
+                    notifications={toasts}
+                    onDismiss={dismissToast}
+                />
             </>
         );
     }
@@ -95,7 +99,6 @@ function DesktopApplication() {
         <>
             <WorkspaceShell
                 activeView={bootstrap.activeView}
-                apiStatus={bootstrap.apiStatus}
                 locale={bootstrap.locale}
                 onLocaleChange={(locale) => void actions.changeLocale(locale)}
                 onLogout={actions.logout}
@@ -120,10 +123,14 @@ function DesktopApplication() {
                     onProfileChange={actions.profileChanged}
                     onReportCreate={reportActions.createReport}
                     onReportDelete={reportActions.deleteReport}
+                    onReportExport={reportActions.exportReport}
                     onReportOpen={reportActions.openReport}
                     onReportsChanged={workspace.refreshReports}
                     onSchedulesChanged={workspace.refreshSchedulesAndGoogle}
+                    onCustomReportSave={actions.saveCustomReport}
+                    onExportAllReports={reportActions.exportAllReports}
                     onSettingsSave={actions.saveSettings}
+                    portfolioRefreshToken={portfolioRefreshToken}
                     profile={bootstrap.profile}
                     reports={workspace.reports}
                     reportsError={workspace.reportsError}
@@ -132,13 +139,27 @@ function DesktopApplication() {
                     settings={bootstrap.settings}
                 />
             </WorkspaceShell>
-            {toast && (
-                <ToastMessage
-                    locale={bootstrap.locale}
-                    message={toast}
-                    onClose={dismissToast}
-                />
-            )}
+            <CommandPalette
+                locale={bootstrap.locale}
+                onCustomReportSave={actions.saveCustomReport}
+                onExportAllReports={reportActions.exportAllReports}
+                onLocaleChange={actions.changeLocale}
+                onNavigate={bootstrap.setActiveView}
+                onNotify={notify}
+                onPortfolioChanged={notifyPortfolioChanged}
+                onProfileChange={actions.profileChanged}
+                onReportCreate={reportActions.createReport}
+                onReportOpen={reportActions.openReport}
+                onReportsChanged={workspace.refreshReports}
+                onSchedulesChanged={workspace.refreshSchedulesAndGoogle}
+                googleStatus={workspace.googleStatus}
+                profile={bootstrap.profile}
+            />
+            <ToastStack
+                locale={bootstrap.locale}
+                notifications={toasts}
+                onDismiss={dismissToast}
+            />
         </>
     );
 }

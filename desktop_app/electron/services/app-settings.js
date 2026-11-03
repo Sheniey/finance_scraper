@@ -1,13 +1,18 @@
 import { app } from 'electron';
 import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import {
+    getPreferredLocale,
+    isSupportedLocale,
+    supportedLocales,
+} from '../../shared/locales.js';
 
 const MIN_RETENTION_SECONDS = 10 * 60;
 const MAX_RETENTION_SECONDS = 30 * 24 * 60 * 60;
 const MAX_WORKER_CONCURRENCY = 16;
 
 function defaultLocale() {
-    return app.getLocale().toLowerCase().startsWith('en') ? 'en' : 'es';
+    return getPreferredLocale(app.getLocale());
 }
 
 function defaultSettings() {
@@ -15,7 +20,6 @@ function defaultSettings() {
         locale: defaultLocale(),
         reportRetentionSeconds: 15 * 24 * 60 * 60,
         workerMaxConcurrency: 4,
-        googleClientId: process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() ?? '',
         financeScraperExecutable: '',
         registeredScheduleIds: [],
     };
@@ -26,8 +30,11 @@ function validateSettings(value) {
         throw new Error('Desktop settings must be a JSON object.');
     }
     const settings = { ...defaultSettings(), ...value };
-    if (!['en', 'es'].includes(settings.locale)) {
-        throw new Error('Desktop language must be en or es.');
+    if (!isSupportedLocale(settings.locale)) {
+        const supported = supportedLocales
+            .map(({ code }) => code)
+            .join(', ');
+        throw new Error(`Desktop language must be one of: ${supported}.`);
     }
     if (
         !Number.isInteger(settings.reportRetentionSeconds) ||
@@ -44,14 +51,19 @@ function validateSettings(value) {
         throw new Error('Worker concurrency must be between 1 and 16.');
     }
     if (
-        typeof settings.googleClientId !== 'string' ||
         typeof settings.financeScraperExecutable !== 'string' ||
         !Array.isArray(settings.registeredScheduleIds) ||
         !settings.registeredScheduleIds.every((id) => typeof id === 'string')
     ) {
         throw new Error('Desktop settings contain invalid values.');
     }
-    return settings;
+    return {
+        locale: settings.locale,
+        reportRetentionSeconds: settings.reportRetentionSeconds,
+        workerMaxConcurrency: settings.workerMaxConcurrency,
+        financeScraperExecutable: settings.financeScraperExecutable,
+        registeredScheduleIds: settings.registeredScheduleIds,
+    };
 }
 
 export async function readAppSettings() {

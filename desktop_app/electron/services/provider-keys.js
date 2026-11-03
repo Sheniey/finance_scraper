@@ -69,6 +69,24 @@ export async function readAiProviderKeys(directory) {
     return parseProviderKeys(contents);
 }
 
+export async function readGoogleOAuthClientId(directory) {
+    const { contents } = await readEnvFile(directory);
+    for (const line of contents.split(/\r?\n/)) {
+        const match = line.match(
+            /^\s*(?:export\s+)?GOOGLE_OAUTH_CLIENT_ID\s*=\s*(.*)$/,
+        );
+        if (!match) {
+            continue;
+        }
+        const clientId = parseEnvValue(match[1]).trim();
+        if (clientId.length > 512 || /[\r\n\0]/.test(clientId)) {
+            throw new Error('The Google OAuth client ID has an invalid format.');
+        }
+        return clientId;
+    }
+    return '';
+}
+
 export async function getAiProviderStatus(directory) {
     const keys = await readAiProviderKeys(directory);
     return {

@@ -28,3 +28,4 @@ pnpm-debug.log*
 
 # private files
 priv/
+electron/google-oauth-config.json

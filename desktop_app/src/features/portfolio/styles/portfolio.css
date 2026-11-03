@@ -1,0 +1,161 @@
+.portfolio-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+}
+
+.portfolio-summary-card {
+    position: relative;
+    display: grid;
+    min-height: 154px;
+    align-content: start;
+    gap: 6px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background:
+        radial-gradient(circle at 95% 5%, rgba(36, 122, 119, 0.08), transparent 42%),
+        #fff;
+}
+
+.portfolio-summary-card p,
+.portfolio-summary-card small {
+    margin: 0;
+    color: #7f8993;
+    font-size: 12px;
+}
+
+.portfolio-summary-card strong {
+    color: var(--ink);
+    font-family: 'Fira Code', monospace;
+    font-size: 27px;
+    font-weight: 450;
+    letter-spacing: -0.04em;
+}
+
+.portfolio-summary-card small {
+    line-height: 1.45;
+}
+
+.portfolio-summary-icon {
+    display: grid;
+    width: 33px;
+    height: 33px;
+    place-items: center;
+    margin-bottom: 2px;
+    border-radius: 9px;
+    background: rgba(36, 122, 119, 0.09);
+    color: #397c76;
+}
+
+.portfolio-summary-icon.accent {
+    background: rgba(215, 129, 81, 0.12);
+    color: #b16a45;
+    font-family: 'Fira Code', monospace;
+    font-size: 16px;
+}
+
+.portfolio-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: 14px;
+}
+
+.portfolio-form-panel,
+.portfolio-history-panel {
+    min-width: 0;
+}
+
+.portfolio-form {
+    display: grid;
+    gap: 15px;
+}
+
+.portfolio-form .form-grid {
+    gap: 12px;
+}
+
+.portfolio-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.portfolio-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.portfolio-table th {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+    color: #86909a;
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.portfolio-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid rgba(13, 23, 38, 0.055);
+    color: #596773;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.portfolio-table td strong,
+.portfolio-table td small {
+    display: block;
+}
+
+.portfolio-table td strong {
+    color: var(--ink);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+.portfolio-table td small {
+    margin-top: 3px;
+    color: #939ca4;
+    font-size: 10px;
+}
+
+.portfolio-trade-action {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.portfolio-trade-action.buy {
+    background: rgba(59, 143, 104, 0.1);
+    color: #3b8f68;
+}
+
+.portfolio-trade-action.sell {
+    background: rgba(188, 90, 77, 0.1);
+    color: #b85a4d;
+}
+
+.portfolio-empty-state {
+    min-height: 210px;
+}
+
+@media (max-width: 1050px) {
+    .portfolio-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .portfolio-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}

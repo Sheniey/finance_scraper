@@ -1,0 +1,65 @@
+.boot-screen {
+    display: grid;
+    min-height: 100vh;
+    align-content: center;
+    justify-items: center;
+    gap: 13px;
+    background:
+        radial-gradient(circle at 50% 28%, rgba(36, 122, 119, 0.1), transparent 23%),
+        var(--ink);
+    color: #f7f3ec;
+    text-align: center;
+}
+
+.boot-mark {
+    display: grid;
+    width: 62px;
+    height: 62px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 17px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.boot-mark img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.boot-screen .field-kicker {
+    margin: 10px 0 0;
+    color: #9dcac4;
+}
+
+.boot-screen h1 {
+    margin: 0;
+    font-family: 'Geist', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.boot-screen > small {
+    color: #8694a3;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.boot-progress {
+    width: 180px;
+    height: 2px;
+    overflow: hidden;
+    margin-top: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.boot-progress span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--orange);
+    animation: boot-progress 1.2s ease-in-out infinite alternate;
+}

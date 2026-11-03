@@ -1,10 +1,13 @@
+
 import { useEffect, useState, type FormEvent } from 'react';
 import { RotateCw, Save } from 'lucide-react';
 
 import type { ApiStatus, AppSettings, Locale } from '#/types.js';
-import { formatError, translate } from '@/i18n/messages.js';
-import { AiProviderKeysPanel } from '@/pages/settings/AiProviderKeysPanel.js';
-import { SettingsFields } from '@/pages/settings/SettingsFields.js';
+import { formatError, translate } from '@/features/common/i18n/messages.js';
+import { SettingsFields } from '@/features/settings/components/SettingsFields.js';
+import PageTitle from '@/features/common/components/PageTitle.js';
+
+
 
 interface SettingsPageProps {
     locale: Locale;
@@ -13,6 +16,7 @@ interface SettingsPageProps {
     onSave: (settings: Partial<AppSettings>) => Promise<void>;
     onChooseExecutable: () => Promise<string | null>;
 }
+
 
 export function SettingsPage({
     locale,
@@ -28,9 +32,6 @@ export function SettingsPage({
     const [workerMaxConcurrency, setWorkerMaxConcurrency] = useState(
         settings.workerMaxConcurrency,
     );
-    const [googleClientId, setGoogleClientId] = useState(
-        settings.googleClientId,
-    );
     const [executable, setExecutable] = useState(
         settings.financeScraperExecutable,
     );
@@ -41,7 +42,6 @@ export function SettingsPage({
     useEffect(() => {
         setRetentionMinutes(Math.round(settings.reportRetentionSeconds / 60));
         setWorkerMaxConcurrency(settings.workerMaxConcurrency);
-        setGoogleClientId(settings.googleClientId);
         setExecutable(settings.financeScraperExecutable);
     }, [settings]);
 
@@ -54,7 +54,6 @@ export function SettingsPage({
             await onSave({
                 reportRetentionSeconds: retentionMinutes * 60,
                 workerMaxConcurrency,
-                googleClientId: googleClientId.trim(),
                 financeScraperExecutable: executable,
             });
             setNotice(t('settings.saved'));
@@ -79,23 +78,20 @@ export function SettingsPage({
     return (
         <div className='page-stack'>
             <header className='page-heading'>
-                <p className='eyebrow dark'>
-                    <span className='signal-mark' />
-                    {t('nav.settings')}
-                </p>
-                <h1>{t('settings.title')}</h1>
-                <p>{t('settings.copy')}</p>
+                <PageTitle
+                    sectionName={t('nav.settings')}
+                    title={t('settings.title')}
+                    copy={t('settings.copy')}
+                />
             </header>
 
             <form className='settings-grid' onSubmit={save}>
                 <SettingsFields
                     executable={executable}
-                    googleClientId={googleClientId}
                     locale={locale}
                     onChooseExecutable={() => void chooseExecutable()}
                     onConcurrencyChange={setWorkerMaxConcurrency}
                     onExecutableChange={setExecutable}
-                    onGoogleClientIdChange={setGoogleClientId}
                     onLocaleChange={(nextLocale) =>
                         void onSave({ locale: nextLocale }).catch(
                             (saveError: unknown) =>
@@ -106,7 +102,6 @@ export function SettingsPage({
                     retentionMinutes={retentionMinutes}
                     workerMaxConcurrency={workerMaxConcurrency}
                 />
-                <AiProviderKeysPanel locale={locale} />
                 {error && (
                     <p
                         className='form-message error-message settings-wide'
