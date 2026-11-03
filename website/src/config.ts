@@ -18,11 +18,11 @@ export const SITE = {
     authorFirstName: 'José Daniel',
     authorLastName: 'Ávalos Becerra',
     authorIg: 'https://www.instagram.com/sheneyby2010_/',
-    authorX: 'https://twitter.com/Sheney',
+    authorX: 'https://twitter.com/SheneyBy2010',
     authorGithub: 'https://github.com/Sheniey',
     authorLinkedIn: 'https://www.linkedin.com/in/sheney',
-    authorYoutube: 'https://www.youtube.com/@Sheney',
-    authorSpotify: 'https://open.spotify.com/user/sheney',
+    authorYoutube: 'https://www.youtube.com/@SheñeyBy2010',
+    authorSpotify: 'https://open.spotify.com/user/314cwtw27o6cycian3ql6txxjh5m?si=f7c421ef53a8453e',
 
     contactEmail: 'financescraper.dev@gmail.com',
 
