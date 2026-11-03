@@ -1,0 +1,14 @@
+<svg
+    aria-hidden="true"
+    class="size-6"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+>
+    <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5.5" />
+    <circle cx="12" cy="12" r="4.25" />
+    <circle cx="17.75" cy="6.5" r="1" fill="currentColor" stroke="none" />
+</svg>

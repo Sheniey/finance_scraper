@@ -62,11 +62,11 @@ const heroPhrases: Mnemonic[] = [
 				>
 				<span
 					aria-hidden="true"
-					class="relative mt-2 grid min-h-[1.08em] max-w-[12ch]"
+					class="relative mt-2 grid select-none min-h-[1.08em] max-w-[12ch]"
 				>
 					{
 						heroPhrases.map((mnemonic) => (
-							<span class="hero-phrase col-start-1 row-start-1 max-w-full text-[#ffd0ad]">
+							<span class="hero-phrase col-start-1 row-start-1 max-w-full text-accent-tertiary">
 								{t({ mnemonic })}
 							</span>
 						))
@@ -84,34 +84,32 @@ const heroPhrases: Mnemonic[] = [
 			<div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
 				<a
 					href="#overview"
-					class="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#111820] outline-none transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-[#ffede0] hover:shadow-[0_12px_32px_rgba(255,109,0,0.15)] focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-[#07101b] motion-reduce:transition-none"
+					class="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-white/90 bg-white px-6 py-3.5 text-sm font-semibold text-[#111820] shadow-[0_10px_30px_rgba(0,0,0,0.22)] outline-none transition-[background-color,box-shadow] duration-200 hover:bg-[#fff3eb] hover:shadow-[0_14px_36px_rgba(255,109,0,0.2)] focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-[#07101b] motion-reduce:transition-none"
 				>
 					{t({ mnemonic: "hero.primary_button" })}
 					<span
 						aria-hidden="true"
-						class="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
+						class="grid size-7 shrink-0 place-items-center rounded-full bg-[#111820]/[0.06] text-base leading-none transition-colors duration-200 group-hover:bg-[#111820]/[0.1] motion-reduce:transition-none"
 					>
 						↗
 					</span>
 				</a>
 				<a
 					href="#market-network"
-					class="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/35 bg-white/4 px-6 py-3 text-sm font-semibold text-white outline-none backdrop-blur-md transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-white/70 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#07101b] motion-reduce:transition-none"
+					class="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-white/30 bg-white/[0.05] px-6 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] outline-none backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-200 hover:border-white/55 hover:bg-white/[0.11] hover:shadow-[0_10px_28px_rgba(0,0,0,0.18)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#07101b] motion-reduce:transition-none"
 				>
 					{t({ mnemonic: "hero.secondary_button" })}
-					<span aria-hidden="true">↓</span>
+					<span
+						aria-hidden="true"
+						class="grid size-7 shrink-0 place-items-center rounded-full border border-white/25 bg-white/[0.05] text-base leading-none transition-colors duration-200 group-hover:border-white/40 group-hover:bg-white/[0.12] motion-reduce:transition-none"
+					>
+						↓
+					</span>
 				</a>
 			</div>
 		</div>
 	</div>
 
-	<a
-		href="#overview"
-		aria-label={t({ mnemonic: "intro.title" })}
-		class="absolute bottom-7 right-6 hidden size-12 items-center justify-center rounded-full border border-white/25 text-white/80 outline-none transition-[background-color,transform] hover:-translate-y-1 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white sm:flex md:bottom-10 md:right-10"
-	>
-		<span aria-hidden="true">↓</span>
-	</a>
 	<div
 		class="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-linear-to-r from-transparent via-white/20 to-transparent"
 	>

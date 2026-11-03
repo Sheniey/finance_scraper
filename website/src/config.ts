@@ -2,6 +2,7 @@
 export const APP_NAME = {
     fullname: 'Finance Scraper',
     styled: 'finance_scraper',
+    code: 'finance-scraper',
     shorted: 'Finscrap',
     abbreviation: 'FS',
 } as const;
@@ -10,7 +11,7 @@ export const LOCALES = ['en', 'es'] as const;
 export const DEFAULT_LOCALE = 'es' as const;
 
 export const SITE = {
-    baseURL: 'https://finscrap.vercel.app',
+    baseURL: 'https://finance-scraper.vercel.app',
     keywords: 'finance scraper,fs,fincrap,financial data,stock market,investments,portfolio,analysis,tracking',
     
     authorPseudonym: 'Sheñey',
@@ -22,6 +23,8 @@ export const SITE = {
     authorLinkedIn: 'https://www.linkedin.com/in/sheney',
     authorYoutube: 'https://www.youtube.com/@Sheney',
     authorSpotify: 'https://open.spotify.com/user/sheney',
+
+    contactEmail: 'financescraper.dev@gmail.com',
 
     favicon1: '/favicon.svg',
     favicon1Type: 'image/svg+xml',
@@ -40,6 +43,11 @@ export const SITE = {
 } as const;
 
 export const BINARY_CURRENT_VERSION = '0.1.0';
+export const BINARY_INSTALLERS = {
+    'x64': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x64.exe`,
+    'x86': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-x86.exe`,
+    'arm64': `/bin/FinanceScraperSetup-${BINARY_CURRENT_VERSION}-arm64.exe`,
+} as const;
 
 export const formatPath = (path: string) => `/${path.replace(/^\/+/, '')}`;
 export const formatStrictPath = (path: string) => `${SITE.baseURL}${formatPath(path)}`;

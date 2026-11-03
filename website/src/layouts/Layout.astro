@@ -1,71 +1,93 @@
 ---
-import '@/styles/global.css'
+import "@/styles/global.css";
+import { localizedRoute } from "@/lib/navigation";
 
-import SEO from '@/components/SEO.astro'
-import Header from '@/components/Header.astro'
-import Footer from '@/components/Footer.astro'
+import SEO from "@/components/SEO.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
 
-import { translations, type Locale } from '@/i18n'
-import { APP_NAME, BINARY_CURRENT_VERSION, SITE } from '@/config'
+import { translations, type Locale } from "@/i18n";
+import { APP_NAME, SITE } from "@/config";
 
 export interface Props {
-	locale: Locale
-	title?: string
-	description?: string
+	locale: Locale;
+	title?: string;
+	description?: string;
 }
 
-const { locale, title = APP_NAME.fullname, description } = Astro.props as Props
-const t = translations(locale)
-const pageDescription = description ?? t({ mnemonic: 'site.description' })
-const canonicalUrl = new URL(Astro.url.pathname, SITE.baseURL).toString()
-const currentVersion = BINARY_CURRENT_VERSION
+const { locale, title = APP_NAME.fullname, description } = Astro.props as Props;
+const t = translations(locale);
+const pageDescription = description ?? t({ mnemonic: "site.description" });
+const canonicalUrl = new URL(Astro.url.pathname, SITE.baseURL).toString();
+const isHomePage =
+	Astro.url.pathname.replace(/\/+$/, "") === localizedRoute(locale, "home");
 ---
 
 <!doctype html>
 <html lang={locale}>
 	<head>
-		<meta charset='utf-8' />
-		<meta name='viewport' content='width=device-width, initial-scale=1' />
-		<meta name='color-scheme' content='light dark' />
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
 		<SEO
 			title={title}
 			description={pageDescription}
-			theme='#0D1726'
+			theme="#0D1726"
 			canonicalUrl={canonicalUrl}
 		/>
-		<link rel='icon' type={SITE.favicon1Type} href={SITE.favicon1} />
-		<link rel='icon' type={SITE.favicon2Type} href={SITE.favicon2} />
+		<link rel="icon" type={SITE.favicon1Type} href={SITE.favicon1} />
+		<link rel="icon" type={SITE.favicon2Type} href={SITE.favicon2} />
 
 		<title>{title}</title>
 
 		<script is:inline>
-			const THEME_STORAGE_READ_WARNING = 'Unable to read the saved theme preference'
-			const preferenceKey = 'finance-scraper-theme'
-			let savedTheme = null
+			const THEME_STORAGE_READ_WARNING =
+				"Unable to read the saved theme preference";
+			const preferenceKey = `${APP_NAME.code}-theme`;
+			let savedTheme = null;
 
 			try {
-				savedTheme = window.localStorage.getItem(preferenceKey)
+				savedTheme = window.localStorage.getItem(preferenceKey);
 			} catch (error) {
-				console.warn(THEME_STORAGE_READ_WARNING, error)
+				console.warn(THEME_STORAGE_READ_WARNING, error);
 			}
 
-			const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+			const systemPrefersDark = window.matchMedia(
+				"(prefers-color-scheme: dark)",
+			).matches;
 			const theme =
-				savedTheme === 'dark' || savedTheme === 'light'
+				savedTheme === "dark" || savedTheme === "light"
 					? savedTheme
 					: systemPrefersDark
-						? 'dark'
-						: 'light'
+						? "dark"
+						: "light";
 
-			document.documentElement.classList.toggle('dark', theme === 'dark')
-			document.documentElement.dataset.theme = theme
+			document.documentElement.classList.toggle("dark", theme === "dark");
+			document.documentElement.dataset.theme = theme;
 		</script>
 	</head>
 	<body
-		id='top'
-		class='relative isolate min-h-screen overflow-x-hidden bg-background font-body text-foreground antialiased transition-colors duration-300'
+		id="top"
+		class="relative isolate min-h-screen overflow-x-hidden bg-background font-body text-foreground antialiased transition-colors duration-300"
 	>
-		<Header locale={locale} currentVersion={currentVersion} />
+		<Header locale={locale} />
+		{
+			isHomePage && (
+				<a
+					href="#hero"
+					aria-label={t({ mnemonic: "nav.back_to_top" })}
+					aria-hidden="true"
+					tabindex="-1"
+					data-back-to-top
+					data-visible="false"
+					class="pointer-events-none fixed bottom-10 right-12 z-400 hidden size-12 select-none items-center justify-center rounded-full bg-[#07101b]/80 text-lg leading-none text-white/85 opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.22)] backdrop-blur-md outline-none transition-[background-color,border-color,opacity] duration-200 hover:border-white/55 hover:bg-[#07101b]/95 hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101b] data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100 motion-reduce:transition-none md:flex"
+				>
+					<span aria-hidden="true" class="select-none">
+						↑
+					</span>
+				</a>
+			)
+		}
 		<slot />
 		<Footer locale={locale} />
 	</body>
@@ -73,12 +95,12 @@ const currentVersion = BINARY_CURRENT_VERSION
 
 <style is:global>
 	html {
-		scroll-behavior: smooth
+		scroll-behavior: smooth;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		html {
-			scroll-behavior: auto
+			scroll-behavior: auto;
 		}
 	}
 </style>

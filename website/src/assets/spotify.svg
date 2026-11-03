@@ -1,0 +1,28 @@
+<svg
+    aria-hidden="true"
+    class="size-6"
+    viewBox="0 0 24 24"
+>
+    <circle cx="12" cy="12" r="10" fill="currentColor" />
+    <path
+        d="M6.4 9.3c3.7-1.1 8.2-.6 11.3 1.2"
+        fill="none"
+        stroke="#05080c"
+        stroke-width="1.6"
+        stroke-linecap="round"
+    />
+    <path
+        d="M7.2 12.2c3.1-.8 6.7-.4 9.5 1.1"
+        fill="none"
+        stroke="#05080c"
+        stroke-width="1.5"
+        stroke-linecap="round"
+    />
+    <path
+        d="M8 15c2.5-.6 5.1-.2 7.3 1"
+        fill="none"
+        stroke="#05080c"
+        stroke-width="1.4"
+        stroke-linecap="round"
+    />
+</svg>
