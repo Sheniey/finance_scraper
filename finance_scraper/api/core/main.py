@@ -17,15 +17,16 @@ from finance.config import (
     DB_LOCATION,
     DB_POOL_SIZE,
     DB_POOL_TIMEOUT,
-    DESKTOP_LOCAL_ONLY,
+    DESKTOP_LOCAL_ONLY
 )
 from finance.services.account.db import initialize_account_database
+from finance.services.account.vault import vault_sessions
 from finance.services.database import (
     AsyncClientPool,
     DatabaseSyncError,
     close_database_pools,
     get_database_pool,
-    get_turso_sync_pool,
+    get_turso_sync_pool
 )
 from finance.services.database.synchronization import run_sync_worker
 
@@ -39,6 +40,7 @@ from api.routers.accounts import router as accounts_router
 from api.routers.auth import router as auth_router
 from api.routers.desktop import router as desktop_router
 from api.routers.integrations import router as integrations_router
+from api.routers.portfolio import router as portfolio_router
 from api.routers.reports import router as reports_router
 from api.routers.schedules import router as schedules_router
 from api.repositories import report as ReportRepository
@@ -61,7 +63,7 @@ if (
 
 async def _rate_limit_handler(
     request: Request,
-    exc: RateLimitExceeded,
+    exc: RateLimitExceeded
 ) -> JSONResponse:
     return JSONResponse(
         status_code=429,
@@ -75,7 +77,7 @@ async def _rate_limit_handler(
 
 async def _request_validation_handler(
     request: Request,
-    exc: RequestValidationError,
+    exc: RequestValidationError
 ) -> JSONResponse:
     details: list[str] = [
         f'{".".join(str(part) for part in error["loc"])}: {error["msg"]}'
@@ -147,6 +149,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
                 except asyncio.CancelledError:
                     pass
         finally:
+            vault_sessions.clear()
             if sync_worker_task is not None:
                 await sync_worker_task
             if sync_pool is not None and sync_pool.is_turso_sync:
@@ -167,7 +170,7 @@ app: FastAPI = FastAPI(
     title=API_TITLE,
     version=API_VERSION,
     description=DESCRIPTION,
-    lifespan=lifespan,
+    lifespan=lifespan
 )
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
@@ -176,11 +179,12 @@ app.add_exception_handler(APIException, APIException.handler)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 app.add_exception_handler(
     RequestValidationError,
-    _request_validation_handler,
+    _request_validation_handler
 )
 app.include_router(auth_router)
 app.include_router(accounts_router)
 app.include_router(desktop_router)
 app.include_router(integrations_router)
+app.include_router(portfolio_router)
 app.include_router(reports_router)
 app.include_router(schedules_router)

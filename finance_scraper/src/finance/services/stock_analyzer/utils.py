@@ -38,7 +38,7 @@ def metric_to_fact(metric: Metric) -> Fact:
 
 def money_value(
     value: int | float | str | Money | None,
-    info: YFinanceTickerInfo,
+    info: YFinanceTickerInfo
 ) -> Money | None:
     if value is None:
         return None
@@ -56,7 +56,7 @@ def money_value(
 
 def money_metric(
     value: int | float | str | Money | None,
-    info: YFinanceTickerInfo,
+    info: YFinanceTickerInfo
 ) -> Metric:
     metric: Metric = Metric(metric=money_value(value, info))
     verify_availability(metric, info)
@@ -78,7 +78,7 @@ def verify_availability(metric: Metric, info: YFinanceTickerInfo) -> None:
 
 def get_evaluator(
     mnemonic: str,
-    language: str | Language | None = None,
+    language: str | Language | None = None
 ) -> MetricEvaluator:
     selected_language: Language = (
         language
@@ -99,7 +99,7 @@ def _get_evaluator_cached(
     mnemonic: str,
     language_code: str,
     language_name: str,
-    language_style: str,
+    language_style: str
 ) -> MetricEvaluator:
     load_definitions()
     selected_language = Language(

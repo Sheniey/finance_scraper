@@ -1,4 +1,5 @@
 import sqlite3
+import json
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -94,7 +95,7 @@ def _create_database(database_path: Path) -> sqlite3.Connection:
 
 def test_local_migration_preserves_accounts_and_reports_only(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch
 ) -> None:
     source_directory: Path = tmp_path / 'legacy'
     source_directory.mkdir()
@@ -124,6 +125,28 @@ def test_local_migration_preserves_accounts_and_reports_only(
             VALUES (?, ?, ?, ?, ?, ?)
             ''',
             ('account-uuid', 'owner@example.test', 'Owner', 'en', 'friendly', 'hash'),
+        )
+        connection.execute('DROP TABLE account_custom_reports')
+        connection.execute(
+            '''
+            CREATE TABLE account_custom_reports (
+                account_id TEXT NOT NULL
+                    REFERENCES accounts(account_id) ON DELETE CASCADE,
+                position INTEGER NOT NULL,
+                metric TEXT NOT NULL,
+                PRIMARY KEY (account_id, position)
+            )
+            ''',
+        )
+        connection.executemany(
+            '''
+            INSERT INTO account_custom_reports (account_id, position, metric)
+            VALUES (?, ?, ?)
+            ''',
+            (
+                ('account-uuid', 0, 'pe_ratio'),
+                ('account-uuid', 1, 'roic'),
+            ),
         )
         connection.execute(
             '''
@@ -206,6 +229,12 @@ def test_local_migration_preserves_accounts_and_reports_only(
         account = connection.execute(
             'SELECT account_id, email FROM accounts',
         ).fetchone()
+        custom_report = connection.execute(
+            '''
+            SELECT account_id, custom_report_json
+            FROM account_custom_reports
+            ''',
+        ).fetchone()
         action = connection.execute(
             'SELECT account_id, price FROM action_history',
         ).fetchone()
@@ -221,6 +250,8 @@ def test_local_migration_preserves_accounts_and_reports_only(
 
     assert account['account_id'] == 'account-uuid'
     assert account['email'] == 'owner@example.test'
+    assert custom_report['account_id'] == 'account-uuid'
+    assert custom_report['custom_report_json'] == '["pe_ratio","roic"]'
     assert action['account_id'] == 'account-uuid'
     assert action['price'] == 50.5
     assert report['report_id'] == 'rep_local'
@@ -228,6 +259,88 @@ def test_local_migration_preserves_accounts_and_reports_only(
     assert 'cache_entries' not in target_tables
     assert 'api_tokens' not in target_tables
     assert sync_marker_path(target_path).is_file()
+
+
+def test_turso_schema_migration_preserves_report_order_and_empty_accounts(
+    tmp_path: Path
+) -> None:
+    database_path: Path = tmp_path / 'remote-source.sqlite3'
+    first_account_id: str = '2d3f0adf-d4cb-4fe4-8d5b-ccbc08460a1e'
+    second_account_id: str = '64142c86-c056-4459-8cf2-c0ae989bf5b2'
+    migration_path: Path = (
+        Path(__file__).parents[1]
+        / 'src'
+        / 'finance'
+        / 'services'
+        / 'database'
+        / 'migrations'
+        / '001_account_vault_and_custom_reports.sql'
+    )
+
+    with sqlite3.connect(database_path) as connection:
+        connection.row_factory = sqlite3.Row
+        connection.execute('PRAGMA foreign_keys = ON')
+        connection.executescript(
+            '''
+            CREATE TABLE accounts (
+                account_id TEXT NOT NULL PRIMARY KEY,
+                email TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                password_hash TEXT NOT NULL
+            );
+            CREATE TABLE account_custom_reports (
+                account_id TEXT NOT NULL
+                    REFERENCES accounts(account_id) ON DELETE CASCADE,
+                position INTEGER NOT NULL,
+                metric TEXT NOT NULL,
+                PRIMARY KEY (account_id, position)
+            );
+            INSERT INTO accounts (account_id, email, name, password_hash)
+            VALUES
+                ('2d3f0adf-d4cb-4fe4-8d5b-ccbc08460a1e', 'first@example.com', 'First', 'hash'),
+                ('64142c86-c056-4459-8cf2-c0ae989bf5b2', 'second@example.com', 'Second', 'hash');
+            INSERT INTO account_custom_reports (account_id, position, metric)
+            VALUES
+                ('2d3f0adf-d4cb-4fe4-8d5b-ccbc08460a1e', 0, 'pe_ratio'),
+                ('2d3f0adf-d4cb-4fe4-8d5b-ccbc08460a1e', 1, 'roic');
+            ''',
+        )
+        connection.executescript(migration_path.read_text(encoding='utf-8'))
+        reports = connection.execute(
+            '''
+            SELECT account_id, custom_report_json
+            FROM account_custom_reports
+            ORDER BY account_id
+            ''',
+        ).fetchall()
+        account_columns: set[str] = {
+            str(row['name'])
+            for row in connection.execute('PRAGMA table_info(accounts)')
+        }
+        foreign_key_violations = connection.execute(
+            'PRAGMA foreign_key_check',
+        ).fetchall()
+        key_table_exists: bool = (
+            connection.execute(
+                '''
+                SELECT 1 FROM sqlite_schema
+                WHERE type = 'table' AND name = 'account_llm_api_keys'
+                ''',
+            ).fetchone()
+            is not None
+        )
+
+    self_reports: dict[str, list[str]] = {
+        str(account_id): json.loads(custom_report_json)
+        for account_id, custom_report_json in reports
+    }
+    assert self_reports == {
+        first_account_id: ['pe_ratio', 'roic'],
+        second_account_id: [],
+    }
+    assert 'encrypted_umk' in account_columns
+    assert key_table_exists
+    assert foreign_key_violations == []
 
 
 def test_row_digest_is_order_independent_and_checks_blob_values() -> None:

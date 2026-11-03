@@ -5,7 +5,6 @@ import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date
-from smtplib import SMTPException
 
 from finance.services.account.db import load_accounts
 from finance.services.account.models import Account, WatchlistItem
@@ -154,7 +153,7 @@ class WatchlistDispatcher:
                         item.symbol,
                         account.email,
                     )
-                    return item.symbol, error
+                    return item.symbol, e
 
         outcomes: list[tuple[str, EmailAttachment] | tuple[str, Exception]] = (
             await asyncio.gather(
@@ -182,18 +181,20 @@ class WatchlistDispatcher:
         attachments: tuple[EmailAttachment, ...] = tuple(
             attachment for _, attachment in successful
         )
+        sender_email: str = str(account.email)
         try:
-            await asyncio.to_thread(
-                self.__email_service.send_report_bundle,
-                str(account.email),
+            sender_email = await self.__email_service.send_report_bundle(
+                str(account.account_id or account.id),
+                account.name,
                 dispatch_date,
                 tickers,
                 attachments,
+                language_code=account.language.code,
             )
-        except (EmailException, OSError, SMTPException, ValueError) as e:
+        except (EmailException, OSError, ValueError) as error:
             logger.exception('Could not email reports to %s', account.email)
             return DispatchResult(
-                account_email=str(account.email),
+                account_email=sender_email,
                 generated_tickers=tickers,
                 failed_tickers=failed_tickers,
                 error=_error_message(error),

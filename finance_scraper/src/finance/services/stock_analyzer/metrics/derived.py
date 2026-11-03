@@ -8,7 +8,7 @@ from finance.services.stock_analyzer.models import Metric, MetricEvaluator
 from finance.services.stock_analyzer.utils import (
     NONE_EVALUATOR,
     money_metric,
-    verify_availability,
+    verify_availability
 )
 
 
@@ -98,7 +98,7 @@ def _average_return(
     info: YFinanceTickerInfo,
     numerator_aliases: tuple[str, ...],
     denominator_aliases: tuple[str, ...],
-    years: int,
+    years: int
 ) -> float | None:
     numerators = dict(_series(info.incomeStatement, numerator_aliases))
     denominators = dict(_series(info.balanceSheet, denominator_aliases))

@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 
 from api.schemas.account import AccountCreate
@@ -13,17 +11,6 @@ class RegistrationRequest(AccountCreate):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: SecretStr = Field(min_length=1, max_length=128)
-
-
-class GoogleLoginFlowRequest(BaseModel):
-    flow_id: str = Field(min_length=32, max_length=128)
-
-
-class GoogleLoginFlowResponse(OKResponse):
-    status: Literal['pending', 'completed', 'failed']
-    email: EmailStr | None = None
-    name: str | None = None
-    error: str | None = None
 
 
 class RefreshRequest(BaseModel):

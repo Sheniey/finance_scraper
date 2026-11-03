@@ -1,11 +1,15 @@
-# ================================================== #
-# MODULE: exceptions
-# ================================================== #
 
+# ================================================== # 
+# GLOBAL EXCEPTIONS                                  #
+# ================================================== #
 
 class DatabaseException(RuntimeError):
     """Raised when a database operation cannot be completed."""
 
+
+# ================================================== #
+# SPECIFIC EXCEPTIONS                                #
+# ================================================== #
 
 class DatabaseConfigurationError(DatabaseException, ValueError):
     """Raised when a database URL or pool setting is invalid."""
@@ -25,14 +29,3 @@ class DatabaseSyncError(DatabaseException):
 
 LibSQLDatabaseException = DatabaseException
 LibSQLIntegrityError = DatabaseIntegrityError
-
-
-__all__: list[str] = [
-    'DatabaseException',
-    'DatabaseConfigurationError',
-    'DatabaseIntegrityError',
-    'DatabaseAlreadyOpenError',
-    'DatabaseSyncError',
-    'LibSQLDatabaseException',
-    'LibSQLIntegrityError',
-]

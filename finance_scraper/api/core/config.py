@@ -8,7 +8,7 @@ from pydantic import (
     ConfigDict,
     Field,
     PositiveInt,
-    field_validator,
+    field_validator
 )
 
 

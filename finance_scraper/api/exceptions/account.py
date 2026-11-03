@@ -40,3 +40,22 @@ class IncorrectCurrentPasswordError(APIException):
     @staticmethod
     async def handler(req: Request, exc: IncorrectCurrentPasswordError) -> JSONResponse:
         return await APIException.handler(req, exc)
+
+
+class AccountVaultUnavailableError(APIException):
+    def __init__(self) -> None:
+        self.error = 'ACCOUNT_VAULT_UNAVAILABLE'
+        self.message = (
+            'The account vault could not be unlocked; use the CLI to '
+            'regenerate it after confirming saved provider keys can be lost.'
+        )
+        self.status_code = status.HTTP_409_CONFLICT
+        self.headers = {}
+        super().__init__(self.message)
+
+    @staticmethod
+    async def handler(
+        req: Request,
+        exc: AccountVaultUnavailableError,
+    ) -> JSONResponse:
+        return await APIException.handler(req, exc)

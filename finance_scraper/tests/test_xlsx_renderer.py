@@ -28,7 +28,7 @@ def _report() -> Report:
 
 
 def test_xlsx_renderer_writes_report_sheets_and_escapes_formulas(
-    tmp_path: Path,
+    tmp_path: Path
 ) -> None:
     output_path: Path = tmp_path / 'reports' / 'AAPL.xlsx'
     renderer = RendererFactory.create('xlsx')

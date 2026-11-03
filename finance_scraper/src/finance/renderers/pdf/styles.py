@@ -18,7 +18,7 @@ from finance.renderers.pdf.colors import (
     NUMBER_COLOR,
     RULE_COLOR,
     SURFACE_COLOR,
-    WHITE_COLOR,
+    WHITE_COLOR
 )
 
 

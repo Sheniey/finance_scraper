@@ -94,4 +94,29 @@ def prompt_signup() -> SignupForm | None:
     )
 
 
-__all__: list[str] = ['SignupForm', 'prompt_signup']
+def prompt_llm_api_key(provider: str) -> str | None:
+    """Collect a provider API key without echoing it to the terminal."""
+
+    return quest.password(
+        f'API key for {provider}:',
+        validate=lambda value: bool(value.strip()),
+    ).ask()
+
+
+def prompt_account_password() -> str | None:
+    """Collect an account password without echoing it to the terminal."""
+
+    return quest.password('Account password:').ask()
+
+
+def confirm_umk_regeneration() -> bool:
+    """Confirm that existing account LLM keys will be discarded."""
+
+    return bool(
+        quest.confirm(
+            'Regenerating the UMK permanently removes saved LLM API keys. '
+            'Continue?',
+            default=False,
+        ).ask()
+    )
+

@@ -11,7 +11,7 @@ from finance.types.report_mode import ReportMode
 from api.exceptions.google import (
     GoogleAccountNotConnectedError,
     GoogleOAuthNotConfiguredError,
-    GoogleOAuthProviderError,
+    GoogleOAuthProviderError
 )
 from api.models.report import ReportJob, ReportStatus
 from api.models.schedule import ReportSchedule, ScheduleRunResult
@@ -21,7 +21,7 @@ from api.repositories import schedules as ScheduleRepository
 from api.schemas.report import ReportCreate
 from api.services.google_mail import (
     GoogleEmailAttachment,
-    send_google_email,
+    send_google_email
 )
 
 
@@ -32,7 +32,7 @@ _REPORT_TIMEOUT_SECONDS: int = 2 * 60 * 60
 def _scheduled_report_id(
     schedule_id: str,
     scheduled_date: str,
-    ticker: str,
+    ticker: str
 ) -> str:
     key: bytes = f'{schedule_id}:{scheduled_date}:{ticker}'.encode('utf-8')
     digest: str = hashlib.sha256(key).hexdigest()[:32]
@@ -42,7 +42,7 @@ def _scheduled_report_id(
 def _scheduled_filename(
     ticker: str,
     scheduled_date: str,
-    report_format: str,
+    report_format: str
 ) -> str:
     normalized_ticker: str = ticker.replace('.', '-')
     return f'{normalized_ticker}-{scheduled_date}.{report_format}'
@@ -59,26 +59,26 @@ def _report_email_content(
     account_name: str,
     tickers: tuple[str, ...],
     scheduled_date: str,
-    language_code: str,
+    language_code: str
 ) -> tuple[str, str]:
     ticker_label: str = ', '.join(tickers)
     if language_code.casefold().startswith('en'):
         subject: str = (
-            f'Finance Scraper report — {ticker_label} — {scheduled_date}'
+            f'Financial report — {ticker_label} — {scheduled_date}'
         )
         body: str = (
             f'Hello {account_name},\n\n'
-            f'Your scheduled Finance Scraper report for {ticker_label} '
+            f'Your scheduled report for {ticker_label} '
             f'on {scheduled_date} is attached.\n\n'
             'The message was sent from your connected Google account.'
         )
         return subject, body
     subject = (
-        f'Finance Scraper — Reporte de {ticker_label} — {scheduled_date}'
+        f'Reporte financiero — {ticker_label} — {scheduled_date}'
     )
     body = (
         f'Hola {account_name},\n\n'
-        f'Adjuntamos tu reporte programado de Finance Scraper para '
+        f'Adjuntamos tu reporte programado de '
         f'{ticker_label} del {scheduled_date}.\n\n'
         'El correo se envió desde tu cuenta de Google autorizada.'
     )
@@ -87,7 +87,7 @@ def _report_email_content(
 
 async def _wait_for_reports(
     account_id: str,
-    report_ids: list[str],
+    report_ids: list[str]
 ) -> list[ReportJob] | None:
     deadline: float = time.monotonic() + _REPORT_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
@@ -127,7 +127,7 @@ async def _wait_for_reports(
 
 
 async def run_scheduled_report(
-    schedule_id: str,
+    schedule_id: str
 ) -> ScheduleRunResult:
     schedule: ReportSchedule | None = (
         await ScheduleRepository.get_schedule_by_id(schedule_id)
@@ -308,6 +308,7 @@ async def run_scheduled_report(
             subject,
             text_body,
             attachments,
+            sender_name=account.name,
         )
     except GoogleAccountNotConnectedError:
         await ScheduleRepository.finish_schedule_run(

@@ -3,7 +3,7 @@ from designkit.behavioral.typing import Assertion
 
 from finance.services.i18n.models import (
     I18nSnapshot,
-    Translation, TranslationMap,
+    Translation, TranslationMap
 )
 from finance.types.language import Language
 from finance.config import DEFAULT_LANGUAGE
@@ -28,7 +28,7 @@ def _create_snapshot(
     translation_map: TranslationMap,
     lang: str,
     mnemonic: str = '.',
-    throw_error: bool = True,
+    throw_error: bool = True
 ) -> Translation:
     Assertion(master_mnemonic).must_be(str)
     Assertion(translation_map).must_be(dict)
@@ -119,7 +119,7 @@ def translate(
     fallback: str | None = None,
     *,
     throw_error: bool = True,
-    **values: object,
+    **values: object
 ) -> str:
     """
     Resolve a text translation through the central i18n service.

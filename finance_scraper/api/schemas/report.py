@@ -14,7 +14,7 @@ from api.schemas.base import CollectionResponse, OKResponse
 
 
 _SAFE_FILE_NAME: re.Pattern[str] = re.compile(
-    r'^[A-Za-z0-9][A-Za-z0-9._ -]{0,119}$',
+    r'^[A-Za-z0-9][A-Za-z0-9._ -]{0,119}$'
 )
 _RESERVED_FILE_NAMES: frozenset[str] = frozenset(
     {
@@ -23,7 +23,7 @@ _RESERVED_FILE_NAMES: frozenset[str] = frozenset(
         'CON',
         'NUL',
         'PRN',
-    },
+    }
 )
 
 

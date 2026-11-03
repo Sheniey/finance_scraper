@@ -10,7 +10,7 @@ async def save_google_connection(
     google_email: str,
     scopes: tuple[str, ...],
     *,
-    connected_at: int | None = None,
+    connected_at: int | None = None
 ) -> GoogleAccountConnection:
     now: int = int(time.time())
     established_at: int = connected_at if connected_at is not None else now
@@ -44,7 +44,7 @@ async def save_google_connection(
 
 
 async def get_google_connection(
-    account_id: str,
+    account_id: str
 ) -> GoogleAccountConnection | None:
     async with api_connection() as connection:
         row = (

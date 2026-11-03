@@ -3,13 +3,17 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.routers import auth as auth_router
-from api.services.google_oauth import GoogleLoginIdentity
+from finance.services.account.vault import (
+    VaultEnvelopeError,
+    generate_umk,
+    vault_sessions
+)
 
 
 def _login(
     client: TestClient,
     email: str = 'admin@example.com',
-    password: str = 'admin-password',
+    password: str = 'admin-password'
 ):
     return client.post(
         '/auth/login',
@@ -19,7 +23,7 @@ def _login(
 
 def test_registration_requires_desktop_token_and_creates_user(
     api_client,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     client, state = api_client
     monkeypatch.setenv('FINANCE_DESKTOP_CONTROL_TOKEN', 'desktop-test-token')
@@ -49,101 +53,15 @@ def test_registration_requires_desktop_token_and_creates_user(
     assert len(state['accounts']) == 3
 
 
-def test_google_signin_creates_a_local_profile_for_a_new_verified_email(
-    api_client,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client, state = api_client
-    monkeypatch.setenv('FINANCE_DESKTOP_CONTROL_TOKEN', 'desktop-test-token')
-    identity = GoogleLoginIdentity(
-        email='google-user@example.com',
-        name='Google User',
-    )
-
-    async def get_account_by_email(email: str):
-        return next(
-            (
-                account
-                for account in state['accounts'].values()
-                if str(account.email).casefold() == email.casefold()
-            ),
-            None,
-        )
-
-    monkeypatch.setattr(
-        auth_router,
-        'consume_google_login_flow',
-        lambda flow_id: identity,
-    )
-    monkeypatch.setattr(
-        auth_router.AccountRepository,
-        'get_account_by_email',
-        get_account_by_email,
-    )
+def test_google_oauth_is_not_an_account_login_method(api_client) -> None:
+    client, _ = api_client
 
     response = client.post(
         '/auth/google/login',
-        headers={'X-Finance-Desktop-Token': 'desktop-test-token'},
         json={'flow_id': 'verified-google-flow-id-1234567890'},
     )
 
-    assert response.status_code == 200
-    assert response.json()['access_token']
-    account = next(
-        item
-        for item in state['accounts'].values()
-        if item.email == identity.email
-    )
-    assert account.name == identity.name
-    assert state['passwords'][identity.email]
-
-
-def test_google_signin_uses_an_existing_account_with_the_verified_email(
-    api_client,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client, state = api_client
-    monkeypatch.setenv('FINANCE_DESKTOP_CONTROL_TOKEN', 'desktop-test-token')
-    identity = GoogleLoginIdentity(
-        email='user@example.com',
-        name='Updated Google Name',
-    )
-    existing_account = next(
-        item
-        for item in state['accounts'].values()
-        if item.email == identity.email
-    )
-
-    async def get_account_by_email(email: str):
-        return existing_account if email.casefold() == identity.email else None
-
-    async def create_account(payload):
-        raise AssertionError('Google sign-in must reuse the matching account')
-
-    monkeypatch.setattr(
-        auth_router,
-        'consume_google_login_flow',
-        lambda flow_id: identity,
-    )
-    monkeypatch.setattr(
-        auth_router.AccountRepository,
-        'get_account_by_email',
-        get_account_by_email,
-    )
-    monkeypatch.setattr(
-        auth_router.AccountRepository,
-        'create_account',
-        create_account,
-    )
-
-    response = client.post(
-        '/auth/google/login',
-        headers={'X-Finance-Desktop-Token': 'desktop-test-token'},
-        json={'flow_id': 'existing-google-flow-id-123456789'},
-    )
-
-    assert response.status_code == 200
-    assert response.json()['access_token']
+    assert response.status_code == 404
 
 
 def test_login_refresh_replay_revokes_token_family(api_client) -> None:
@@ -183,8 +101,40 @@ def test_login_refresh_replay_revokes_token_family(api_client) -> None:
     assert replay_response.json()['error'] == 'INVALID_EXPIRED_TOKEN'
 
 
-def test_logout_revokes_access_and_refresh_tokens(api_client) -> None:
+def test_login_returns_a_safe_error_when_the_vault_cannot_be_unlocked(
+    api_client,
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
     client, _ = api_client
+
+    async def fail_authentication(
+        email: str,
+        password: str,
+    ) -> None:
+        raise VaultEnvelopeError('invalid encrypted vault contents')
+
+    monkeypatch.setattr(
+        auth_router,
+        'authenticate',
+        fail_authentication,
+    )
+    response = _login(client)
+
+    assert response.status_code == 409
+    assert response.json()['error'] == 'ACCOUNT_VAULT_UNAVAILABLE'
+    assert 'invalid encrypted vault contents' not in response.text
+
+
+def test_logout_revokes_access_and_refresh_tokens(api_client) -> None:
+    client, state = api_client
+    account = next(
+        item
+        for item in state['accounts'].values()
+        if str(item.email) == 'admin@example.com'
+    )
+    account_id = account.account_id or account.id
+    vault_sessions.clear()
+    vault_sessions.unlock(account_id, generate_umk())
     pair = _login(client).json()
     headers = {'Authorization': f'Bearer {pair["access_token"]}'}
 
@@ -196,6 +146,7 @@ def test_logout_revokes_access_and_refresh_tokens(api_client) -> None:
     )
 
     assert logout_response.status_code == 200
+    assert vault_sessions.get(account_id) is None
     assert profile_response.status_code == 401
     assert refresh_response.status_code == 401
 

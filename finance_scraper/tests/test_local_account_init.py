@@ -8,7 +8,7 @@ import finance.services.account.db as account_database
 
 def test_fresh_local_account_database_is_initialized_without_turso(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch
 ) -> None:
     database_path: Path = tmp_path / 'accounts.sqlite3'
     database_key: str = str(database_path.resolve())
@@ -44,6 +44,7 @@ def test_fresh_local_account_database_is_initialized_without_turso(
                 'action_history',
                 'account_custom_reports',
                 'account_watchlist',
+                'account_llm_api_keys',
             }.issubset(table_names)
         finally:
             account_database._schema_ready.discard(database_key)

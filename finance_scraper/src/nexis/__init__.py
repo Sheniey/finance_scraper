@@ -13,12 +13,12 @@ from nexis.actions import (
     ALL_ACTION_LABELS,
     MODEL_ACTION_LABELS,
     MODEL_ACTIONS,
-    TradingAction,
+    TradingAction
 )
 from nexis.classifier import (
     ActionClassifier,
     TradingDecision,
-    TradingSignal,
+    TradingSignal
 )
 from nexis.errors import (
     EmptyHistoryError,
@@ -28,7 +28,7 @@ from nexis.errors import (
     InsufficientHistoryError,
     InvalidModelArtifactError,
     ModelException,
-    ModelArtifactNotFoundError,
+    ModelArtifactNotFoundError
 )
 from nexis.predictor import load_model
 

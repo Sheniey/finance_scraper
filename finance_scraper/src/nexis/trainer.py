@@ -29,7 +29,7 @@ from nexis.settings import (
     RandomForestHyperparameters,
     ModelSettings, ModelHyperparameters,
     save_nexis_settings,
-    stamp_training_metadata,
+    stamp_training_metadata
 )
 
 
@@ -118,7 +118,7 @@ def _build_ticker_dataset(
     ticker: Ticker,
     config: DatasetConfig,
     *,
-    verboser: VerboseSystem,
+    verboser: VerboseSystem
 ) -> pd.DataFrame | None:
     try:
         dataset: pd.DataFrame = build_training_dataset(ticker=ticker, config=config)
@@ -150,7 +150,7 @@ def _ordinal_mae_rmse(y_true: pd.Series, y_pred: pd.Series) -> tuple[Percentage,
 def _build_ticker_oof_predictions(
     ticker_dataset: pd.DataFrame,
     n_splits: int,
-    hyperparameters: ModelHyperparameters,
+    hyperparameters: ModelHyperparameters
 ) -> tuple[pd.Series, pd.Series, dict[str, pd.Series]] | None:
     if len(ticker_dataset) < n_splits + 1:
         return None
@@ -205,7 +205,7 @@ def _build_oof_predictions(
     hyperparameters: ModelHyperparameters,
     n_splits: int = 5,
     *,
-    verboser: VerboseSystem,
+    verboser: VerboseSystem
 ) -> tuple[pd.Series, pd.Series, dict[str, pd.Series]]:
     ticker_datasets: list[pd.DataFrame] = _group_ticker_datasets(dataset)
     for ticker_dataset in ticker_datasets:
@@ -264,7 +264,7 @@ def _fit_and_save(
     config: DatasetConfig,
     hyperparameters: ModelHyperparameters,
     *,
-    verboser: VerboseSystem,
+    verboser: VerboseSystem
 ) -> tuple[ActionClassifier, TrainMetrics]:
     y_true, y_pred, estimator_predictions = _build_oof_predictions(global_dataset, hyperparameters, verboser=verboser)
     report: str = classification_report(y_true, y_pred, digits=4, zero_division=0)
@@ -320,7 +320,7 @@ def _evaluate_estimator_oof(
     name: str,
     settings: RandomForestHyperparameters | LightGBMHyperparameters | CatBoostHyperparameters,
     ticker_datasets: list[pd.DataFrame],
-    n_splits: int,
+    n_splits: int
 ) -> tuple[Percentage, Percentage]:
     """
     Trains and scores a single estimator (not the full ensemble) via
@@ -376,7 +376,7 @@ def _tune_estimator(
     estimators_step: int,
     depth_step: int,
     max_iterations: int,
-    verboser: VerboseSystem,
+    verboser: VerboseSystem
 ) -> tuple[
     RandomForestHyperparameters
     | LightGBMHyperparameters
@@ -497,7 +497,7 @@ def train(
     tickers: list[Ticker],
     config: DatasetConfig | None = None,
     *,
-    verboser: VerboseSystem | None = None,
+    verboser: VerboseSystem | None = None
 ) -> tuple[ActionClassifier, TrainMetrics]:
     """
     Trains the model once, reading its hyperparameters
@@ -527,7 +527,7 @@ def deep_train(
     depth_step: int = 1,
     max_iterations: int = 50,
     settings_path: str | os.PathLike[str] | None = None,
-    verboser: VerboseSystem | None = None,
+    verboser: VerboseSystem | None = None
 ) -> tuple[ActionClassifier, TrainMetrics, ModelSettings]:
     """
     Searches, per classifier (rf/lgbm/catboost), for the hyperparameters

@@ -16,14 +16,13 @@ from finance.services.stock_analyzer import analyze_stock
 from finance.services.i18n.i18n import load_i18n
 from finance.services.yf_extractor.repository import build_info
 from finance.services.stock_analyzer.models import Metric, MetricGrade
+from finance.types import Language, ReportMode
 from datatypes import (
-    Language,
     Money as MoneyWrapper,
-    ReportMode,
     Ticker,
     YFinanceTickerInfo,
     YFinanceStatement,
-    to_money,
+    to_money
 )
 
 

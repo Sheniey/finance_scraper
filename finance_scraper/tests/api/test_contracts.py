@@ -18,6 +18,8 @@ def test_api_exposes_only_the_requested_endpoints() -> None:
         '/integrations/google/authorize': {'post'},
         '/integrations/google/callback/{flow_id}': {'get'},
         '/integrations/google/status': {'get', 'delete'},
+        '/portfolio/me': {'get'},
+        '/portfolio/me/trades': {'post'},
         '/reports': {'get', 'post', 'delete'},
         '/reports/{report_id}': {'get', 'delete'},
         '/reports/{report_id}/download': {'get'},

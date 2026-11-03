@@ -8,7 +8,7 @@ from finance.services.database import (
     DatabaseConfigurationError,
     close_database_pools,
     database_url,
-    get_database_pool,
+    get_database_pool
 )
 
 

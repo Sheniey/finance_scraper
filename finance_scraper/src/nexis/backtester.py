@@ -30,7 +30,7 @@ def run_backtest(
     symbol: str,
     config: DatasetConfig | None = None,
     initial_train_ratio: float = 0.7,
-    transaction_cost: float = 0.0,
+    transaction_cost: float = 0.0
 ) -> BacktestMetrics:
     Assertion(symbol).must_be(str)
     Assertion(initial_train_ratio).must_comply(

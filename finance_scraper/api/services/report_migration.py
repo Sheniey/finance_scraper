@@ -12,7 +12,7 @@ from finance.services.report_store import reports as ReportStore
 
 logger: logging.Logger = logging.getLogger(__name__)
 _REPORT_STATUSES: frozenset[str] = frozenset(
-    {'PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'},
+    {'PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED'}
 )
 
 
@@ -24,7 +24,7 @@ def _legacy_database_paths() -> tuple[Path, ...]:
 
 def _resolve_legacy_artifact(
     database_path: Path,
-    artifact_path: str | None,
+    artifact_path: str | None
 ) -> tuple[Path | None, bytes | None]:
     if not artifact_path:
         return None, None

@@ -1,15 +1,14 @@
 """Account preference choices exposed by the account service."""
 
-
-# ================================================== #
-# MODULE: preferences
-# ================================================== #
-
 from pathlib import Path
 
 from finance.types.language import Language
 from finance.types.report_mode import ReportMode
 
+
+# ================================================== #
+# CONSTANTS                                          #
+# ================================================== #
 
 LANGUAGE_NAMES: dict[str, str] = {
     'chilango': 'Chilango',
@@ -20,9 +19,13 @@ LANGUAGE_NAMES: dict[str, str] = {
 LANGUAGE_STYLES: tuple[str, ...] = (
     'friendly',
     'professional',
-    'technical',
+    'technical'
 )
 
+
+# ================================================== #
+# FEATURES                                           #
+# ================================================== #
 
 def get_available_languages() -> list[Language]:
     language_paths: set[Path] = set()
@@ -39,19 +42,8 @@ def get_available_languages() -> list[Language]:
         for code in codes
     ]
 
-
 def get_available_language_styles() -> list[str]:
     return list(LANGUAGE_STYLES)
 
-
 def get_available_report_modes() -> list[ReportMode]:
     return list(ReportMode)
-
-
-__all__: list[str] = [
-    'LANGUAGE_NAMES',
-    'LANGUAGE_STYLES',
-    'get_available_languages',
-    'get_available_language_styles',
-    'get_available_report_modes',
-]

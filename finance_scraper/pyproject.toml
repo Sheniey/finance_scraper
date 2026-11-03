@@ -43,6 +43,8 @@ dependencies = [
     "finance-core",
     "openpyxl>=3.1.5",
     "keyring>=25.7.0",
+    "argon2-cffi>=25.1.0",
+    "cryptography>=50.0.2",
 ]
 
 [dependency-groups]
@@ -74,9 +76,7 @@ finance = ["**/*.json", "**/*.sql", "**/*.yaml"]
 nexis = ["**/*.yaml"]
 
 [tool.uv.workspace]
-members = [
-    "src/finance_core",
-]
+members = ["src/finance_core",]
 
 [tool.uv.sources]
 finance-core = { workspace = true, editable = true }

@@ -18,7 +18,7 @@ class TradingAction(StrEnum):
 MODEL_ACTIONS: tuple[TradingAction, ...] = (
     TradingAction.BUY,
     TradingAction.HOLD,
-    TradingAction.SELL,
+    TradingAction.SELL
 )
 """The subset of actions that the trading model is capable of predicting."""
 

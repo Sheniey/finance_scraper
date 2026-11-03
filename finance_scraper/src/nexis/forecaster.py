@@ -15,7 +15,7 @@ from nexis.models import ForecastResult
 from nexis.errors import (
     ForecastGenerationError,
     ForecastModelUnavailableError,
-    InsufficientForecastHistoryError,
+    InsufficientForecastHistoryError
 )
 
 

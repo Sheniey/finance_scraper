@@ -1,7 +1,4 @@
-# ================================================== #
-# MODULE: __init__
-# ================================================== #
-
+ 
 
 from finance.services.ml.repository import predict_share, load_model
 from finance.services.ml.models import (
@@ -12,5 +9,5 @@ from finance.services.ml.models import (
 from finance.services.ml.exceptions import (
     ModelException,
     MachineLearningException,
-    InvalidMiddlewareError,
+    InvalidMiddlewareError
 )

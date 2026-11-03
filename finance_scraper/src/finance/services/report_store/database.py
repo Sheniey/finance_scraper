@@ -10,12 +10,12 @@ from finance.config import (
     DB_LOCAL_PATH,
     DB_LOCATION,
     DESKTOP_LOCAL_ONLY,
-    REPORT_STORE_PATH,
+    REPORT_STORE_PATH
 )
 from finance.services.database.exceptions import DatabaseSyncError
 from finance.services.database.sync import (
     SyncConnection,
-    TursoSyncDatabase,
+    TursoSyncDatabase
 )
 
 
@@ -68,7 +68,7 @@ REPORT_SCHEMA_STATEMENTS: tuple[str, ...] = (
         source_database TEXT PRIMARY KEY,
         completed_at INTEGER NOT NULL
     )
-    ''',
+    '''
 )
 
 

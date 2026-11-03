@@ -1,7 +1,4 @@
-# ================================================== #
-# MODULE: __init__
-# ================================================== #
-
+ 
 
 from finance.services.llm.models import ExplanationConfig, Explanation, Reasoning
 from finance.services.llm.repository import explain_action
@@ -13,7 +10,7 @@ from finance.services.llm.exceptions import (
     LLMException,
     LLMInitializationError,
     LLMProviderError,
-    LLMUnavailableError,
+    LLMUnavailableError
 )
 from finance.services.llm.strategy import (
     AnthropicLLMStrategy,
@@ -29,6 +26,7 @@ from finance.services.llm.strategy import (
     OpenAIStrategy,
     Response,
     create_llm_service,
+    create_llm_service_for_account
 )
 
 
@@ -57,5 +55,6 @@ __all__: list[str] = [
     'Reasoning',
     'Response',
     'create_llm_service',
+    'create_llm_service_for_account',
     'explain_action',
 ]

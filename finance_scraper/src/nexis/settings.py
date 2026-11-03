@@ -124,7 +124,7 @@ def stamp_training_metadata(
     mae: Percentage,
     rmse: Percentage,
     horizon_days: int,
-    trained_tickers: list[str],
+    trained_tickers: list[str]
 ) -> ModelSettings:
     return settings.with_updates(
         training=TrainingMetadata(

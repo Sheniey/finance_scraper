@@ -11,12 +11,12 @@ import httpx
 from api.exceptions.google import (
     GoogleAccountNotConnectedError,
     GoogleOAuthNotConfiguredError,
-    GoogleOAuthProviderError,
+    GoogleOAuthProviderError
 )
 from api.repositories import google as GoogleRepository
 from api.services.credential_store import (
     delete_google_refresh_token,
-    get_google_refresh_token,
+    get_google_refresh_token
 )
 
 
@@ -38,14 +38,22 @@ def build_google_email(
     subject: str,
     text_body: str,
     attachments: Sequence[GoogleEmailAttachment],
+    *,
+    sender_name: str,
 ) -> EmailMessage:
     if not subject.strip() or '\r' in subject or '\n' in subject:
         raise ValueError('Email subject must not be blank or contain line breaks')
     if not text_body.strip():
         raise ValueError('Email body must not be blank')
+    if (
+        not sender_name.strip()
+        or '\r' in sender_name
+        or '\n' in sender_name
+    ):
+        raise ValueError('Email sender name must not be blank or contain line breaks')
 
     message: EmailMessage = EmailMessage()
-    message['From'] = formataddr(('Finance Scraper', recipient))
+    message['From'] = formataddr((sender_name.strip(), recipient))
     message['To'] = recipient
     message['Subject'] = subject
     message.set_content(text_body)
@@ -64,7 +72,7 @@ def build_google_email(
 
 async def _refresh_access_token(
     account_id: str,
-    refresh_token: str,
+    refresh_token: str
 ) -> str:
     client_id: str = (os.getenv('GOOGLE_OAUTH_CLIENT_ID') or '').strip()
     if not client_id:
@@ -129,7 +137,9 @@ async def send_google_email(
     subject: str,
     text_body: str,
     attachments: Sequence[GoogleEmailAttachment] = (),
-) -> None:
+    *,
+    sender_name: str,
+) -> str:
     connection = await GoogleRepository.get_google_connection(account_id)
     if connection is None:
         raise GoogleAccountNotConnectedError()
@@ -150,6 +160,7 @@ async def send_google_email(
         subject,
         text_body,
         attachments,
+        sender_name=sender_name,
     )
     raw_message: str = base64.urlsafe_b64encode(
         message.as_bytes(),
@@ -164,5 +175,6 @@ async def send_google_email(
             response.raise_for_status()
     except httpx.HTTPError as e:
         raise GoogleOAuthProviderError(
-            'Gmail could not send the Finance Scraper report',
+            'Gmail could not send the report',
         ) from e
+    return connection.google_email

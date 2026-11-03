@@ -145,16 +145,19 @@ mismo store que usa la API.
 
 ## Gmail OAuth y reportes programados
 
-La integración de escritorio autoriza una cuenta Google mediante el navegador
-del sistema, `state` y PKCE. Solicita `gmail.send` y los scopes de identidad
-`openid email`; no utiliza contraseña de aplicación, SMTP ni acceso de lectura
-del correo. El encabezado visible es `Finance Scraper <correo-autorizado>` y
-los reportes se envían al Gmail que autorizó el perfil.
+Los perfiles de Finance Scraper se registran e inician sesión con el correo y
+la contraseña de la aplicación. Google no autentica perfiles. Al crear reportes
+programados, cada perfil puede autorizar Gmail desde el navegador del sistema
+con `state` y PKCE. El consentimiento solicita `gmail.send` y los scopes de
+identidad `openid email`; no solicita una contraseña de aplicación, acceso de
+lectura del correo ni credenciales SMTP. Los mensajes se envían desde la cuenta
+Gmail conectada y muestran el nombre del perfil como remitente.
 
-Configura `GOOGLE_OAUTH_CLIENT_ID` con un OAuth Client de tipo Desktop después
-de activar Gmail API. El refresh token se guarda en Windows Credential Manager,
-vinculado al `account_id`; SQLite conserva solo correo, scopes y fechas. Antes
-de distribuir el envío a cualquier usuario, el propietario debe completar el
+El publicador de la aplicación configura `GOOGLE_OAUTH_CLIENT_ID` con un OAuth
+Client de tipo Desktop y activa Gmail API; la persona que usa la aplicación no
+debe crear ni pegar un ID. El refresh token se guarda en Windows Credential
+Manager, vinculado al `account_id`; SQLite conserva solo correo, scopes y
+fechas. Antes de distribuir el envío a usuarios, el publicador completa el
 consentimiento y la verificación que exija Google para Gmail.
 
 `GET/POST /schedules/me` lista y crea horarios diarios; el usuario puede pausar
@@ -164,6 +167,11 @@ escritorio activa la API solo durante un envío programado. El Programador de
 tareas de Windows usa la sesión interactiva, recupera ejecuciones vencidas al
 volver y no necesita la contraseña de Windows. Los perfiles de Finance Scraper
 y sus autorizaciones de Gmail permanecen separados.
+
+`GET /portfolio/me` devuelve los movimientos y posiciones de la cuenta
+autenticada. `POST /portfolio/me/trades` registra una compra (`BUY`) o venta
+(`SELL`); el historial se guarda en la base local de cuentas. Los análisis
+usan el saldo neto para indicar a la IA si el perfil ya tiene una posición.
 
 El worker limita el paralelismo según núcleos lógicos y memoria disponible,
 respetando `api.report_worker_max_concurrency` (por defecto 4, máximo 16).

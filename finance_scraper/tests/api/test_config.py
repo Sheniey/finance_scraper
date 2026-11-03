@@ -10,10 +10,10 @@ def test_report_retention_defaults_to_fifteen_days() -> None:
 
 @pytest.mark.parametrize(
     'retention_seconds',
-    [599, 30 * 24 * 60 * 60 + 1],
+    [599, 30 * 24 * 60 * 60 + 1]
 )
 def test_report_retention_rejects_values_outside_configured_range(
-    retention_seconds: int,
+    retention_seconds: int
 ) -> None:
     with pytest.raises(ValidationError):
         APISettings(report_retention_seconds=retention_seconds)

@@ -12,7 +12,7 @@ from datatypes import (
     YFinanceSplit,
     YFinanceStatement,
     YFinanceTickerInfo,
-    YFinanceTicker,
+    YFinanceTicker
 )
 from finance.config import Theme
 from finance.services.report_store.cache import cache
@@ -152,7 +152,7 @@ def _load_info(ticker: YFinanceTicker) -> dict[str, Any]:
 def _load_history_points(
     ticker: YFinanceTicker,
     period: str,
-    interval: str,
+    interval: str
 ) -> list[YFinanceHistoryPoint]:
     return _history(ticker.history(period=period, interval=interval, auto_adjust=False))
 

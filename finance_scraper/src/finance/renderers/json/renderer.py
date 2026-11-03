@@ -1,9 +1,4 @@
-# ================================================== #
-# MODULE: renderer
-# ================================================== #
 
-
-import json
 from pathlib import Path
 from typing import Any
 from rich.syntax import Syntax

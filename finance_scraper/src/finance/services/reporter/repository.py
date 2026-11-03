@@ -28,7 +28,7 @@ from finance.logging import (
     INVALID_PROVIDER_PRIORITY,
     LLM_INITIALIZATION_FAILED,
     LLM_IS_UNAVAILABLE,
-    LLM_PROVIDER_ERROR,
+    LLM_PROVIDER_ERROR
 )
 from finance.types import ReportMode, Language
 from finance.types.report import Report
@@ -48,19 +48,15 @@ from finance.services.i18n.exceptions import I18nException
 from finance.services.yf_extractor.exceptions import YFExtractorException
 from finance.services.llm import (
     Explanation, ExplanationConfig, explain_action, LLMException,
-    LLMInitializationError, LLMProviderError, LLMUnavailableError,
+    LLMInitializationError, LLMProviderError, LLMService, LLMUnavailableError,
     InvalidExplanationError, InvalidPromptError, InvalidProviderPriorityError,
     EmptyExplanationError
 )
-from finance.types.report_presets import (
-    CUSTOM_FEATURE_NAMES,
-    CUSTOM_GRAPH_NAMES,
-    CUSTOM_METRIC_NAMES,
-)
+from finance.types.report_presets import CUSTOM_REPORT_IDENTIFIERS
 from finance.services.reporter.exceptions import (
     InvalidCustomReportError,
     InvalidReportHorizonError,
-    InvalidReportModeError,
+    InvalidReportModeError
 )
 
 _REPORT_CACHE_NAMESPACE: str = 'financial_report'
@@ -82,19 +78,22 @@ def _resolve_mode(mode: ReportMode | str) -> ReportMode:
         raise InvalidReportModeError(mode) from e
 
 
-def _normalize_custom_report(account: Account, mode: ReportMode) -> set[str]:
+def _normalize_custom_report(account: Account, mode: ReportMode) -> list[str]:
     custom_report: list[str] = list(account.custom_report)
     if mode == ReportMode.CUSTOM and not custom_report:
         raise InvalidCustomReportError(
             'The custom report mode requires at least one metric in account.custom_report.'
         )
 
-    normalized_custom_report: set[str] = {
-        item.strip().lower()
-        for item in custom_report
-    }
-    unknown_metrics = normalized_custom_report - (
-        CUSTOM_METRIC_NAMES | CUSTOM_FEATURE_NAMES | CUSTOM_GRAPH_NAMES
+    normalized_custom_report: list[str] = list(
+        dict.fromkeys(
+            item.strip().lower()
+            for item in custom_report
+            if item.strip()
+        ),
+    )
+    unknown_metrics: set[str] = (
+        set(normalized_custom_report) - CUSTOM_REPORT_IDENTIFIERS
     )
     if mode == ReportMode.CUSTOM and unknown_metrics:
         unknown_metrics_text: str = ', '.join(sorted(unknown_metrics))
@@ -107,14 +106,34 @@ def _normalize_custom_report(account: Account, mode: ReportMode) -> set[str]:
 
 def _should_generate_explanation(
     mode: ReportMode,
-    normalized_custom_report: set[str],
-    generate_explanation: bool,
+    normalized_custom_report: list[str],
+    generate_explanation: bool
 ) -> bool:
     if mode == ReportMode.INFO:
         return False
     if mode != ReportMode.CUSTOM:
         return generate_explanation
-    return 'explanation' in normalized_custom_report
+    return generate_explanation and 'explanation' in normalized_custom_report
+
+
+def will_generate_explanation(
+    account: Account,
+    *,
+    generate_explanation: bool,
+    mode: ReportMode | str
+) -> bool:
+    """Return whether this account and report mode require an LLM response."""
+
+    selected_mode: ReportMode = _resolve_mode(mode)
+    normalized_custom_report: list[str] = _normalize_custom_report(
+        account,
+        selected_mode,
+    )
+    return _should_generate_explanation(
+        selected_mode,
+        normalized_custom_report,
+        generate_explanation,
+    )
 
 
 def _build_analysis(ticker: Ticker, language: Language) -> StockAnalysis:
@@ -170,12 +189,12 @@ def _build_report_cache_key(
     account: Account,
     ticker: Ticker,
     *,
-    normalized_custom_report: set[str],
+    normalized_custom_report: list[str],
     selected_mode: ReportMode,
     should_explain: bool,
     generate_charts: bool,
     horizon: int,
-    has_shares: bool,
+    has_shares: bool
 ) -> str | None:
     if has_shares:
         return None
@@ -184,7 +203,7 @@ def _build_report_cache_key(
         'ticker': ticker.ticker,
         'language': account.language.model_dump(mode='json'),
         'mode': selected_mode.value,
-        'custom_report': sorted(normalized_custom_report),
+        'custom_report': normalized_custom_report,
         'explain': should_explain,
         'charts': generate_charts,
         'ml_horizon': horizon,
@@ -207,14 +226,14 @@ def get_report_cache_key(
     generate_explanation: bool = True,
     generate_charts: bool = True,
     mode: ReportMode | str = ReportMode.CLASSIC,
-    horizon: int = 10,
+    horizon: int = 10
 ) -> str | None:
     Assertion(account).must_be(Account, TypeError(f'Account {account!r} must be an instance of Account'))
     Assertion(ticker).must_be(Ticker, TypeError(f'Ticker {ticker!r} must be an instance of Ticker'))
     if horizon <= 0:
         raise InvalidReportHorizonError(horizon)
     selected_mode: ReportMode = _resolve_mode(mode)
-    normalized_custom_report: set[str] = _normalize_custom_report(
+    normalized_custom_report: list[str] = _normalize_custom_report(
         account,
         selected_mode,
     )
@@ -266,10 +285,17 @@ def _predict_share(
         )
         raise
 
-async def _explain_action(explanation_config: ExplanationConfig) -> Explanation | None:
+async def _explain_action(
+    explanation_config: ExplanationConfig,
+    *,
+    llm_service: LLMService | None = None
+) -> Explanation | None:
     try:
         with __verboser__.info_status(GENERATING_EXPLANATION):
-            explanation: Explanation = await explain_action(explanation_config)
+            explanation: Explanation = await explain_action(
+                explanation_config,
+                service=llm_service,
+            )
         __verboser__.info(EXPLANATION_GENERATED)
         return explanation
     except LLMInitializationError as e:
@@ -305,6 +331,8 @@ async def generate_report(
     mode: ReportMode | str = ReportMode.CLASSIC,
     horizon: int = 10,
     verbose: bool = False,
+    llm_service: LLMService | None = None,
+    cache_enabled: bool = True
 ) -> Report:
     Assertion(account).must_be(Account, TypeError(f'Account {account!r} must be an instance of Account'))
     Assertion(ticker).must_be(Ticker, TypeError(f'Ticker {ticker!r} must be an instance of Ticker'))
@@ -330,15 +358,19 @@ async def generate_report(
     )
 
     has_shares: bool = _has_shares(account, ticker)
-    cache_key: str | None = _build_report_cache_key(
-        account,
-        ticker,
-        normalized_custom_report=normalized_custom_report,
-        selected_mode=selected_mode,
-        should_explain=should_explain,
-        generate_charts=generate_charts,
-        horizon=horizon,
-        has_shares=has_shares,
+    cache_key: str | None = (
+        _build_report_cache_key(
+            account,
+            ticker,
+            normalized_custom_report=normalized_custom_report,
+            selected_mode=selected_mode,
+            should_explain=should_explain,
+            generate_charts=generate_charts,
+            horizon=horizon,
+            has_shares=has_shares,
+        )
+        if cache_enabled
+        else None
     )
     if cache_key is not None:
         cached_report: bytes | None = await asyncio.to_thread(
@@ -385,7 +417,7 @@ async def generate_report(
         has_explanation=should_explain,
         charts=generate_charts,
         mode=selected_mode,
-        custom_report=sorted(normalized_custom_report),
+        custom_report=normalized_custom_report,
     )
     print('Prediction: ', report.prediction_result.model_dump_json(indent=2))
 
@@ -401,7 +433,10 @@ async def generate_report(
             prediction_result=prediction_result,
             mode=selected_mode,
         )
-        explanation: Explanation | None = await _explain_action(explanation_config)
+        explanation: Explanation | None = await _explain_action(
+            explanation_config,
+            llm_service=llm_service,
+        )
         report.explanation = explanation
 
     if cache_key is not None:

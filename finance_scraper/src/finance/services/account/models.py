@@ -1,16 +1,17 @@
 
+import re
 from typing import Literal, Self
-from uuid import UUID, uuid4
-
 from designkit.behavioral.typing import classname
 from pydantic import BaseModel, EmailStr, Field, PositiveInt, field_validator, model_validator
+from uuid import UUID, uuid4
 
 from finance.config import DEFAULT_LANGUAGE
 from finance.types.language import Language
 from finance.types.report_mode import ReportMode
 from finance.services.account.exceptions import InvalidTickerError
-from finance.services.account.data.patterns import SYMBOL_PATTERN
 
+
+SYMBOL_PATTERN: re.Pattern = re.compile(r'^[A-Z]+[A-Z0-9\.\-]*$')
 
 # ================================================== #
 # TYPE ALIASES                                       #

@@ -1,7 +1,4 @@
-# ================================================== #
-# MODULE: __init__
-# ================================================== #
-
+ 
 
 from finance.services.stock_analyzer import extract, evaluators
 from finance.services.stock_analyzer.models import Fact, Metric, MetricStatus, MetricGrade
@@ -20,5 +17,5 @@ from finance.services.stock_analyzer.exceptions import (
     InvalidRatingRuleError,
     MnemonicNotFoundError,
     MissingMetricValueError,
-    StockAnalyzerException,
+    StockAnalyzerException
 )

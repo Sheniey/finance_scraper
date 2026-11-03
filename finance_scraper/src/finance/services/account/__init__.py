@@ -6,13 +6,25 @@ from finance.services.account.repository import (
     get_names, get_emails, get_everyone, get_watchlist,
     create_account, add_trade, add_watchlist_item, remove_watchlist_item,
     update_account, change_password,
-    count_shares, has_positive_position
+    count_shares, has_positive_position,
+    get_account_llm_keys, get_account_llm_key_providers,
+    set_account_llm_key, remove_account_llm_key, regenerate_account_umk
+)
+from finance.services.account.vault import (
+    LLMProvider,
+    decrypt_provider_key,
+    encrypt_provider_key,
+    generate_umk,
+    normalize_llm_provider,
+    unwrap_umk,
+    wrap_umk,
+    vault_sessions
 )
 from finance.services.account.models import Account, WatchlistItem, Stock
 from finance.services.account.preferences import (
     get_available_languages,
     get_available_language_styles,
-    get_available_report_modes,
+    get_available_report_modes
 )
 from finance.services.account.db import (
     delete_account,
@@ -24,12 +36,16 @@ from finance.services.account.db import (
     get_password_hash,
     get_password_hash_by_email,
     get_account_with_password_by_email,
-    get_account_with_password_by_name,
+    get_account_with_password_by_name
 )
 from finance.services.account.exceptions import (
     AccountException,
+    AccountVaultException,
     AccountSchemaException,
     AccountAlreadyExistsError,
     AccountNotFoundError,
     InvalidTickerError,
+    VaultLockedError,
+    VaultAuthenticationError,
+    VaultEnvelopeError
 )

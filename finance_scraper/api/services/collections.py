@@ -50,7 +50,7 @@ def collection_response(
     allowed_fields: set[str],
     allowed_sort_fields: set[str],
     allowed_filter_fields: set[str],
-    default_sort: tuple[str, ...] = (),
+    default_sort: tuple[str, ...] = ()
 ) -> CollectionResponse:
     field_names: set[str] = set(allowed_fields)
     selected_fields: tuple[str, ...] = query.fields or tuple(sorted(field_names))

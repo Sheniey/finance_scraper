@@ -19,7 +19,7 @@ from finance.services.account import (
     get_account_with_password_by_email,
     get_by_id,
     get_password_hash,
-    get_password_hash_by_email,
+    get_password_hash_by_email
 )
 from finance.services.account import db as account_storage
 from finance.services.database import close_database_pools, get_database_pool

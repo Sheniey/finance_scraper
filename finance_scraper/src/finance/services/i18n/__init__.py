@@ -6,5 +6,5 @@ from finance.services.i18n.exceptions import (
     I18nException,
     LanguageNotLoadedError,
     LanguageNotSupportedError,
-    MnemonicNotFoundError,
+    MnemonicNotFoundError
 )

@@ -1,3 +1,4 @@
+
 import json
 from collections.abc import Mapping
 from pathlib import Path
@@ -20,7 +21,7 @@ _TITLE_FONT: Font = Font(color='0D1726', bold=True, size=16)
 
 def _flatten_value(
     value: Any,
-    path: str = '',
+    path: str = ''
 ) -> list[tuple[str, Any]]:
     if isinstance(value, Mapping):
         flattened: list[tuple[str, Any]] = []

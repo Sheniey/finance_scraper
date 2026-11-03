@@ -10,7 +10,7 @@ from api.exceptions.security import UnauthorizedError
 
 
 def require_permission(
-    permission: str,
+    permission: str
 ) -> Callable[..., Awaitable[Account]]:
     async def dependency(
         account: Account = Depends(get_current_account),

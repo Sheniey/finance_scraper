@@ -24,5 +24,5 @@ limiter: Limiter = Limiter(
     default_limits=[
         f'{settings.security.rate_limits.default_per_minute}/minute',
     ],
-    headers_enabled=True,
+    headers_enabled=True
 )

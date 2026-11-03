@@ -15,7 +15,7 @@ from api.core.config import (
     DEFAULT_JWT_SECRET_KEY,
     JWT_ALGORITHM,
     JWT_ISSUER,
-    JWT_SECRET_KEY,
+    JWT_SECRET_KEY
 )
 from api.exceptions.auth import IncorrectCredentialsError, InvalidExpiredTokenError
 from api.models.auth import TokenClaims
@@ -36,7 +36,7 @@ if JWT_ALGORITHM != 'HS256':
 
 bearer_scheme: HTTPBearer = HTTPBearer(
     scheme_name='BearerAuth',
-    auto_error=False,
+    auto_error=False
 )
 
 
@@ -284,7 +284,7 @@ async def get_account_from_token(token: str) -> Account:
 
 async def get_current_account(
     request: Request,
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme)
 ) -> Account:
     if credentials is None:
         raise InvalidExpiredTokenError()

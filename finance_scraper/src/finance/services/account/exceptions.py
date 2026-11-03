@@ -9,9 +9,12 @@ class AccountException(Exception):
 class AccountSchemaException(RuntimeError):
     """Raised when the account database needs an explicit schema rebuild."""
 
+class AccountVaultException(AccountException):
+    """Base exception for account vault failures."""
+
 
 # ================================================== #
-# CUSTOM EXCEPTIONS                                  #
+# SPECIFIC EXCEPTIONS                                #
 # ================================================== #
 
 class InvalidTickerError(AccountException, ValueError):
@@ -34,3 +37,14 @@ class AccountNotFoundError(AccountException, LookupError):
     def __init__(self, identifier: str) -> None:
         self.identifier: str = identifier
         super().__init__(f'Account {identifier!r} does not exist.')
+
+class VaultEnvelopeError(AccountVaultException, ValueError):
+    """Raised when encrypted vault data is malformed or unsupported."""
+
+
+class VaultAuthenticationError(AccountVaultException):
+    """Raised when a password or associated vault data fails authentication."""
+
+
+class VaultLockedError(AccountVaultException):
+    """Raised when an account vault is not unlocked in this process."""

@@ -52,7 +52,7 @@ pub fn hash_password(password: &str) -> Result<String, String> {
 
 pub fn verify_password(
     password: &str,
-    encoded_password: &str,
+    encoded_password: &str
 ) -> bool {
     let parts: Vec<&str> = encoded_password.split('$').collect();
 

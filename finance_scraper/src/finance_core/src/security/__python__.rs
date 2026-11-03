@@ -12,7 +12,7 @@ pub fn hash_password(password: &str) -> PyResult<String> {
 #[pyfunction]
 pub fn verify_password(
     password: &str,
-    encoded_password: &str,
+    encoded_password: &str
 ) -> bool {
     passwords::verify_password(
         password,

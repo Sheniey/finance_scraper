@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from finance.config import DEFAULT_LANGUAGE
 from finance.services.account.models import Account
 from finance.services.account.exceptions import (
-    AccountAlreadyExistsError as FinanceAccountAlreadyExistsError,
+    AccountAlreadyExistsError as FinanceAccountAlreadyExistsError
 )
 from finance.types.language import Language
 
@@ -29,7 +29,7 @@ from finance.services.database.repository import create_schema
 from finance.services.report_store.cache import SQLiteCache
 from finance.services.report_store.database import (
     SQLiteReportDatabase,
-    create_report_schema,
+    create_report_schema
 )
 from finance.services.report_store import reports as ReportStore
 from api.core.config import APIConfig, settings
@@ -40,7 +40,7 @@ from api.main import app
 @pytest.fixture
 def api_test_paths(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> Path:
     account_database_path: Path = tmp_path / 'accounts.sqlite3'
     temporary_settings: APIConfig = APIConfig(
@@ -102,7 +102,7 @@ def api_test_paths(
 @pytest.fixture
 def api_client(
     api_test_paths: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[tuple[TestClient, dict[str, Any]]]:
     accounts: dict[str, Account] = {}
     passwords: dict[str, str] = {}

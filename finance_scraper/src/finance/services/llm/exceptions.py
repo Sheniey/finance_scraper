@@ -70,7 +70,9 @@ class EmptyExplanationError(LLMException, RuntimeError):
         super().__init__('LLM returned an empty explanation')
 
 class OllamaNotInstalledError(LLMException, RuntimeError):
-    """Raised when the Ollama provider is the only remaining provider and is not installed."""
+    """Raised when Ollama is unavailable or has no downloaded model."""
 
     def __init__(self) -> None:
-        super().__init__('Ollama provider is not installed or was not found on the system')
+        super().__init__(
+            'Ollama is not running or no local model is installed',
+        )

@@ -1,10 +1,7 @@
 """Seed a new Turso Sync replica from the existing local SQLite databases."""
 
-import logging
-import hashlib
-import os
-import sqlite3
-import time
+import time, logging, hashlib, os
+import json, sqlite3
 from collections.abc import Mapping, Sequence
 from contextlib import closing
 from datetime import datetime, timezone
@@ -14,12 +11,12 @@ from typing import Any
 from finance.config import DB_AUTH_TOKEN, DB_LOCAL_PATH, DB_LOCATION, MODULE_ROOT
 from finance.services.database.exceptions import (
     DatabaseConfigurationError,
-    DatabaseException,
+    DatabaseException
 )
 from finance.services.database.sync import (
     SyncConnection,
     TursoSyncDatabase,
-    sync_marker_path,
+    sync_marker_path
 )
 
 
@@ -37,6 +34,7 @@ _ACCOUNT_TABLE_COLUMNS: dict[str, tuple[str, ...]] = {
         'language_code',
         'language_style',
         'password_hash',
+        'encrypted_umk',
     ),
     'action_history': (
         'action_id',
@@ -50,8 +48,12 @@ _ACCOUNT_TABLE_COLUMNS: dict[str, tuple[str, ...]] = {
     ),
     'account_custom_reports': (
         'account_id',
-        'position',
-        'metric',
+        'custom_report_json',
+    ),
+    'account_llm_api_keys': (
+        'account_id',
+        'provider',
+        'encrypted_value',
     ),
     'account_watchlist': (
         'account_id',
@@ -60,6 +62,22 @@ _ACCOUNT_TABLE_COLUMNS: dict[str, tuple[str, ...]] = {
         'ticker_id',
         'rendering_mode',
         'llm_explanation',
+    ),
+}
+_LEGACY_ACCOUNT_COLUMNS: dict[str, tuple[str, ...]] = {
+    'accounts': (
+        'account_id',
+        'email',
+        'name',
+        'role',
+        'language_code',
+        'language_style',
+        'password_hash',
+    ),
+    'account_custom_reports': (
+        'account_id',
+        'position',
+        'metric',
     ),
 }
 _REPORT_TABLE_COLUMNS: dict[str, tuple[str, ...]] = {
@@ -142,22 +160,33 @@ def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
 
 def _validate_source_schema(
     database_path: Path,
-    required_tables: Mapping[str, tuple[str, ...]],
+    required_tables: Mapping[str, tuple[str, ...]]
 ) -> None:
     with closing(_readonly_connection(database_path)) as connection:
         for table_name, expected_columns in required_tables.items():
             if not _table_exists(connection, table_name):
+                if table_name == 'account_llm_api_keys':
+                    continue
                 raise DatabaseConfigurationError(
                     f'The local source is missing required table {table_name!r}.',
                 )
 
-            actual_columns: tuple[str, ...] = tuple(
+            actual_columns: set[str] = {
                 str(row['name'])
                 for row in connection.execute(
                     f'PRAGMA table_info({table_name})',
                 ).fetchall()
+            }
+            accepted_columns: set[frozenset[str]] = {
+                frozenset(expected_columns),
+            }
+            legacy_columns: tuple[str, ...] | None = (
+                _LEGACY_ACCOUNT_COLUMNS.get(table_name)
             )
-            if set(actual_columns) != set(expected_columns):
+            if legacy_columns is not None:
+                accepted_columns.add(frozenset(legacy_columns))
+
+            if frozenset(actual_columns) not in accepted_columns:
                 raise DatabaseConfigurationError(
                     f'The local source schema for {table_name!r} is not supported.',
                 )
@@ -179,30 +208,150 @@ def _validate_source_schema(
             )
 
 
+def _normalized_source_rows(
+    connection: sqlite3.Connection,
+    table_name: str,
+    columns: tuple[str, ...]
+) -> list[tuple[object, ...]]:
+    if not _table_exists(connection, table_name):
+        return []
+
+    source_columns: set[str] = {
+        str(row['name'])
+        for row in connection.execute(
+            f'PRAGMA table_info({table_name})',
+        ).fetchall()
+    }
+    if table_name == 'accounts':
+        selected_columns: tuple[str, ...] = tuple(
+            column
+            for column in columns
+            if column in source_columns
+        )
+        source_rows = connection.execute(
+            f'SELECT {", ".join(selected_columns)} FROM accounts',
+        ).fetchall()
+        return [
+            tuple(
+                row[column] if column in source_columns else None
+                for column in columns
+            )
+            for row in source_rows
+        ]
+
+    if table_name == 'account_custom_reports':
+        account_rows = connection.execute(
+            'SELECT account_id FROM accounts ORDER BY account_id',
+        ).fetchall()
+        account_ids: list[str] = [
+            str(row['account_id'])
+            for row in account_rows
+        ]
+        reports_by_account: dict[str, list[str]] = {}
+        if 'metric' in source_columns:
+            report_rows = connection.execute(
+                '''
+                SELECT account_id, position, metric
+                FROM account_custom_reports
+                ORDER BY account_id, position
+                ''',
+            ).fetchall()
+            for row in report_rows:
+                metric: object = row['metric']
+                if not isinstance(metric, str):
+                    raise DatabaseConfigurationError(
+                        'A local custom report metric is not text.',
+                    )
+                reports_by_account.setdefault(
+                    str(row['account_id']),
+                    [],
+                ).append(metric)
+
+        else:
+            report_rows = connection.execute(
+                '''
+                SELECT account_id, custom_report_json
+                FROM account_custom_reports
+                ORDER BY account_id
+                ''',
+            ).fetchall()
+
+            for row in report_rows:
+                account_id: str = str(row['account_id'])
+                if account_id in reports_by_account:
+                    raise DatabaseConfigurationError(
+                        'The local custom report table contains duplicate accounts.',
+                    )
+                custom_report_json: str = str(row['custom_report_json'])
+                try:
+                    custom_report: object = json.loads(custom_report_json)
+                except json.JSONDecodeError as e:
+                    raise DatabaseConfigurationError(
+                        'A local custom report is not valid JSON.',
+                    ) from e
+                
+                if (
+                    not isinstance(custom_report, list)
+                    or not all(
+                        isinstance(metric, str)
+                        for metric in custom_report
+                    )
+                ):
+                    raise DatabaseConfigurationError(
+                        'A local custom report must be a JSON array of strings.',
+                    )
+                reports_by_account[account_id] = [*custom_report]
+
+        if not set(reports_by_account).issubset(set(account_ids)):
+            raise DatabaseConfigurationError(
+                'A local custom report references an unknown account.',
+            )
+        
+        return [
+            (
+                account_id,
+                json.dumps(
+                    reports_by_account.get(account_id, []),
+                    ensure_ascii=False,
+                    separators=(',', ':'),
+                ),
+            )
+            for account_id in account_ids
+        ]
+
+    selected_columns = ', '.join(columns)
+    return [
+        tuple(row[column] for column in columns)
+        for row in connection.execute(
+            f'SELECT {selected_columns} FROM {table_name}',
+        )
+    ]
+
+
 def _copy_table(
     source_path: Path,
     target: SyncConnection,
     table_name: str,
-    columns: tuple[str, ...],
+    columns: tuple[str, ...]
 ) -> int:
     with closing(_readonly_connection(source_path)) as source:
-        if not _table_exists(source, table_name):
-            return 0
-
         placeholders: str = ', '.join('?' for _ in columns)
         column_sql: str = ', '.join(columns)
         statement: str = (
             f'INSERT INTO {table_name} ({column_sql}) '
             f'VALUES ({placeholders})'
         )
-        rows = source.execute(
-            f'SELECT {column_sql} FROM {table_name}',
+
+        rows: list[tuple[object, ...]] = _normalized_source_rows(
+            source,
+            table_name,
+            columns,
         )
         copied_rows: int = 0
         for row in rows:
             target.execute(
                 statement,
-                tuple(row[column] for column in columns),
+                row,
             )
             copied_rows += 1
     return copied_rows
@@ -211,31 +360,30 @@ def _copy_table(
 def _row_digest(values: Sequence[object]) -> bytes:
     row_hash: Any = hashlib.sha256()
     for value in values:
-        if value is None:
-            row_hash.update(b'n')
-        elif isinstance(value, bool):
-            row_hash.update(b'i')
-            row_hash.update(str(int(value)).encode('ascii'))
-        elif isinstance(value, int):
-            row_hash.update(b'i')
-            row_hash.update(str(value).encode('ascii'))
-        elif isinstance(value, float):
-            row_hash.update(b'f')
-            row_hash.update(value.hex().encode('ascii'))
-        elif isinstance(value, str):
-            encoded_value: bytes = value.encode('utf-8')
-            row_hash.update(b's')
-            row_hash.update(len(encoded_value).to_bytes(8, 'big'))
-            row_hash.update(encoded_value)
-        elif isinstance(value, (bytes, bytearray, memoryview)):
-            encoded_value = bytes(value)
-            row_hash.update(b'b')
-            row_hash.update(len(encoded_value).to_bytes(8, 'big'))
-            row_hash.update(encoded_value)
-        else:
-            raise DatabaseException(
-                'A source database contains an unsupported SQLite value type.',
-            )
+        match value:
+            case None:
+                row_hash.update(b'n')
+            case bool():
+                row_hash.update(b'i')
+                row_hash.update(str(int(value)).encode('ascii'))
+            case int():
+                row_hash.update(b'i')
+                row_hash.update(str(value).encode('ascii'))
+            case float():
+                row_hash.update(b'f')
+                row_hash.update(value.hex().encode('ascii'))
+            case str():
+                encoded_value: bytes = value.encode('utf-8')
+                row_hash.update(b's')
+                row_hash.update(len(encoded_value).to_bytes(8, 'big'))
+                row_hash.update(encoded_value)
+            case (bytes() | bytearray() | memoryview()):
+                encoded_value = bytes(value)
+                row_hash.update(b'b')
+                row_hash.update(len(encoded_value).to_bytes(8, 'big'))
+                row_hash.update(encoded_value)
+            case _:
+                raise DatabaseException('A source database contains an unsupported SQLite value type.')
     return row_hash.digest()
 
 
@@ -245,16 +393,18 @@ def _digest_table(
     columns: tuple[str, ...],
     *,
     where_clause: str = '',
-    parameters: tuple[object, ...] = (),
+    parameters: tuple[object, ...] = ()
 ) -> tuple[int, bytes]:
     column_sql: str = ', '.join(columns)
     query: str = f'SELECT {column_sql} FROM {table_name} {where_clause}'
     table_hash: Any = hashlib.sha256()
+
     row_digests: list[bytes] = []
     row_count: int = 0
     for row in connection.execute(query, parameters):
         row_digests.append(_row_digest(row))
         row_count += 1
+    
     for digest in sorted(row_digests):
         table_hash.update(digest)
     return row_count, table_hash.digest()
@@ -263,16 +413,22 @@ def _digest_table(
 def _source_table_digest(
     database_path: Path,
     table_name: str,
-    columns: tuple[str, ...],
+    columns: tuple[str, ...]
 ) -> tuple[int, bytes]:
     with closing(_readonly_connection(database_path)) as connection:
-        if not _table_exists(connection, table_name):
-            return 0, hashlib.sha256().digest()
-        return _digest_table(
+        rows: list[tuple[object, ...]] = _normalized_source_rows(
             connection,
             table_name,
             columns,
         )
+    row_digests: list[bytes] = [
+        _row_digest(row)
+        for row in rows
+    ]
+    table_hash: Any = hashlib.sha256()
+    for digest in sorted(row_digests):
+        table_hash.update(digest)
+    return len(rows), table_hash.digest()
 
 
 def _target_row_count(connection: SyncConnection, table_name: str) -> int:
@@ -280,9 +436,7 @@ def _target_row_count(connection: SyncConnection, table_name: str) -> int:
         f'SELECT COUNT(*) AS row_count FROM {table_name}',
     ).fetchone()
     if row is None:
-        raise DatabaseException(
-            f'Could not count rows in the synchronized table {table_name!r}.',
-        )
+        raise DatabaseException(f'Could not count rows in the synchronized table {table_name!r}.')
     return int(row['row_count'])
 
 
@@ -300,6 +454,7 @@ def _write_migration_state(state_path: Path) -> None:
         ) from e
 
 
+# this function below was coded by a LLM, it lenght is relatively long
 def migrate_local_data() -> None:
     """Back up and seed the sync replica from local account/report files."""
 
@@ -307,13 +462,9 @@ def migrate_local_data() -> None:
     account_source: Path = source_directory / 'financescraper.sqlite3'
     report_source: Path = source_directory / 'report_store.sqlite3'
     if not account_source.is_file():
-        raise DatabaseConfigurationError(
-            'The local financescraper.sqlite3 source file was not found.',
-        )
+        raise DatabaseConfigurationError('The local financescraper.sqlite3 source file was not found.')
     if not report_source.is_file():
-        raise DatabaseConfigurationError(
-            'The local report_store.sqlite3 source file was not found.',
-        )
+        raise DatabaseConfigurationError('The local report_store.sqlite3 source file was not found.')
 
     _validate_source_schema(account_source, _ACCOUNT_TABLE_COLUMNS)
     if report_source.exists():
@@ -345,9 +496,7 @@ def migrate_local_data() -> None:
             'replica; it will not be opened or overwritten.',
         )
     if managed_marker.is_file() and not target_exists:
-        raise DatabaseConfigurationError(
-            'The Turso Sync marker exists but the local database file is missing.',
-        )
+        raise DatabaseConfigurationError('The Turso Sync marker exists but the local database file is missing.')
 
     _backup_source(account_source)
     _backup_source(report_source)
@@ -446,9 +595,7 @@ def migrate_local_data() -> None:
                     or actual_count != expected_count
                     or actual_digest != expected_digest
                 ):
-                    raise DatabaseException(
-                        f'Local migration verification failed for {table_name!r}.',
-                    )
+                    raise DatabaseException(f'Local migration verification failed for {table_name!r}.')
 
             expected_count, expected_digest = _source_table_digest(
                 report_source,
@@ -497,16 +644,12 @@ def migrate_local_data() -> None:
         target.push()
         stats = target.stats()
         if stats.cdc_operations != 0:
-            raise DatabaseException(
-                'Turso accepted the push but local CDC still reports pending operations.',
-            )
+            raise DatabaseException('Turso accepted the push but local CDC still reports pending operations.')
 
         target.mark_sync_managed()
         if migration_state_path.exists():
             migration_state_path.unlink()
-        logger.info(
-            'Local accounts, shared tables, and report jobs were synchronized.',
-        )
+        logger.info('Local accounts, shared tables, and report jobs were synchronized.')
     finally:
         target.close()
 
@@ -514,7 +657,6 @@ def migrate_local_data() -> None:
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
     migrate_local_data()
-
 
 if __name__ == '__main__':
     main()

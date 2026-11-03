@@ -9,7 +9,7 @@ from ollama import (
     AsyncClient as OllamaClient,
     ChatResponse as OllamaResponse,
     RequestError as OllamaRequestError,
-    ResponseError as OllamaResponseError,
+    ResponseError as OllamaResponseError
 )
 from openai import APIError, AsyncOpenAI
 
@@ -17,7 +17,7 @@ from finance.config import (
     ANTHROPIC_API_KEY,
     DEEPSEEK_API_KEY,
     OPENAI_API_KEY,
-    settings as application_settings,
+    settings as application_settings
 )
 from finance.settings import LLMModelSettings, Settings
 from finance.services.llm.exceptions import (
@@ -26,7 +26,7 @@ from finance.services.llm.exceptions import (
     LLMInitializationError,
     LLMProviderError,
     LLMUnavailableError,
-    OllamaNotInstalledError,
+    OllamaNotInstalledError
 )
 
 
@@ -66,7 +66,7 @@ def _messages(system_prompt: str, user_prompt: str) -> list[dict[str, str]]:
 
 def _max_tokens(
     options: Mapping[str, Any],
-    provider_settings: LLMModelSettings,
+    provider_settings: LLMModelSettings
 ) -> int:
     configured_value: Any = options.get('max_tokens', options.get('num_predict'))
     if configured_value is None:
@@ -201,16 +201,36 @@ class OllamaStrategy(LLMStrategy):
             host=self.provider_settings.base_url
         )
 
+    def _installed_models(self) -> list[str]:
+        try:
+            response = httpx.get(
+                self.provider_settings.base_url + '/api/tags',
+                timeout=1,
+            )
+        except httpx.RequestError:
+            return []
+        if not response.is_success:
+            return []
+        try:
+            payload: object = response.json()
+        except ValueError:
+            return []
+        if not isinstance(payload, dict):
+            return []
+        models: object = payload.get('models')
+        if not isinstance(models, list):
+            return []
+        return [
+            model['name']
+            for model in models
+            if isinstance(model, dict)
+            and isinstance(model.get('name'), str)
+            and model['name']
+        ]
+
     @property
     def is_available(self) -> bool:
-        try:
-            httpx.get(
-                self.provider_settings.base_url + '/api/tags',
-                timeout=1
-            )
-            return True
-        except:
-            return False
+        return bool(self._installed_models())
 
     def _request_options(self, options: Mapping[str, Any]) -> dict[str, Any]:
         configured_options: Any = options.get('options', {})
@@ -246,8 +266,19 @@ class OllamaStrategy(LLMStrategy):
         user_prompt: str,
         **options: Any,
     ) -> Response:
+        installed_models: list[str] = self._installed_models()
+        if not installed_models:
+            raise LLMProviderError(
+                self.provider,
+                'Ollama is not running or no local model is installed',
+            )
+        selected_model: str = (
+            self.provider_settings.model
+            if self.provider_settings.model in installed_models
+            else installed_models[0]
+        )
         request: dict[str, Any] = {
-            'model': self.provider_settings.model,
+            'model': selected_model,
             'messages': _messages(system_prompt, user_prompt),
             'stream': False,
             'options': self._request_options(options),
@@ -484,10 +515,11 @@ def create_llm_service(
     openai_api_key: str | None = None,
     deepseek_api_key: str | None = None,
     anthropic_api_key: str | None = None,
+    use_environment_keys: bool = True,
     openai__client: Any | None = None,
     deepseek__client: Any | None = None,
     anthropic__client: Any | None = None,
-    ollama__client: OllamaClient | None = None,
+    ollama__client: OllamaClient | None = None
 ) -> LLMService:
     current_settings: Settings = (
         configured_settings
@@ -495,13 +527,19 @@ def create_llm_service(
         else application_settings
     )
     resolved_openai_key: str | None = (
-        OPENAI_API_KEY if openai_api_key is None else openai_api_key
+        OPENAI_API_KEY
+        if use_environment_keys and openai_api_key is None
+        else openai_api_key
     )
     resolved_deepseek_key: str | None = (
-        DEEPSEEK_API_KEY if deepseek_api_key is None else deepseek_api_key
+        DEEPSEEK_API_KEY
+        if use_environment_keys and deepseek_api_key is None
+        else deepseek_api_key
     )
     resolved_anthropic_key: str | None = (
-        ANTHROPIC_API_KEY if anthropic_api_key is None else anthropic_api_key
+        ANTHROPIC_API_KEY
+        if use_environment_keys and anthropic_api_key is None
+        else anthropic_api_key
     )
     try:
         provider_settings: dict[str, LLMModelSettings] = {
@@ -519,19 +557,28 @@ def create_llm_service(
             ollama__client,
         ),
     }
-    if resolved_anthropic_key or anthropic__client is not None:
+    if (
+        'anthropic' in provider_settings
+        and (resolved_anthropic_key or anthropic__client is not None)
+    ):
         strategies['anthropic'] = AnthropicStrategy(
             provider_settings['anthropic'],
             resolved_anthropic_key,
             anthropic__client,
         )
-    if resolved_deepseek_key or deepseek__client is not None:
+    if (
+        'deepseek' in provider_settings
+        and (resolved_deepseek_key or deepseek__client is not None)
+    ):
         strategies['deepseek'] = DeepSeekStrategy(
             provider_settings['deepseek'],
             resolved_deepseek_key,
             deepseek__client,
         )
-    if resolved_openai_key or openai__client is not None:
+    if (
+        'chatgpt' in provider_settings
+        and (resolved_openai_key or openai__client is not None)
+    ):
         strategies['chatgpt'] = ChatGPTStrategy(
             provider_settings['chatgpt'],
             resolved_openai_key,
@@ -545,6 +592,32 @@ def create_llm_service(
             'temperature': current_settings.llm.generation.temperature,
             'max_tokens': current_settings.llm.generation.max_tokens,
         },
+    )
+
+
+def create_llm_service_for_account(
+    provider_keys: Mapping[str, str]
+) -> LLMService | None:
+    """Build an isolated LLM service using one account's encrypted keys."""
+
+    if not provider_keys:
+        return None
+    supported_providers: set[str] = {
+        'deepseek',
+        'anthropic',
+        'chatgpt',
+    }
+    unsupported_providers: set[str] = set(provider_keys) - supported_providers
+    if unsupported_providers:
+        raise ValueError(
+            'Unsupported account LLM providers: '
+            f'{", ".join(sorted(unsupported_providers))}.'
+        )
+    return create_llm_service(
+        openai_api_key=provider_keys.get('chatgpt'),
+        deepseek_api_key=provider_keys.get('deepseek'),
+        anthropic_api_key=provider_keys.get('anthropic'),
+        use_environment_keys=True,
     )
 
 
@@ -571,4 +644,5 @@ __all__: list[str] = [
     'OpenAIStrategy',
     'Response',
     'create_llm_service',
+    'create_llm_service_for_account',
 ]

@@ -48,6 +48,8 @@ timesfm @ git+https://github.com/google-research/timesfm.git
 
 # Security Libraries
 httpx==0.28.1
+argon2-cffi==25.1.0
+cryptography==50.0.2
 
 # Doctor Libraries
 complexipy==7.0.1

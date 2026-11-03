@@ -5,7 +5,7 @@ from typing import Any
 
 from finance.services.report_store.database import (
     SQLiteReportDatabase,
-    cache_database,
+    cache_database
 )
 
 

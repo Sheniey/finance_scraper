@@ -1,7 +1,6 @@
 import asyncio
 from urllib.parse import parse_qs, urlparse
 from urllib.parse import parse_qs as parse_form
-from urllib.parse import urlparse as parse_url
 
 from fastapi.testclient import TestClient
 import httpx
@@ -13,7 +12,7 @@ import api.services.google_oauth as google_oauth
 def _access_token(
     client: TestClient,
     email: str,
-    password: str,
+    password: str
 ) -> str:
     response = client.post(
         '/auth/login',
@@ -25,7 +24,7 @@ def _access_token(
 
 def test_google_authorization_is_send_only_and_bound_to_local_account(
     api_client,
-    monkeypatch,
+    monkeypatch
 ) -> None:
     client, _ = api_client
     monkeypatch.setenv(
@@ -86,7 +85,7 @@ def test_google_email_sender_and_recipient_are_the_connected_account() -> None:
 
     message = build_google_email(
         'owner@example.com',
-        'Finance Scraper report',
+        'Financial report',
         'Your report is attached.',
         [
             GoogleEmailAttachment(
@@ -95,15 +94,16 @@ def test_google_email_sender_and_recipient_are_the_connected_account() -> None:
                 content=b'%PDF-data',
             ),
         ],
+        sender_name='Profile Owner',
     )
 
-    assert message['From'] == 'Finance Scraper <owner@example.com>'
+    assert message['From'] == 'Profile Owner <owner@example.com>'
     assert message['To'] == 'owner@example.com'
     assert len(message.get_payload()) == 2
 
 
 def test_google_oauth_callback_uses_pkce_and_stores_opaque_refresh_token(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     monkeypatch.setenv(
         'GOOGLE_OAUTH_CLIENT_ID',
@@ -195,67 +195,3 @@ def test_google_oauth_callback_uses_pkce_and_stores_opaque_refresh_token(
     assert flow.status == 'completed'
     assert flow.google_email == email
     assert query['code_challenge_method'] == ['S256']
-
-
-def test_google_signin_creates_a_verified_single_use_identity_flow(
-    monkeypatch,
-) -> None:
-    monkeypatch.setenv(
-        'GOOGLE_OAUTH_CLIENT_ID',
-        'test-desktop-client.apps.googleusercontent.com',
-    )
-    callback_url = 'http://127.0.0.1:8765/integrations/google/callback'
-    flow_id, authorization_url = google_oauth.start_google_login(callback_url)
-    query = parse_qs(urlparse(authorization_url).query)
-    assert set(query['scope'][0].split()) == {'openid', 'email', 'profile'}
-    assert query['prompt'] == ['select_account']
-
-    original_async_client = httpx.AsyncClient
-    token_form: dict[str, list[str]] = {}
-
-    async def mock_google(request: httpx.Request) -> httpx.Response:
-        if request.url.path == '/token':
-            token_form.update(parse_form(request.content.decode('utf-8')))
-            return httpx.Response(
-                200,
-                json={
-                    'access_token': 'short-lived-login-token',
-                    'scope': 'openid email profile',
-                },
-            )
-        return httpx.Response(
-            200,
-            json={
-                'sub': 'google-subject-123',
-                'email': 'owner@example.com',
-                'email_verified': True,
-                'name': 'Google User',
-            },
-        )
-
-    transport: httpx.MockTransport = httpx.MockTransport(mock_google)
-    monkeypatch.setattr(
-        google_oauth.httpx,
-        'AsyncClient',
-        lambda **kwargs: original_async_client(
-            transport=transport,
-            **kwargs,
-        ),
-    )
-
-    asyncio.run(
-        google_oauth.complete_google_oauth('authorization-code', flow_id),
-    )
-    flow = google_oauth.get_google_login_flow(flow_id)
-    identity = google_oauth.consume_google_login_flow(flow_id)
-
-    assert token_form['code_verifier']
-    assert token_form['redirect_uri'] == [callback_url]
-    assert 'client_secret' not in token_form
-    assert flow is not None
-    assert flow.status == 'completed'
-    assert flow.google_email == 'owner@example.com'
-    assert identity is not None
-    assert identity.email == 'owner@example.com'
-    assert identity.name == 'Google User'
-    assert google_oauth.consume_google_login_flow(flow_id) is None

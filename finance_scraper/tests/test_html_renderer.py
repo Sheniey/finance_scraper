@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from finance.renderers.html.renderer import HTMLPageRenderer, HTMLSiteRenderer
 from finance.services.stock_analyzer.models import Metric, MetricGrade
-from datatypes import Language, ReportMode
+from finance.types import Language, ReportMode
 
 
 class HTMLRendererTests(unittest.TestCase):

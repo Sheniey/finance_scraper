@@ -72,7 +72,7 @@ def _styled_metric_text(
     grade: MetricGrade,
     pre: str,
     post: str,
-    ndigits: int,
+    ndigits: int
 ) -> str:
     label = metric.label or 'N/A'
     if want_text:
@@ -236,7 +236,7 @@ def as_table(
     fmt_func: Callable[[Metric], str],
     *,
     metric_eval: MetricEvalType = 'rating',
-    show_rating: bool = True,
+    show_rating: bool = True
 ) -> Table:
     grid: Table = Table.grid()
     desc: str = (

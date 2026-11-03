@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, status
 from finance.services.account import Account
 from finance.services.account.exceptions import (
     AccountAlreadyExistsError as FinanceAccountAlreadyExistsError,
-    AccountNotFoundError as FinanceAccountNotFoundError,
+    AccountNotFoundError as FinanceAccountNotFoundError
 )
 
 from api.exceptions.account import (
     AccountAlreadyExistsError,
     AccountNotFoundError,
-    IncorrectCurrentPasswordError,
+    IncorrectCurrentPasswordError
 )
 from api.repositories import account as AccountRepository
 from api.repositories import google as GoogleRepository
@@ -25,7 +25,7 @@ from api.schemas.account import (
     AccountPasswordChangedResponse,
     AccountResponse,
     AccountUpdate,
-    ChangePasswordRequest,
+    ChangePasswordRequest
 )
 from api.schemas.query import CollectionQuery, get_collection_query
 from api.services.auth_sessions import invalidate_tokens
@@ -76,11 +76,11 @@ async def _delete_account_and_sessions(account: Account) -> None:
     '',
     response_model=AccountCollectionResponse,
     status_code=status.HTTP_200_OK,
-    summary='List accounts',
+    summary='List accounts'
 )
 async def get_accounts(
     query: CollectionQuery = Depends(get_collection_query),
-    admin: Account = Depends(require_permission('account:read')),
+    admin: Account = Depends(require_permission('account:read'))
 ) -> AccountCollectionResponse:
     accounts: list[Account] = await AccountRepository.list_accounts()
     items: list[AccountResponse] = [
@@ -101,11 +101,11 @@ async def get_accounts(
     '',
     response_model=AccountResponse,
     status_code=status.HTTP_201_CREATED,
-    summary='Create an account',
+    summary='Create an account'
 )
 async def create_account(
     payload: AccountCreate,
-    admin: Account = Depends(require_permission('account:create')),
+    admin: Account = Depends(require_permission('account:create'))
 ) -> AccountResponse:
     try:
         account: Account = await AccountRepository.create_account(payload)
@@ -118,10 +118,10 @@ async def create_account(
     '/me',
     response_model=AccountResponse,
     status_code=status.HTTP_200_OK,
-    summary='Get the authenticated account',
+    summary='Get the authenticated account'
 )
 async def get_my_account(
-    account: Account = Depends(require_permission('account-me:read')),
+    account: Account = Depends(require_permission('account-me:read'))
 ) -> AccountResponse:
     return AccountResponse.from_account(account)
 
@@ -130,11 +130,11 @@ async def get_my_account(
     '/me',
     response_model=AccountResponse,
     status_code=status.HTTP_200_OK,
-    summary='Update the authenticated account profile and watchlist',
+    summary='Update the authenticated account profile and watchlist'
 )
 async def update_my_account(
     payload: AccountUpdate,
-    account: Account = Depends(require_permission('account-me:update')),
+    account: Account = Depends(require_permission('account-me:update'))
 ) -> AccountResponse:
     try:
         updated_account: Account = await AccountRepository.update_account(
@@ -152,10 +152,10 @@ async def update_my_account(
     '/me',
     response_model=AccountDeleteResponse,
     status_code=status.HTTP_200_OK,
-    summary='Delete the authenticated account and revoke all sessions',
+    summary='Delete the authenticated account and revoke all sessions'
 )
 async def delete_my_account(
-    account: Account = Depends(require_permission('account-me:delete')),
+    account: Account = Depends(require_permission('account-me:delete'))
 ) -> AccountDeleteResponse:
     await _delete_account_and_sessions(account)
     return AccountDeleteResponse()
@@ -165,11 +165,11 @@ async def delete_my_account(
     '/me/change-password',
     response_model=AccountPasswordChangedResponse,
     status_code=status.HTTP_200_OK,
-    summary='Change the authenticated account password',
+    summary='Change the authenticated account password'
 )
 async def change_my_password(
     payload: ChangePasswordRequest,
-    account: Account = Depends(require_permission('account-me:change-password')),
+    account: Account = Depends(require_permission('account-me:change-password'))
 ) -> AccountPasswordChangedResponse:
     was_changed: bool = await AccountRepository.change_password(
         _account_id(account),
@@ -186,11 +186,11 @@ async def change_my_password(
     '/{uuid}',
     response_model=AccountResponse,
     status_code=status.HTTP_200_OK,
-    summary='Get an account by UUID',
+    summary='Get an account by UUID'
 )
 async def get_account(
     uuid: UUID,
-    admin: Account = Depends(require_permission('account:read')),
+    admin: Account = Depends(require_permission('account:read'))
 ) -> AccountResponse:
     account: Account | None = await AccountRepository.get_account(uuid)
     if account is None:
@@ -202,12 +202,12 @@ async def get_account(
     '/{uuid}',
     response_model=AccountResponse,
     status_code=status.HTTP_200_OK,
-    summary='Update an account by UUID',
+    summary='Update an account by UUID'
 )
 async def update_account(
     uuid: UUID,
     payload: AccountUpdate,
-    admin: Account = Depends(require_permission('account:update')),
+    admin: Account = Depends(require_permission('account:update'))
 ) -> AccountResponse:
     account: Account | None = await AccountRepository.get_account(uuid)
     if account is None:
@@ -228,11 +228,11 @@ async def update_account(
     '/{uuid}',
     response_model=AccountDeleteResponse,
     status_code=status.HTTP_200_OK,
-    summary='Delete an account by UUID and revoke its sessions',
+    summary='Delete an account by UUID and revoke its sessions'
 )
 async def delete_account(
     uuid: UUID,
-    admin: Account = Depends(require_permission('account:delete')),
+    admin: Account = Depends(require_permission('account:delete'))
 ) -> AccountDeleteResponse:
     account: Account | None = await AccountRepository.get_account(uuid)
     if account is None:

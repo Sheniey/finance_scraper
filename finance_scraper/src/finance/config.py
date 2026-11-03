@@ -1,7 +1,5 @@
 
-import logging
-import os
-import sys
+import os, sys, logging
 from pathlib import Path
 from functools import partial
 from typing import Final as Const
@@ -45,6 +43,7 @@ IS_DEV: Const[bool]         = envm.environment == EnvMode.DEVELOPMENT
 APP_NAME: Const[str]        = 'FINANCE SCRAPER'
 APP_NAME_SHORT: Const[str]  = 'FSCRAPER'
 APP_NAME_CODING: Const[str] = 'finance_scraper'
+APP_NAME_CODING_2: Const[str] = 'finance-scraper'
 APP_AUTHOR: Const[str]      = 'Sheñey'
 DESCRIPTION: Const[str]     = 'Financial Research and Analysis Tool.'
 
@@ -52,14 +51,6 @@ DESCRIPTION: Const[str]     = 'Financial Research and Analysis Tool.'
 # ================================================== #
 # ENVIRONMENT VARIABLES & SETTINGS                   #
 # ================================================== #
-
-EMAIL_ADDRESS: Const[str | None]    = envm.getenv('EMAIL_ADDRESS')
-EMAIL_PASSWORD: Const[str | None]   = envm.getenv('EMAIL_PASSWORD')
-EMAIL_HOST: Const[str | None]       = envm.getenv('EMAIL_HOST')
-EMAIL_PORT: Const[str]              = envm.getenv('EMAIL_PORT', default='587', validate=lambda v: v.isdigit() and 0 < int(v) < 65536)
-EMAIL_TIMEOUT: Const[str]           = envm.getenv('EMAIL_TIMEOUT', default='30')
-EMAIL_USE_SSL: Const[str | None]    = envm.getenv('EMAIL_USE_SSL')
-EMAIL_USE_TLS: Const[str | None]    = envm.getenv('EMAIL_USE_TLS')
 
 LLM_EFFORT: Const[EffortLevel]              = settings.llm.effort
 LLM_EFFORT_LVL: Const[int]                  = { 'low': 0, 'medium': 1, 'high': 2 }.get(LLM_EFFORT, 1)
@@ -100,7 +91,7 @@ _DB_LOCAL_LOCATION: Path = Path(
     envm.getenv(
         'DB_LOCAL_PATH',
         default=str(MODULE_ROOT / 'db' / 'sync' / 'financescraper.sqlite3'),
-    ),
+    )
 ).expanduser()
 DB_LOCAL_PATH: Const[Path] = (
     _DB_LOCAL_LOCATION
@@ -111,7 +102,7 @@ _REPORT_STORE_LOCATION: Path = Path(
     envm.getenv(
         'REPORT_STORE_PATH',
         default=str(MODULE_ROOT / 'db' / 'report_store.sqlite3'),
-    ),
+    )
 ).expanduser()
 REPORT_STORE_PATH: Const[Path] = (
     _REPORT_STORE_LOCATION

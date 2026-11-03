@@ -8,7 +8,7 @@ from api.core.config import APIConfig, settings
 from api.services import report_migration
 from finance.services.report_store.database import (
     SQLiteReportDatabase,
-    create_report_schema,
+    create_report_schema
 )
 from finance.services.report_store import reports as ReportStore
 
@@ -19,7 +19,7 @@ def _create_legacy_database(
     report_id: str,
     status: str,
     artifact_path: str | None,
-    artifact: bytes | None = None,
+    artifact: bytes | None = None
 ) -> None:
     database_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(database_path) as connection:
@@ -88,7 +88,7 @@ def _create_legacy_database(
 
 def test_migration_verifies_blobs_and_preserves_token_tables(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     legacy_directory: Path = tmp_path / 'legacy'
     current_database: Path = legacy_directory / 'db.sqlite3'

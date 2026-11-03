@@ -11,7 +11,7 @@ import api.services.google_mail as google_mail
 
 
 def test_google_mail_refreshes_and_sends_only_from_connected_account(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     account_id: str = 'local-account-one'
     connection: GoogleAccountConnection = GoogleAccountConnection(
@@ -73,7 +73,7 @@ def test_google_mail_refreshes_and_sends_only_from_connected_account(
     asyncio.run(
         google_mail.send_google_email(
             account_id,
-            'Finance Scraper report',
+            'Financial report',
             'Your AAPL report is attached.',
             [
                 google_mail.GoogleEmailAttachment(
@@ -82,6 +82,7 @@ def test_google_mail_refreshes_and_sends_only_from_connected_account(
                     content=b'%PDF report',
                 ),
             ],
+            sender_name='Profile Owner',
         ),
     )
 
@@ -95,7 +96,7 @@ def test_google_mail_refreshes_and_sends_only_from_connected_account(
         raw_message + '=' * (-len(raw_message) % 4),
     )
     message = message_from_bytes(decoded)
-    assert message['From'] == 'Finance Scraper <owner@example.com>'
+    assert message['From'] == 'Profile Owner <owner@example.com>'
     assert message['To'] == 'owner@example.com'
     attachment = message.get_payload()[1]
     assert attachment.get_filename() == 'AAPL.pdf'

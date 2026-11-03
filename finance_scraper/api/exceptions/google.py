@@ -6,7 +6,7 @@ from api.exceptions.base import APIException
 class GoogleOAuthNotConfiguredError(APIException):
     def __init__(self) -> None:
         self.error = 'GOOGLE_OAUTH_NOT_CONFIGURED'
-        self.message = 'A Google OAuth desktop client ID must be configured'
+        self.message = 'Google OAuth is not configured for this installation'
         self.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         self.headers = {}
         super().__init__(self.message)

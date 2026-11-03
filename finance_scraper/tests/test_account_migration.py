@@ -9,14 +9,14 @@ from finance.services.account.exceptions import AccountSchemaException
 from finance.services.database import close_database_pools, get_database_pool
 from finance.services.database.repository import (
     AsyncDatabaseExecutor,
-    create_schema,
+    create_schema
 )
 
 
 async def _create_legacy_schema(
     connection: AsyncDatabaseExecutor,
     *,
-    extra_account_column: bool = False,
+    extra_account_column: bool = False
 ) -> None:
     await create_schema(connection)
     extra_column: str = ', unexpected TEXT' if extra_account_column else ''
@@ -238,6 +238,7 @@ class AccountSchemaMigrationTests(unittest.IsolatedAsyncioTestCase):
                         'action_history',
                         'account_custom_reports',
                         'account_watchlist',
+                        'account_llm_api_keys',
                     ):
                         table_columns = {
                             str(row['name']): row
@@ -266,14 +267,15 @@ class AccountSchemaMigrationTests(unittest.IsolatedAsyncioTestCase):
                             '''
                         )
                     ).fetchone()
-                    custom_report = (
+                    custom_reports = (
                         await connection.execute(
                             '''
-                            SELECT account_id, position, metric
+                            SELECT account_id, custom_report_json
                             FROM account_custom_reports
+                            ORDER BY account_id
                             '''
                         )
-                    ).fetchone()
+                    ).fetchall()
                     watchlist = (
                         await connection.execute(
                             '''
@@ -290,6 +292,16 @@ class AccountSchemaMigrationTests(unittest.IsolatedAsyncioTestCase):
                     ).fetchall()
 
                 migrated_id: str = account_ids['legacy@example.com']
+                custom_report = next(
+                    row
+                    for row in custom_reports
+                    if row['account_id'] == migrated_id
+                )
+                empty_custom_report = next(
+                    row
+                    for row in custom_reports
+                    if row['account_id'] != migrated_id
+                )
                 self.assertEqual(action['account_id'], migrated_id)
                 self.assertEqual(action['action_id'], 29)
                 self.assertEqual(action['action'], 'BUY')
@@ -297,13 +309,155 @@ class AccountSchemaMigrationTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(action['price'], 150.5)
                 self.assertEqual(action['timestamp'], '2026-01-15')
                 self.assertEqual(custom_report['account_id'], migrated_id)
-                self.assertEqual(custom_report['metric'], 'pe_ratio')
+                self.assertEqual(
+                    custom_report['custom_report_json'],
+                    '["pe_ratio"]',
+                )
+                self.assertEqual(
+                    empty_custom_report['custom_report_json'],
+                    '[]',
+                )
+                self.assertEqual(len(custom_reports), 2)
                 self.assertEqual(watchlist['account_id'], migrated_id)
                 self.assertEqual(watchlist['ticker_id'], 1)
                 self.assertEqual(watchlist['llm_explanation'], 1)
                 self.assertEqual(foreign_key_violations, [])
                 self.assertFalse(
                     await account_storage.migrate_account_schema()
+                )
+            finally:
+                account_storage.DATABASE_PATH = original_account_path
+                await close_database_pools()
+
+    async def test_uuid_account_schema_migrates_custom_report_rows_to_json(
+        self,
+    ) -> None:
+        original_account_path: str | Path = account_storage.DATABASE_PATH
+
+        with tempfile.TemporaryDirectory() as directory:
+            database_path: Path = Path(directory) / 'legacy_uuid.sqlite3'
+            account_storage.DATABASE_PATH = database_path
+            try:
+                pool = await get_database_pool(
+                    database_path,
+                    auth_token=DB_AUTH_TOKEN,
+                    size=DB_POOL_SIZE,
+                    acquire_timeout=DB_POOL_TIMEOUT,
+                )
+                first_account_id: str = str(UUID(int=101))
+                second_account_id: str = str(UUID(int=202))
+                async with pool.transaction() as connection:
+                    await create_schema(connection)
+                    await connection.execute(
+                        'INSERT INTO languages (code, name) VALUES (?, ?)',
+                        ('en', 'English'),
+                    )
+                    await connection.execute(
+                        '''
+                        CREATE TABLE accounts (
+                            account_id TEXT NOT NULL PRIMARY KEY,
+                            email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                            name TEXT NOT NULL,
+                            role TEXT NOT NULL DEFAULT 'user',
+                            language_code TEXT NOT NULL
+                                REFERENCES languages(code),
+                            language_style TEXT NOT NULL,
+                            password_hash TEXT NOT NULL
+                        )
+                        '''
+                    )
+                    await connection.execute(
+                        '''
+                        CREATE TABLE account_custom_reports (
+                            account_id TEXT NOT NULL
+                                REFERENCES accounts(account_id)
+                                ON DELETE CASCADE,
+                            position INTEGER NOT NULL,
+                            metric TEXT NOT NULL,
+                            PRIMARY KEY (account_id, position)
+                        )
+                        '''
+                    )
+                    await connection.execute(
+                        '''
+                        INSERT INTO accounts (
+                            account_id, email, name, role, language_code,
+                            language_style, password_hash
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)
+                        ''',
+                        (
+                            first_account_id,
+                            'first@example.test',
+                            'First',
+                            'user',
+                            'en',
+                            'friendly',
+                            'hash-first',
+                            second_account_id,
+                            'second@example.test',
+                            'Second',
+                            'user',
+                            'en',
+                            'technical',
+                            'hash-second',
+                        ),
+                    )
+                    await connection.execute(
+                        '''
+                        INSERT INTO account_custom_reports (
+                            account_id, position, metric
+                        )
+                        VALUES (?, ?, ?), (?, ?, ?)
+                        ''',
+                        (
+                            first_account_id,
+                            0,
+                            'pe_ratio',
+                            first_account_id,
+                            1,
+                            'roic',
+                        ),
+                    )
+
+                self.assertTrue(await account_storage.migrate_account_schema())
+
+                async with pool.connection() as connection:
+                    reports = (
+                        await connection.execute(
+                            '''
+                            SELECT account_id, custom_report_json
+                            FROM account_custom_reports
+                            ORDER BY account_id
+                            '''
+                        )
+                    ).fetchall()
+                    accounts = (
+                        await connection.execute(
+                            '''
+                            SELECT account_id, encrypted_umk
+                            FROM accounts
+                            ORDER BY account_id
+                            '''
+                        )
+                    ).fetchall()
+                report_by_account: dict[str, str] = {
+                    str(row['account_id']): str(row['custom_report_json'])
+                    for row in reports
+                }
+                self.assertEqual(
+                    report_by_account,
+                    {
+                        first_account_id: '["pe_ratio","roic"]',
+                        second_account_id: '[]',
+                    },
+                )
+                self.assertEqual(len(accounts), 2)
+                self.assertTrue(
+                    all(row['encrypted_umk'] is None for row in accounts),
+                )
+                self.assertFalse(
+                    await account_storage.migrate_account_schema(),
                 )
             finally:
                 account_storage.DATABASE_PATH = original_account_path

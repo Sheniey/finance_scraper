@@ -14,7 +14,7 @@ async def store_token_pair(
     access_expires_at: int,
     refresh_jti: str,
     refresh_expires_at: int,
-    issued_at: int,
+    issued_at: int
 ) -> None:
     async with api_transaction() as connection:
         await _insert_token(
@@ -44,7 +44,7 @@ async def _insert_token(
     account_id: str,
     token_type: str,
     issued_at: int,
-    expires_at: int,
+    expires_at: int
 ) -> None:
     await connection.execute(
         '''
@@ -69,7 +69,7 @@ async def is_token_active(
     session_id: str,
     account_id: str,
     token_type: str,
-    now: int | None = None,
+    now: int | None = None
 ) -> bool:
     checked_at: int = now if now is not None else int(time.time())
     async with api_connection() as connection:
@@ -106,7 +106,7 @@ async def rotate_refresh_token(
     access_expires_at: int,
     new_refresh_jti: str,
     refresh_expires_at: int,
-    issued_at: int,
+    issued_at: int
 ) -> bool:
     async with api_transaction() as connection:
         old_token = (
@@ -185,7 +185,7 @@ async def revoke_session(session_id: str, *, revoked_at: int | None = None) -> N
 async def revoke_account_tokens(
     account_id: str,
     *,
-    revoked_at: int | None = None,
+    revoked_at: int | None = None
 ) -> None:
     timestamp: int = revoked_at if revoked_at is not None else int(time.time())
     async with api_transaction() as connection:

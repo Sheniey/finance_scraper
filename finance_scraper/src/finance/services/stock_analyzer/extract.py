@@ -32,7 +32,7 @@ from finance.services.stock_analyzer.facts.ohlc          import (
     open_extractor as open,
     high_extractor as high,
     low_extractor as low,
-    close_extractor as close,
+    close_extractor as close
 )
 from finance.services.stock_analyzer.facts.phone         import extractor as phone
 from finance.services.stock_analyzer.facts.quote_type    import extractor as quote_type
@@ -105,5 +105,5 @@ from finance.services.stock_analyzer.metrics.derived import (
     change_in_working_capital,
     receivables,
     inventory,
-    accounts_payable,
+    accounts_payable
 )

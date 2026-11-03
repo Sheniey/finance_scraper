@@ -118,7 +118,7 @@ def create_report_job(
     is_personalized: bool = False,
     source: str = 'api',
     now: int | None = None,
-    report_id: str | None = None,
+    report_id: str | None = None
 ) -> StoredReportJob:
     initialize_report_store()
     created_at: int = now if now is not None else int(time.time())
@@ -168,7 +168,7 @@ def get_report_job(
     report_id: str,
     *,
     account_id: str | None,
-    include_artifact: bool = False,
+    include_artifact: bool = False
 ) -> StoredReportJob | None:
     initialize_report_store()
     query: str = _report_select(include_artifact=include_artifact)
@@ -197,7 +197,7 @@ def get_report_job(
 def list_report_jobs(
     *,
     account_id: str | None,
-    source: str | None = None,
+    source: str | None = None
 ) -> list[StoredReportJob]:
     initialize_report_store()
     query: str = _report_select()
@@ -224,7 +224,7 @@ def claim_next_report_job(
     worker_id: str,
     *,
     now: int | None = None,
-    lease_seconds: int = 120,
+    lease_seconds: int = 120
 ) -> StoredReportJob | None:
     initialize_report_store()
     claimed_at: int = now if now is not None else int(time.time())
@@ -286,7 +286,7 @@ def renew_report_lease(
     worker_id: str,
     *,
     now: int | None = None,
-    lease_seconds: int = 120,
+    lease_seconds: int = 120
 ) -> bool:
     initialize_report_store()
     renewed_at: int = now if now is not None else int(time.time())
@@ -319,7 +319,7 @@ def complete_report_job(
     cache_key: str | None = None,
     is_personalized: bool,
     now: int | None = None,
-    ttl_seconds: int = REPORT_RETENTION_SECONDS,
+    ttl_seconds: int = REPORT_RETENTION_SECONDS
 ) -> bool:
     if not artifact:
         raise ValueError('Report artifacts cannot be empty')
@@ -388,7 +388,7 @@ def fail_report_job(
     *,
     is_personalized: bool = False,
     now: int | None = None,
-    ttl_seconds: int = REPORT_RETENTION_SECONDS,
+    ttl_seconds: int = REPORT_RETENTION_SECONDS
 ) -> bool:
     if ttl_seconds <= 0:
         raise ValueError('Report retention must be positive')
@@ -436,7 +436,7 @@ def create_cli_artifact(
     is_personalized: bool,
     cache_key: str | None,
     now: int | None = None,
-    ttl_seconds: int = REPORT_RETENTION_SECONDS,
+    ttl_seconds: int = REPORT_RETENTION_SECONDS
 ) -> str:
     if not artifact:
         raise ValueError('Report artifacts cannot be empty')
@@ -483,7 +483,7 @@ def create_cli_artifact(
 def delete_report_job(
     report_id: str,
     *,
-    account_id: str | None,
+    account_id: str | None
 ) -> bool:
     initialize_report_store()
     with report_database.transaction() as connection:
@@ -505,7 +505,7 @@ def delete_report_job(
 
 def delete_report_jobs(
     *,
-    account_id: str | None,
+    account_id: str | None
 ) -> int:
     initialize_report_store()
     with report_database.transaction() as connection:
@@ -568,7 +568,7 @@ def import_legacy_report_job(
     updated_at: int,
     started_at: int | None,
     completed_at: int | None,
-    expires_at: int | None,
+    expires_at: int | None
 ) -> None:
     initialize_report_store()
     normalized_status: str = status
@@ -615,7 +615,7 @@ def import_legacy_report_job(
 def mark_legacy_database_migrated(
     source_database: str,
     *,
-    now: int | None = None,
+    now: int | None = None
 ) -> None:
     initialize_report_store()
     migrated_at: int = now if now is not None else int(time.time())

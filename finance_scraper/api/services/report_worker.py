@@ -8,18 +8,23 @@ from uuid import uuid4
 
 from datatypes.ticker import Ticker
 from finance.renderers import smart_render_strategy
-from finance.services.account import get_by_id
+from finance.services.account import get_account_llm_keys, get_by_id, AccountVaultException, VaultLockedError
 from finance.services.llm.exceptions import LLMException, OllamaNotInstalledError
+from finance.services.llm.strategy import create_llm_service_for_account
 from finance.services.ml.exceptions import ModelException
 from finance.services.report_store import cache as shared_cache
 from finance.services.reporter import generate_report
 from finance.services.reporter.exceptions import ReporterException
-from finance.services.reporter.repository import get_report_cache_key
+from finance.services.reporter.repository import (
+    get_report_cache_key,
+    will_generate_explanation
+)
 from finance.services.yf_extractor.exceptions import YFinanceError
 
 from api.core.config import settings, IS_DEV
 from api.models.report import ReportJob
 from api.repositories import report as ReportRepository
+from api.services.ai_providers import has_available_ai_provider
 from api.services.worker_capacity import get_report_worker_concurrency
 
 
@@ -30,6 +35,10 @@ _CLEANUP_INTERVAL_SECONDS: int = 60
 
 
 def _failure_code(error: Exception) -> str:
+    if isinstance(error, VaultLockedError):
+        return 'ACCOUNT_VAULT_LOCKED'
+    if isinstance(error, AccountVaultException):
+        return 'ACCOUNT_VAULT_ERROR'
     if isinstance(error, (ValueError, ReporterException)):
         return 'REPORT_REQUEST_INVALID'
     if isinstance(error, (YFinanceError, ModelException, LLMException)):
@@ -40,7 +49,7 @@ def _failure_code(error: Exception) -> str:
 async def _heartbeat(
     report_id: str,
     worker_id: str,
-    stop_event: asyncio.Event,
+    stop_event: asyncio.Event
 ) -> None:
     while not stop_event.is_set():
         try:
@@ -87,14 +96,34 @@ async def _process_report_job(job: ReportJob, worker_id: str) -> None:
         generate_charts: bool = bool(request_data['charts'])
         mode: str = str(request_data['mode'])
         horizon: int = int(request_data['ml_horizon'])
-        cache_key: str | None = get_report_cache_key(
+        account_id = account.account_id or account.id
+        needs_explanation: bool = will_generate_explanation(
             account,
-            ticker,
             generate_explanation=generate_explanation,
-            generate_charts=generate_charts,
             mode=mode,
-            horizon=horizon,
         )
+        provider_keys = {}
+        if needs_explanation:
+            try:
+                provider_keys = await get_account_llm_keys(account_id)
+            except VaultLockedError:
+                if not has_available_ai_provider():
+                    raise
+                logger.info(
+                    'Using installation-level AI providers for account %s because its private key vault is locked',
+                    account_id,
+                )
+        llm_service = create_llm_service_for_account(provider_keys)
+        cache_key: str | None = None
+        if not provider_keys:
+            cache_key = get_report_cache_key(
+                account,
+                ticker,
+                generate_explanation=generate_explanation,
+                generate_charts=generate_charts,
+                mode=mode,
+                horizon=horizon,
+            )
         is_personalized = cache_key is None
         try:
             report = await generate_report(
@@ -105,13 +134,18 @@ async def _process_report_job(job: ReportJob, worker_id: str) -> None:
                 mode=mode,
                 horizon=horizon,
                 verbose=bool(request_data.get('verbose', False)),
+                llm_service=llm_service,
+                cache_enabled=not provider_keys,
             )
         except OllamaNotInstalledError:
-            logger.error('Ollama it is the last provider available and is not installed, cannot generate report for %s', job.report_id)
+            logger.error(
+                'Ollama is the final provider but is unavailable or has no local model for report %s',
+                job.report_id,
+            )
             await ReportRepository.fail_report_job(
                 job.report_id,
                 worker_id,
-                'SERVICE_UNAVAILABLE::OLLAMA_NOT_INSTALLED',
+                'SERVICE_UNAVAILABLE::OLLAMA_UNAVAILABLE',
             )
             return
 

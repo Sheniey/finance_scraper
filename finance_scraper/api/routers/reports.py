@@ -6,13 +6,17 @@ from fastapi.responses import PlainTextResponse
 
 from finance.services.account import Account
 from finance.services.account.models import WatchlistItem
+from finance.services.reporter.exceptions import InvalidCustomReportError
+from finance.services.reporter.repository import will_generate_explanation
 
 from api.core.config import settings
 from api.core.roles import Roles
 from api.exceptions.report import (
+    AIProviderNotConfiguredError,
+    InvalidReportConfigurationError,
     ReportArtifactNotFoundError,
     ReportNotFoundError,
-    ReportNotReadyError,
+    ReportNotReadyError
 )
 from api.models.report import ReportJob, ReportStatus
 from api.repositories import report as ReportRepository
@@ -23,11 +27,13 @@ from api.schemas.report import (
     ReportCollectionResponse,
     ReportCreate,
     ReportDeleteResponse,
-    ReportStatusResponse,
+    ReportStatusResponse
 )
 from api.services.collections import collection_response
+from api.services.ai_providers import has_available_ai_provider
 from api.services.rate_limit import limiter
 from api.services.security import require_permission
+from finance.types.report_mode import ReportMode
 
 
 router: APIRouter = APIRouter(prefix='/reports', tags=['reports'])
@@ -52,7 +58,7 @@ def _account_id(account: Account) -> str:
 def _report_scope(
     account: Account,
     *,
-    include_all_for_admin: bool = True,
+    include_all_for_admin: bool = True
 ) -> str | None:
     role = Roles.get_role(account.role)
     if (
@@ -94,7 +100,7 @@ async def _list_reports(
     account: Account,
     query: CollectionQuery,
     *,
-    include_all_for_admin: bool = False,
+    include_all_for_admin: bool = False
 ) -> CollectionResponse:
     jobs: list[ReportJob] = await ReportRepository.list_report_jobs(
         _report_scope(
@@ -125,8 +131,25 @@ async def _list_reports(
 
 async def _enqueue_report(
     account: Account,
-    payload: ReportCreate,
+    payload: ReportCreate
 ) -> ReportStatusResponse:
+    needs_explanation: bool = False
+    if not (
+        payload.mode is ReportMode.CUSTOM
+        and not account.custom_report
+        and not payload.explain
+    ):
+        try:
+            needs_explanation = will_generate_explanation(
+                account,
+                generate_explanation=payload.explain,
+                mode=payload.mode,
+            )
+        except InvalidCustomReportError as error:
+            raise InvalidReportConfigurationError(str(error)) from error
+    if needs_explanation and not has_available_ai_provider():
+        raise AIProviderNotConfiguredError()
+
     job: ReportJob = await ReportRepository.create_report_job(
         _account_id(account),
         payload,
@@ -162,11 +185,11 @@ async def _enqueue_watchlist_reports(account: Account) -> ReportBatchResponse:
     '',
     response_model=ReportCollectionResponse,
     status_code=status.HTTP_200_OK,
-    summary='List report statuses available to the authenticated role',
+    summary='List report statuses available to the authenticated role'
 )
 async def get_reports(
     query: CollectionQuery = Depends(get_collection_query),
-    account: Account = Depends(require_permission('report:limited-read')),
+    account: Account = Depends(require_permission('report:limited-read'))
 ) -> ReportCollectionResponse:
     return await _list_reports(
         account,
@@ -179,16 +202,16 @@ async def get_reports(
     '',
     response_model=ReportStatusResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary='Queue a financial report',
+    summary='Queue a financial report'
 )
 @limiter.limit(
-    f'{settings.security.rate_limits.report_generation_per_minute}/minute',
+    f'{settings.security.rate_limits.report_generation_per_minute}/minute'
 )
 async def create_report(
     request: Request,
     response: Response,
     payload: ReportCreate,
-    account: Account = Depends(require_permission('report:create')),
+    account: Account = Depends(require_permission('report:create'))
 ) -> ReportStatusResponse:
     return await _enqueue_report(account, payload)
 
@@ -197,10 +220,10 @@ async def create_report(
     '',
     response_model=ReportDeleteResponse,
     status_code=status.HTTP_200_OK,
-    summary='Delete all accessible report statuses and artifacts',
+    summary='Delete all accessible report statuses and artifacts'
 )
 async def delete_reports(
-    account: Account = Depends(require_permission('report-me:delete')),
+    account: Account = Depends(require_permission('report-me:delete'))
 ) -> ReportDeleteResponse:
     deleted: int = await ReportRepository.delete_all_report_jobs(
         _report_scope(account),
@@ -212,11 +235,11 @@ async def delete_reports(
     '/me',
     response_model=ReportCollectionResponse,
     status_code=status.HTTP_200_OK,
-    summary='List the authenticated account report statuses',
+    summary='List the authenticated account report statuses'
 )
 async def get_my_reports(
     query: CollectionQuery = Depends(get_collection_query),
-    account: Account = Depends(require_permission('report-me:read')),
+    account: Account = Depends(require_permission('report-me:read'))
 ) -> ReportCollectionResponse:
     return await _list_reports(
         account,
@@ -229,16 +252,16 @@ async def get_my_reports(
     '/me',
     response_model=ReportStatusResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary='Queue a financial report for the authenticated account',
+    summary='Queue a financial report for the authenticated account'
 )
 @limiter.limit(
-    f'{settings.security.rate_limits.report_generation_per_minute}/minute',
+    f'{settings.security.rate_limits.report_generation_per_minute}/minute'
 )
 async def create_my_report(
     request: Request,
     response: Response,
     payload: ReportCreate,
-    account: Account = Depends(require_permission('report:create')),
+    account: Account = Depends(require_permission('report:create'))
 ) -> ReportStatusResponse:
     return await _enqueue_report(account, payload)
 
@@ -247,15 +270,15 @@ async def create_my_report(
     '/run-watchlist',
     response_model=ReportBatchResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary='Queue financial reports for the authenticated account watchlist',
+    summary='Queue financial reports for the authenticated account watchlist'
 )
 @limiter.limit(
-    f'{settings.security.rate_limits.report_generation_per_minute}/minute',
+    f'{settings.security.rate_limits.report_generation_per_minute}/minute'
 )
 async def run_watchlist_reports(
     request: Request,
     response: Response,
-    account: Account = Depends(require_permission('report:create')),
+    account: Account = Depends(require_permission('report:create'))
 ) -> ReportBatchResponse:
     return await _enqueue_watchlist_reports(account)
 
@@ -264,15 +287,15 @@ async def run_watchlist_reports(
     '/me/run-watchlist',
     response_model=ReportBatchResponse,
     status_code=status.HTTP_202_ACCEPTED,
-    summary='Queue financial reports for the authenticated account watchlist',
+    summary='Queue financial reports for the authenticated account watchlist'
 )
 @limiter.limit(
-    f'{settings.security.rate_limits.report_generation_per_minute}/minute',
+    f'{settings.security.rate_limits.report_generation_per_minute}/minute'
 )
 async def run_my_watchlist_reports(
     request: Request,
     response: Response,
-    account: Account = Depends(require_permission('report:create')),
+    account: Account = Depends(require_permission('report:create'))
 ) -> ReportBatchResponse:
     return await _enqueue_watchlist_reports(account)
 
@@ -281,11 +304,11 @@ async def run_my_watchlist_reports(
     '/{report_id}',
     response_model=ReportStatusResponse,
     status_code=status.HTTP_200_OK,
-    summary='Get a report status',
+    summary='Get a report status'
 )
 async def get_report(
     report_id: str,
-    account: Account = Depends(require_permission('report:limited-read')),
+    account: Account = Depends(require_permission('report:limited-read'))
 ) -> ReportStatusResponse:
     job: ReportJob | None = await ReportRepository.get_report_job(
         report_id,
@@ -302,11 +325,11 @@ async def get_report(
     '/{report_id}',
     response_model=ReportDeleteResponse,
     status_code=status.HTTP_200_OK,
-    summary='Delete a report status and artifact',
+    summary='Delete a report status and artifact'
 )
 async def delete_report(
     report_id: str,
-    account: Account = Depends(require_permission('report-me:delete')),
+    account: Account = Depends(require_permission('report-me:delete'))
 ) -> ReportDeleteResponse:
     was_deleted: bool = await ReportRepository.delete_report_job(
         report_id,
@@ -321,11 +344,11 @@ async def delete_report(
     '/{report_id}/download',
     response_model=None,
     status_code=status.HTTP_200_OK,
-    summary='Download a completed report artifact',
+    summary='Download a completed report artifact'
 )
 async def download_report(
     report_id: str,
-    account: Account = Depends(require_permission('report:limited-read')),
+    account: Account = Depends(require_permission('report:limited-read'))
 ) -> Response:
     job: ReportJob | None = await ReportRepository.get_report_job(
         report_id,

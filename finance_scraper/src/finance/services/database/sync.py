@@ -2,7 +2,7 @@
 
 import os, errno
 from _thread import LockType
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,12 +14,20 @@ from finance.services.database.exceptions import (
     DatabaseAlreadyOpenError,
     DatabaseConfigurationError,
     DatabaseException,
-    DatabaseSyncError,
+    DatabaseSyncError
 )
 
 
+# ================================================== #
+# TYPE ALIASES                                       #
+# ================================================== #
+
 type SyncConnection = Any
 
+
+# ================================================== #
+# DATACLASSES                                        #
+# ================================================== #
 
 @dataclass(slots=True)
 class _FileLockState:
@@ -41,10 +49,18 @@ class SyncStats:
     revision: str | None
 
 
+# ================================================== #
+# SETUP AND GLOBALS                                  #
+# ================================================== #
+
 _FILE_LOCKS: dict[str, _FileLockState] = {}
 _FILE_LOCKS_GUARD: RLock = RLock()
 _SYNC_MARKER_CONTENT: str = 'turso-sync-v1\n'
 
+
+# ================================================== # 
+# FEATURES                                           #
+# ================================================== #
 
 def validate_sync_url(remote_url: str) -> str:
     """
@@ -83,16 +99,14 @@ def validate_sync_url(remote_url: str) -> str:
 
     return value
 
-
-def sync_marker_path(database_path: str | Path) -> Path:
-    path: Path = Path(database_path).expanduser().resolve()
+def sync_marker_path(db_path: str | Path) -> Path:
+    path: Path = Path(db_path).expanduser().resolve()
     return Path(f'{path}.sync-managed')
 
-
-def acquire_sync_file_lock(database_path: str | Path) -> 'SyncFileLock':
+def acquire_sync_file_lock(db_path: str | Path) -> 'SyncFileLock':
     """Acquire a process-wide lock for one local Turso Sync database."""
 
-    path: Path = Path(database_path).expanduser().resolve()
+    path: Path = Path(db_path).expanduser().resolve()
     key: str = os.path.normcase(str(path))
     with _FILE_LOCKS_GUARD:
         existing: _FileLockState | None = _FILE_LOCKS.get(key)
@@ -106,8 +120,9 @@ def acquire_sync_file_lock(database_path: str | Path) -> 'SyncFileLock':
             descriptor: int = os.open(
                 lock_path,
                 os.O_CREAT | os.O_RDWR,
-                0o600,
+                0o600, # file permissions: owner read/write only
             )
+
         except OSError as e:
             raise DatabaseException(
                 'Could not create the local Turso Sync process lock.',
@@ -120,12 +135,8 @@ def acquire_sync_file_lock(database_path: str | Path) -> 'SyncFileLock':
         except OSError as e:
             os.close(descriptor)
             if e.errno in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}:
-                raise DatabaseAlreadyOpenError(
-                    'The local Turso Sync replica is already open in another process.',
-                ) from e
-            raise DatabaseException(
-                'Could not acquire the local Turso Sync process lock.',
-            ) from e
+                raise DatabaseAlreadyOpenError('The local Turso Sync replica is already open in another process.') from e
+            raise DatabaseException('Could not acquire the local Turso Sync process lock.') from e
 
         _FILE_LOCKS[key] = _FileLockState(
             descriptor=descriptor,
@@ -178,8 +189,12 @@ class SyncFileLock:
             return state.operation_lock
 
 
+# ================================================== #
+# HELPER FUNCTIONS                                   #
+# ================================================== #
+
 def _lock_descriptor(descriptor: int) -> None:
-    if os.name == 'nt':
+    if os.name == 'nt': # Windows NT
         import msvcrt
 
         os.lseek(descriptor, 0, os.SEEK_SET)
@@ -187,9 +202,7 @@ def _lock_descriptor(descriptor: int) -> None:
         return
 
     import fcntl
-
     fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-
 
 def _unlock_descriptor(descriptor: int, *, is_windows: bool) -> None:
     if is_windows:
@@ -199,15 +212,13 @@ def _unlock_descriptor(descriptor: int, *, is_windows: bool) -> None:
         msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
         return
 
-    import fcntl
-
+    import fcntl  # POSIX file locking
     fcntl.flock(descriptor, fcntl.LOCK_UN)
-
 
 def open_turso_sync_connection(
     database_path: str | Path,
     remote_url: str,
-    auth_token: str | None,
+    auth_token: str | None
 ) -> SyncConnection:
     """Open the local replica exclusively through the Turso Sync SDK."""
 
@@ -223,9 +234,7 @@ def open_turso_sync_connection(
         import turso
         import turso.sync
     except ModuleNotFoundError as e:
-        raise DatabaseConfigurationError(
-            'pyturso is unavailable; run the API or CLI in Docker/WSL Linux.',
-        ) from e
+        raise DatabaseConfigurationError('pyturso is unavailable; run the API or CLI in Docker/WSL Linux.') from e
 
     try:
         connection: SyncConnection = turso.sync.connect(
@@ -238,9 +247,7 @@ def open_turso_sync_connection(
         connection.execute('PRAGMA foreign_keys = ON')
         return connection
     except Exception as e:
-        raise DatabaseException(
-            'Could not open the local Turso Sync replica.',
-        ) from e
+        raise DatabaseException('Could not open the local Turso Sync replica.') from e
 
 
 class TursoSyncDatabase:
@@ -264,33 +271,34 @@ class TursoSyncDatabase:
         self.__operation_lock: LockType | None = None
 
     @contextmanager
-    def connection(self) -> Iterator[SyncConnection]:
-        connection: SyncConnection = self._get_connection()
+    def connection(self) -> Generator[SyncConnection, None, None]:
+        conn: SyncConnection = self._get_connection()
         operation_lock: LockType | None = self.__operation_lock
         if operation_lock is None:
             raise DatabaseException(
                 'The local Turso Sync process lock is unavailable.',
             )
         operation_lock.acquire()
+
         try:
-            yield connection
+            yield conn
         finally:
             operation_lock.release()
 
     @contextmanager
-    def transaction(self) -> Iterator[SyncConnection]:
-        with self.connection() as connection:
-            connection.execute('BEGIN IMMEDIATE')
+    def transaction(self) -> Generator[SyncConnection, None, None]:
+        with self.connection() as conn:
+            conn.execute('BEGIN IMMEDIATE')
             try:
-                yield connection
-                connection.commit()
+                yield conn
+                conn.commit()
             except BaseException:
-                connection.rollback()
+                conn.rollback()
                 raise
 
     def verify_tables(self, required_tables: set[str]) -> None:
-        with self.connection() as connection:
-            rows = connection.execute(
+        with self.connection() as conn:
+            rows = conn.execute(
                 '''
                 SELECT name
                 FROM sqlite_schema
@@ -306,26 +314,27 @@ class TursoSyncDatabase:
             )
 
     def pull(self) -> bool:
-        with self.connection() as connection:
+        with self.connection() as conn:
             try:
-                return bool(connection.pull())
+                return bool(conn.pull())
             except Exception as e:
                 raise DatabaseSyncError(
                     'Turso pull failed; local data remains available.',
                 ) from e
 
     def push(self) -> None:
-        with self.connection() as connection:
+        with self.connection() as conn:
             try:
-                connection.push()
+                conn.push()
             except Exception as e:
                 raise DatabaseSyncError(
                     'Turso push failed; local changes remain pending.',
                 ) from e
 
     def stats(self) -> SyncStats:
-        with self.connection() as connection:
-            stats = connection.stats()
+        with self.connection() as conn:
+            stats = conn.stats()
+
         revision: object | None = stats.revision
         return SyncStats(
             cdc_operations=int(stats.cdc_operations),
@@ -398,15 +407,3 @@ class TursoSyncDatabase:
             self.__file_lock = file_lock
             self.__operation_lock = file_lock.operation_lock
             return connection
-
-
-__all__: list[str] = [
-    'SyncConnection',
-    'SyncFileLock',
-    'SyncStats',
-    'TursoSyncDatabase',
-    'acquire_sync_file_lock',
-    'open_turso_sync_connection',
-    'sync_marker_path',
-    'validate_sync_url',
-]

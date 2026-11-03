@@ -14,7 +14,7 @@ from finance.services.reporter.models import Report
 def render_pdf_attachment(
     report: Report,
     *,
-    filename: str | None = None,
+    filename: str | None = None
 ) -> EmailAttachment:
     """Render a report into an in-memory PDF attachment."""
 

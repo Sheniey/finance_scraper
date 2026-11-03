@@ -16,6 +16,7 @@ from datatypes import Money, Ticker
 from finance import investopedia_links as wiki
 from finance.config import console
 from finance.types import Language, ReportPreset, get_preset
+from finance.types.report_presets import ordered_custom_report_sections
 from finance.services.reporter import Report
 from finance.services.stock_analyzer import DescriptiveFacts, QuantifiableFacts, StockAnalysis
 from finance.services.stock_analyzer.models import Fact, Metric, MetricGrade
@@ -58,7 +59,7 @@ def _metric_panel(
     fmt_func: Callable[[Metric], str],
     *,
     link_url: str | None = None,
-    show_rating: bool = True,
+    show_rating: bool = True
 ) -> Panel | None:
     if report.mode.value == 'custom':
         requested: set[str] = {
@@ -103,6 +104,15 @@ def _metric_section(panels: list[Panel | None], columns: int) -> Table | None:
 def _custom_feature_requested(report: Report, feature: str) -> bool:
     if report.mode.value != 'custom':
         return True
+
+    if feature == 'explanation':
+        return bool(
+            getattr(
+                report,
+                'has_explanation',
+                'explanation' in report.custom_report,
+            ),
+        )
 
     requested: set[str] = {
         item.strip().lower()
@@ -196,7 +206,11 @@ def _llm_and_ml_prediction(report: Report) -> Group:
         grid
     )
 
-def _analysis(report: Report) -> Group:
+def _analysis(
+    report: Report,
+    *,
+    section_names: list[str] | None = None,
+) -> Group:
     analysis: StockAnalysis = report.analysis
 
     valuation_metrics: list[Panel | None] = [
@@ -343,6 +357,16 @@ def _analysis(report: Report) -> Group:
         ('capital_allocation', capital_allocation, 'Capital Allocation'),
         ('working_capital', working_capital, 'Working Capital'),
     ]
+    if section_names is not None:
+        section_map: dict[str, tuple[str, Table | None, str]] = {
+            mnemonic: (mnemonic, section, fallback)
+            for mnemonic, section, fallback in sections
+        }
+        sections = [
+            section_map[name]
+            for name in section_names
+            if name in section_map
+        ]
     preset: ReportPreset = get_preset(report.mode)
     return Group(
         *[
@@ -436,18 +460,105 @@ class ConsoleRenderer:
         header: Group = _header(report)
         renderables: list[RenderableType] = [Panel(header)]
 
-        if preset.show_explanation and _custom_feature_requested(report, 'explanation'):
-            renderables.append(Panel(_llm_and_ml_prediction(report), title=_translation(report, 'prediction', 'AI Generated Prediction')))
-            renderables.append('\n')
-        if preset.show_analysis:
-            renderables.append(_analysis(report))
-            renderables.append('\n')
-        if preset.show_facts and _custom_feature_requested(report, 'dividends_and_splits'):
-            renderables.append(Panel(_dividends_and_splits(report), title=_translation(report, 'dividends_and_splits', 'Dividends and Splits')))
-            renderables.append('\n')
-        if preset.show_news:
-            renderables.append(Panel(_news(report), title=_translation(report, 'recent_news', 'Recent News')))
-            renderables.append('\n')
+        if report.mode.value == 'custom':
+            for section_name in ordered_custom_report_sections(
+                report.custom_report,
+            ):
+                if section_name == 'explanation':
+                    if _custom_feature_requested(report, 'explanation'):
+                        renderables.append(
+                            Panel(
+                                _llm_and_ml_prediction(report),
+                                title=_translation(
+                                    report,
+                                    'prediction',
+                                    'AI Generated Prediction',
+                                ),
+                            ),
+                        )
+                        renderables.append('\n')
+                elif section_name in preset.sections:
+                    renderables.append(
+                        _analysis(report, section_names=[section_name]),
+                    )
+                    renderables.append('\n')
+                elif (
+                    section_name == 'dividends_and_splits'
+                    and preset.show_facts
+                    and _custom_feature_requested(
+                        report,
+                        'dividends_and_splits',
+                    )
+                ):
+                    renderables.append(
+                        Panel(
+                            _dividends_and_splits(report),
+                            title=_translation(
+                                report,
+                                'dividends_and_splits',
+                                'Dividends and Splits',
+                            ),
+                        ),
+                    )
+                    renderables.append('\n')
+                elif section_name == 'news':
+                    renderables.append(
+                        Panel(
+                            _news(report),
+                            title=_translation(
+                                report,
+                                'recent_news',
+                                'Recent News',
+                            ),
+                        ),
+                    )
+                    renderables.append('\n')
+        else:
+            if (
+                preset.show_explanation
+                and _custom_feature_requested(report, 'explanation')
+            ):
+                renderables.append(
+                    Panel(
+                        _llm_and_ml_prediction(report),
+                        title=_translation(
+                            report,
+                            'prediction',
+                            'AI Generated Prediction',
+                        ),
+                    ),
+                )
+                renderables.append('\n')
+            if preset.show_analysis:
+                renderables.append(_analysis(report))
+                renderables.append('\n')
+            if (
+                preset.show_facts
+                and _custom_feature_requested(report, 'dividends_and_splits')
+            ):
+                renderables.append(
+                    Panel(
+                        _dividends_and_splits(report),
+                        title=_translation(
+                            report,
+                            'dividends_and_splits',
+                            'Dividends and Splits',
+                        ),
+                    ),
+                )
+                renderables.append('\n')
+            if preset.show_news:
+                renderables.append(
+                    Panel(
+                        _news(report),
+                        title=_translation(
+                            report,
+                            'recent_news',
+                            'Recent News',
+                        ),
+                    ),
+                )
+                renderables.append('\n')
         if preset.show_description: renderables.append(Panel(_description(report), title=_translation(report, 'business_summary', 'Business Summary')))
 
         report_group: Group = Group(*renderables)

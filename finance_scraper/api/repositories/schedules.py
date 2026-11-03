@@ -58,7 +58,7 @@ _SCHEDULE_SELECT: str = '''
 
 async def create_schedule(
     account_id: str,
-    payload: ScheduleCreate,
+    payload: ScheduleCreate
 ) -> ReportSchedule:
     now: int = int(time.time())
     schedule_id: str = f'sch_{uuid4().hex}'
@@ -98,7 +98,7 @@ async def create_schedule(
 
 async def get_schedule(
     schedule_id: str,
-    account_id: str,
+    account_id: str
 ) -> ReportSchedule | None:
     async with api_connection() as connection:
         row = (
@@ -112,7 +112,7 @@ async def get_schedule(
 
 
 async def get_schedule_by_id(
-    schedule_id: str,
+    schedule_id: str
 ) -> ReportSchedule | None:
     async with api_connection() as connection:
         row = (
@@ -228,7 +228,7 @@ async def delete_account_schedules(account_id: str) -> list[str]:
 async def set_schedule_enabled(
     schedule_id: str,
     account_id: str,
-    enabled: bool,
+    enabled: bool
 ) -> ReportSchedule | None:
     now: int = int(time.time())
     async with api_transaction() as connection:
@@ -264,7 +264,7 @@ async def delete_schedule(schedule_id: str, account_id: str) -> bool:
 
 async def claim_schedule_run(
     schedule: ReportSchedule,
-    scheduled_date: str,
+    scheduled_date: str
 ) -> tuple[str, list[str], bool]:
     now: int = int(time.time())
     async with api_transaction() as connection:
@@ -323,7 +323,7 @@ async def update_schedule_run_reports(
     schedule_id: str,
     account_id: str,
     scheduled_date: str,
-    report_ids: list[str],
+    report_ids: list[str]
 ) -> None:
     now: int = int(time.time())
     async with api_transaction() as connection:
@@ -346,7 +346,7 @@ async def update_schedule_run_reports(
 async def claim_schedule_delivery(
     schedule_id: str,
     account_id: str,
-    scheduled_date: str,
+    scheduled_date: str
 ) -> bool:
     now: int = int(time.time())
     async with api_transaction() as connection:
@@ -368,7 +368,7 @@ async def finish_schedule_run(
     scheduled_date: str,
     status: str,
     *,
-    error_code: str | None = None,
+    error_code: str | None = None
 ) -> None:
     now: int = int(time.time())
     async with api_transaction() as connection:

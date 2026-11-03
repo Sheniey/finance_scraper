@@ -3,7 +3,7 @@ from finance.services.report_store.database import (
     SQLiteReportDatabase,
     TursoSyncReportDatabase,
     cache_database,
-    report_database,
+    report_database
 )
 from finance.services.report_store import reports
 

@@ -1,7 +1,3 @@
-# ================================================== #
-# MODULE: renderer
-# ================================================== #
-
 
 import json
 from datetime import datetime
@@ -16,7 +12,12 @@ from finance.renderers.utils import normalize_output
 from finance.services.reporter import Report
 from finance.services.stock_analyzer.models import Fact, Metric, MetricStatus
 from datatypes import Money, Percentage
-from finance.types.report_presets import ReportPreset, get_preset
+from finance.types.report_presets import (
+    CUSTOM_GRAPH_NAMES,
+    ReportPreset,
+    get_preset,
+    ordered_custom_report_sections,
+)
 
 
 CSS: Const[str] = '''
@@ -535,7 +536,7 @@ def _analyzer_translation(
     report: Report,
     mnemonic: str,
     fallback: str,
-    field: str = 'title',
+    field: str = 'title'
 ) -> str:
     language = report.account.language
     snapshot = i18n(
@@ -639,7 +640,7 @@ def _section(
     description: str = '',
     *,
     actions: str = '',
-    attributes: str = '',
+    attributes: str = ''
 ) -> str:
     section_attributes = f' {attributes}' if attributes else ''
     return (
@@ -736,7 +737,12 @@ def _profile(report: Report) -> str:
     ) + '</div>'
 
 
-def _analysis(report: Report, preset: ReportPreset) -> str:
+def _analysis(
+    report: Report,
+    preset: ReportPreset,
+    *,
+    section_names: list[str] | None = None,
+) -> str:
     sections = [
         ('valuation', report.analysis.valuation),
         ('profitability', report.analysis.profitability),
@@ -746,6 +752,13 @@ def _analysis(report: Report, preset: ReportPreset) -> str:
         ('capital_allocation', report.analysis.capital_allocation),
         ('working_capital', report.analysis.working_capital),
     ]
+    if section_names is not None:
+        section_map = dict(sections)
+        sections = [
+            (name, section_map[name])
+            for name in section_names
+            if name in section_map
+        ]
     output: list[str] = []
     for section_name, model in sections:
         if section_name not in preset.sections:
@@ -960,7 +973,7 @@ def _document(
     active: str,
     site: bool,
     home_href: str,
-    nav_items: list[tuple[str, str, str]] | None = None,
+    nav_items: list[tuple[str, str, str]] | None = None
 ) -> str:
     generated_at = datetime.now()
     nav_items = nav_items or [
@@ -1016,17 +1029,7 @@ class HTMLPageRenderer:
         destination = normalize_output(output, report, 'html')
         path = Path(destination or f'{report.ticker.symbol.lower()}_report.html')
         path.parent.mkdir(parents=True, exist_ok=True)
-        preset = get_preset(report.mode)
-        content = _summary(report)
-        if preset.show_explanation and _feature_requested(report, 'explanation'):
-            content += _prediction(report)
-        if preset.show_analysis:
-            content += _analysis(report, preset)
-        if preset.show_facts and _feature_requested(report, 'dividends_and_splits'):
-            content += _facts(report)
-        if preset.show_news:
-            content += _news(report)
-        content += _charts(report)
+        content = _report_content(report)
         path.write_text(
             _document(
                 report,
@@ -1049,7 +1052,58 @@ def _feature_requested(report: Report, feature: str) -> bool:
     requested = {item.strip().lower() for item in report.custom_report}
     if feature == 'dividends_and_splits':
         return bool(requested.intersection({'dividends_and_splits', 'dividends', 'splits'}))
+    if feature == 'explanation':
+        return report.has_explanation
+    if feature == 'charts':
+        return 'charts' in requested or bool(
+            requested.intersection(CUSTOM_GRAPH_NAMES),
+        )
     return feature in requested
+
+
+def _report_content(report: Report) -> str:
+    preset: ReportPreset = get_preset(report.mode)
+    content: str = _summary(report)
+    if report.mode.value == 'custom':
+        for section_name in ordered_custom_report_sections(
+            report.custom_report,
+        ):
+            if section_name == 'explanation':
+                if _feature_requested(report, 'explanation'):
+                    content += _prediction(report)
+            elif section_name in preset.sections:
+                content += _analysis(
+                    report,
+                    preset,
+                    section_names=[section_name],
+                )
+            elif (
+                section_name == 'dividends_and_splits'
+                and preset.show_facts
+                and _feature_requested(report, 'dividends_and_splits')
+            ):
+                content += _facts(report)
+            elif section_name == 'news':
+                content += _news(report)
+            elif (
+                section_name == 'charts'
+                and report.charts
+                and _feature_requested(report, 'charts')
+            ):
+                content += _charts(report)
+        return content
+
+    if preset.show_explanation and _feature_requested(report, 'explanation'):
+        content += _prediction(report)
+    if preset.show_analysis:
+        content += _analysis(report, preset)
+    if preset.show_facts and _feature_requested(report, 'dividends_and_splits'):
+        content += _facts(report)
+    if preset.show_news:
+        content += _news(report)
+    if report.charts:
+        content += _charts(report)
+    return content
 
 
 class HTMLSiteRenderer:
@@ -1076,26 +1130,145 @@ class HTMLSiteRenderer:
 
         preset: ReportPreset = get_preset(report.mode)
         pages: list[tuple[str, str, str, str]] = [
-            ('index.html', _ui(report, 'html.overview', 'Overview'), _summary(report), 'overview'),
-            ('charts.html', _ui(report, 'section.charts', 'Market charts'), _charts(report), 'charts'),
+            (
+                'index.html',
+                _ui(report, 'html.overview', 'Overview'),
+                _summary(report),
+                'overview',
+            ),
         ]
-        if preset.show_analysis:
-            pages.insert(
-                1,
-                ('analysis.html', _ui(report, 'html.analysis', 'Analysis'), _analysis(report, preset), 'analysis'),
+        if report.mode.value == 'custom':
+            selected_sections = ordered_custom_report_sections(
+                report.custom_report,
             )
-        if preset.show_facts and _feature_requested(report, 'dividends_and_splits'):
+            selected_analysis_sections: list[str] = [
+                section
+                for section in selected_sections
+                if section in preset.sections
+            ]
+            if selected_analysis_sections:
+                pages.append(
+                    (
+                        'analysis.html',
+                        _ui(report, 'html.analysis', 'Analysis'),
+                        _analysis(
+                            report,
+                            preset,
+                            section_names=selected_analysis_sections,
+                        ),
+                        'analysis',
+                    ),
+                )
+            for section_name in selected_sections:
+                if section_name in preset.sections:
+                    continue
+                if (
+                    section_name == 'dividends_and_splits'
+                    and preset.show_facts
+                    and _feature_requested(report, 'dividends_and_splits')
+                ):
+                    pages.append(
+                        (
+                            'facts.html',
+                            _ui(report, 'html.facts', 'Facts'),
+                            _facts(report),
+                            'facts',
+                        ),
+                    )
+                elif (
+                    section_name == 'explanation'
+                    and _feature_requested(report, 'explanation')
+                ):
+                    pages.append(
+                        (
+                            'prediction.html',
+                            _ui(
+                                report,
+                                'section.prediction',
+                                'AI Generated Prediction',
+                            ),
+                            _prediction(report),
+                            'prediction',
+                        ),
+                    )
+                elif section_name == 'news':
+                    pages.append(
+                        (
+                            'news.html',
+                            _ui(report, 'section.recent_news', 'Recent News'),
+                            _news(report),
+                            'news',
+                        ),
+                    )
+                elif (
+                    section_name == 'charts'
+                    and report.charts
+                    and _feature_requested(report, 'charts')
+                ):
+                    pages.append(
+                        (
+                            'charts.html',
+                            _ui(report, 'section.charts', 'Market charts'),
+                            _charts(report),
+                            'charts',
+                        ),
+                    )
+        else:
             pages.append(
-                ('facts.html', _ui(report, 'html.facts', 'Facts'), _facts(report), 'facts'),
+                (
+                    'charts.html',
+                    _ui(report, 'section.charts', 'Market charts'),
+                    _charts(report),
+                    'charts',
+                ),
             )
-        if preset.show_explanation and _feature_requested(report, 'explanation'):
-            pages.append(
-                ('prediction.html', _ui(report, 'section.prediction', 'AI Generated Prediction'), _prediction(report), 'prediction'),
-            )
-        if preset.show_news:
-            pages.append(
-                ('news.html', _ui(report, 'section.recent_news', 'Recent News'), _news(report), 'news'),
-            )
+            if preset.show_analysis:
+                pages.insert(
+                    1,
+                    (
+                        'analysis.html',
+                        _ui(report, 'html.analysis', 'Analysis'),
+                        _analysis(report, preset),
+                        'analysis',
+                    ),
+                )
+            if (
+                preset.show_facts
+                and _feature_requested(report, 'dividends_and_splits')
+            ):
+                pages.append(
+                    (
+                        'facts.html',
+                        _ui(report, 'html.facts', 'Facts'),
+                        _facts(report),
+                        'facts',
+                    ),
+                )
+            if (
+                preset.show_explanation
+                and _feature_requested(report, 'explanation')
+            ):
+                pages.append(
+                    (
+                        'prediction.html',
+                        _ui(
+                            report,
+                            'section.prediction',
+                            'AI Generated Prediction',
+                        ),
+                        _prediction(report),
+                        'prediction',
+                    ),
+                )
+            if preset.show_news:
+                pages.append(
+                    (
+                        'news.html',
+                        _ui(report, 'section.recent_news', 'Recent News'),
+                        _news(report),
+                        'news',
+                    ),
+                )
 
         for filename, page_title, body, active in pages:
             (root / filename).write_text(

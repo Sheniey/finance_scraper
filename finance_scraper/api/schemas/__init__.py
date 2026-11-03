@@ -4,19 +4,19 @@ from api.schemas.account import (
     AccountPasswordChangedResponse,
     AccountResponse,
     AccountUpdate,
-    ChangePasswordRequest,
+    ChangePasswordRequest
 )
 from api.schemas.auth import (
     LoginRequest,
     LogoutResponse,
     RefreshRequest,
-    TokenPairResponse,
+    TokenPairResponse
 )
 from api.schemas.report import (
     ReportBatchResponse,
     ReportCreate,
     ReportDeleteResponse,
-    ReportStatusResponse,
+    ReportStatusResponse
 )
 
 

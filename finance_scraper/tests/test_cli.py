@@ -1,7 +1,12 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from finance.cli.forms import prompt_signup
+from finance.cli.forms import (
+    confirm_umk_regeneration,
+    prompt_account_password,
+    prompt_llm_api_key,
+    prompt_signup
+)
 from finance.cli.i18n import translate
 
 
@@ -59,3 +64,29 @@ def test_signup_form_returns_localized_values() -> None:
     assert form.language.code == 'es'
     assert form.style == 'professional'
     assert form.watchlist_symbols == ('AAPL', 'MSFT')
+
+
+def test_secret_prompts_return_values_without_output() -> None:
+    def answer(value):
+        return SimpleNamespace(ask=lambda: value)
+
+    with patch(
+        'finance.cli.forms.quest.password',
+        side_effect=[
+            answer('account-password'),
+            answer('sk-test-provider-key'),
+        ],
+    ):
+        assert prompt_account_password() == 'account-password'
+        assert prompt_llm_api_key('deepseek') == 'sk-test-provider-key'
+
+
+def test_umk_regeneration_confirmation_defaults_to_cancel() -> None:
+    def answer(value):
+        return SimpleNamespace(ask=lambda: value)
+
+    with patch(
+        'finance.cli.forms.quest.confirm',
+        return_value=answer(None),
+    ):
+        assert not confirm_umk_regeneration()

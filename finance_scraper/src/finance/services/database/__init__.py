@@ -1,7 +1,3 @@
-# ================================================== #
-# MODULE: __init__
-# ================================================== #
-
 
 from finance.services.database.libsql import (
     AsyncClientPool,
@@ -20,7 +16,7 @@ from finance.services.database.libsql import (
     get_database_pool,
     get_turso_sync_pool,
     push_turso_sync_pools,
-    sync_and_close_database_pools,
+    sync_and_close_database_pools
 )
 from finance.services.database.exceptions import (
     DatabaseAlreadyOpenError,
@@ -37,7 +33,7 @@ from finance.services.database.repository import (
     initialize_database,
     ensure_language,
     get_or_create_ticker,
-    get_or_create_currency,
+    get_or_create_currency
 )
 from finance.services.database.sync import (
     SyncStats,
@@ -45,5 +41,5 @@ from finance.services.database.sync import (
     acquire_sync_file_lock,
     open_turso_sync_connection,
     sync_marker_path,
-    validate_sync_url,
+    validate_sync_url
 )

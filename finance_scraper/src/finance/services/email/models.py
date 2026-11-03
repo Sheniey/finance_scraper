@@ -1,4 +1,4 @@
-"""Typed email attachments used by the SMTP delivery service."""
+"""Typed report attachments used by Google Gmail delivery."""
 
 import mimetypes
 from dataclasses import dataclass
@@ -23,12 +23,14 @@ class EmailAttachment:
             raise TypeError('Attachment filename must be a string')
         if not self.filename.strip():
             raise ValueError('Attachment filename must not be blank')
+        
         if (
             Path(self.filename).name != self.filename
             or '\r' in self.filename
             or '\n' in self.filename
         ):
             raise ValueError('Attachment filename must be a safe file name')
+       
         if not isinstance(self.content, bytes):
             raise TypeError('Attachment content must be bytes')
         if not isinstance(self.maintype, str) or not isinstance(self.subtype, str):
@@ -42,7 +44,7 @@ class EmailAttachment:
         path: str | Path,
         *,
         filename: str | None = None,
-    ) -> 'EmailAttachment':
+    ) -> EmailAttachment:
         """Read a file and infer its MIME type."""
 
         attachment_path: Path = Path(path)
@@ -74,8 +76,3 @@ class EmailAttachment:
             maintype=maintype,
             subtype=subtype,
         )
-
-
-__all__: list[str] = [
-    'EmailAttachment',
-]

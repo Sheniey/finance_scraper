@@ -8,7 +8,7 @@ from finance.services.database import (
     AsyncClientPool,
     AsyncDatabaseConnection,
     AsyncDatabaseTransaction,
-    get_database_pool,
+    get_database_pool
 )
 
 from api.core.config import settings

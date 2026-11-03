@@ -4,17 +4,19 @@ from uuid import UUID
 from finance.config import DEFAULT_LANGUAGE
 from finance.services.account import (
     Account,
+    add_trade as persist_portfolio_trade,
     change_password as change_account_password,
     create_account as persist_account,
     delete_account as remove_account,
     get_by_id,
     get_everyone,
     get_account_with_password_by_email,
-    update_account as persist_account_update,
+    update_account as persist_account_update
 )
 from finance.types.language import Language
 
 from api.schemas.account import AccountCreate, AccountUpdate
+from api.schemas.portfolio import PortfolioTradeCreate
 
 
 async def list_accounts() -> list[Account]:
@@ -47,7 +49,7 @@ async def create_account(payload: AccountCreate) -> Account:
 
 async def update_account(
     account: Account,
-    payload: AccountUpdate,
+    payload: AccountUpdate
 ) -> Account:
     updated_account: Account = account.model_copy(
         update={
@@ -73,13 +75,29 @@ async def update_account(
     )
     return await persist_account_update(updated_account)
 
+
+async def add_portfolio_trade(
+    account: Account,
+    payload: PortfolioTradeCreate,
+) -> Account:
+    return await persist_portfolio_trade(
+        account,
+        payload.action,
+        payload.ticker,
+        payload.region,
+        payload.currency,
+        payload.price,
+        payload.quantity,
+        payload.date.isoformat(),
+    )
+
 async def delete_account(account_id: UUID) -> Account | None:
     return await remove_account(account_id)
 
 async def change_password(
     account_id: UUID,
     current_password: str,
-    new_password: str,
+    new_password: str
 ) -> bool:
     return await change_account_password(
         account_id,

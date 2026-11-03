@@ -68,7 +68,7 @@ def _account(
     name: str,
     email: str,
     *,
-    portfolio: list[Stock] | None = None,
+    portfolio: list[Stock] | None = None
 ) -> Account:
     return Account(
         name=name,
@@ -172,7 +172,7 @@ def test_positive_holdings_bypass_cache_only_for_matching_ticker_region() -> Non
 
 
 def test_cached_report_is_canonical_and_rehydrated_for_requesting_account(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     cache: MemoryReportCache = MemoryReportCache()
     analysis_calls: int = 0

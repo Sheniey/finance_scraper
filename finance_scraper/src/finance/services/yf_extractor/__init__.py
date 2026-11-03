@@ -1,14 +1,11 @@
-# ================================================== #
-# MODULE: __init__
-# ================================================== #
-
+ 
 
 from finance.services.yf_extractor.exceptions import (
     YFExtractorException,
     YFinanceError,
     YFinanceException,
     InvalidTickerError,
-    TickerNotFoundError,
+    TickerNotFoundError
 )
 
 

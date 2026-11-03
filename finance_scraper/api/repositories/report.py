@@ -50,7 +50,7 @@ async def create_report_job(
     account_id: str,
     payload: ReportCreate,
     *,
-    report_id: str | None = None,
+    report_id: str | None = None
 ) -> ReportJob:
     if report_id is not None:
         existing_job: ReportJob | None = await get_report_job(
@@ -86,7 +86,7 @@ async def get_report_job(
     report_id: str,
     account_id: str | None,
     *,
-    include_artifact: bool = False,
+    include_artifact: bool = False
 ) -> ReportJob | None:
     job: StoredReportJob | None = await asyncio.to_thread(
         ReportStore.get_report_job,
@@ -115,7 +115,7 @@ async def claim_next_report_job(
     worker_id: str,
     *,
     now: int | None = None,
-    lease_seconds: int = 120,
+    lease_seconds: int = 120
 ) -> ReportJob | None:
     job: StoredReportJob | None = await asyncio.to_thread(
         ReportStore.claim_next_report_job,
@@ -131,7 +131,7 @@ async def renew_report_lease(
     worker_id: str,
     *,
     now: int | None = None,
-    lease_seconds: int = 120,
+    lease_seconds: int = 120
 ) -> bool:
     return await asyncio.to_thread(
         ReportStore.renew_report_lease,
@@ -151,7 +151,7 @@ async def complete_report_job(
     metadata: Mapping[str, Any],
     cache_key: str | None,
     is_personalized: bool,
-    now: int | None = None,
+    now: int | None = None
 ) -> bool:
     return await asyncio.to_thread(
         ReportStore.complete_report_job,
@@ -173,7 +173,7 @@ async def fail_report_job(
     error_code: str,
     *,
     is_personalized: bool = False,
-    now: int | None = None,
+    now: int | None = None
 ) -> bool:
     return await asyncio.to_thread(
         ReportStore.fail_report_job,
@@ -188,7 +188,7 @@ async def fail_report_job(
 
 async def delete_report_job(
     report_id: str,
-    account_id: str | None,
+    account_id: str | None
 ) -> bool:
     return await asyncio.to_thread(
         ReportStore.delete_report_job,
@@ -213,7 +213,7 @@ async def delete_all_report_jobs(account_id: str | None) -> int:
 
 async def cleanup_expired_report_jobs(
     *,
-    now: int | None = None,
+    now: int | None = None
 ) -> int:
     return await asyncio.to_thread(
         ReportStore.cleanup_expired_report_jobs,

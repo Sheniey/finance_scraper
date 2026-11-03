@@ -8,7 +8,7 @@ from pydantic import (
     StrictFloat,
     field_serializer,
     field_validator,
-    model_validator,
+    model_validator
 )
 from decimal import Decimal
 from enum import Enum, StrEnum
@@ -18,13 +18,13 @@ from datatypes import (
     Money,
     Percentage,
     YFinanceHistoryPoint,
-    YFinanceTickerInfo,
+    YFinanceTickerInfo
 )
 from finance.services.stock_analyzer.exceptions import (
     CurrencyMismatchError,
     InvalidMetricThresholdError,
     InvalidRatingRuleError,
-    MissingMetricValueError,
+    MissingMetricValueError
 )
 
 type Label = str

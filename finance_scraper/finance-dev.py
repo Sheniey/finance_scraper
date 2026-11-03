@@ -21,7 +21,7 @@ PYPROJECT_FILE: Const[str] = 'pyproject.toml'
 def run(
     script: Annotated[str, Argument(..., help='The script to run')] = None,
     listing: Annotated[bool, Option(..., '--list', '-l', help='Whether to list all available scripts')] = False,
-    options: Annotated[list[str], Argument(..., help='Additional options for the script')] = [],
+    options: Annotated[list[str], Argument(..., help='Additional options for the script')] = []
 ):
     with open(PYPROJECT_FILE, 'rb') as f:
         config = tomllib.load(f)

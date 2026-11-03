@@ -13,7 +13,7 @@ from datatypes.money import (
     CurrencyWrapper as Currency,
     MoneyWrapper as Money,
     Currencies,
-    to_money,
+    to_money
 )
 from designkit.creational.toolbox.currency import convert as convert_currency
 from datatypes.ticker import (
@@ -24,7 +24,7 @@ from datatypes.ticker import (
     YFinanceSplit,
     YFinanceStatement,
     YFinanceTicker, # this represents the full YFinance ticker object
-    YFinanceTickerInfo,
+    YFinanceTickerInfo
 )
 
 

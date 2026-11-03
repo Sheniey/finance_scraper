@@ -27,13 +27,13 @@ from nexis.errors import (
     InvalidDecisionContextError,
     InvalidModelProbabilitiesError,
     MissingFeatureColumnsError,
-    MissingTargetColumnError,
+    MissingTargetColumnError
 )
 from nexis.settings import (
     CatBoostHyperparameters,
     LightGBMHyperparameters,
     ModelHyperparameters,
-    RandomForestHyperparameters,
+    RandomForestHyperparameters
 )
 
 
@@ -57,7 +57,7 @@ ESTIMATOR_NAMES: tuple[str, ...] = ('rf', 'lgbm', 'catboost')
 def build_estimator(
     name: str,
     settings: RandomForestHyperparameters | LightGBMHyperparameters | CatBoostHyperparameters,
-    estimator_threads: int = 1,
+    estimator_threads: int = 1
 ) -> RandomForestClassifier | LGBMClassifier | CatBoostClassifier:
     """Builds a single, unfitted estimator from its own hyperparameters model.
     Shared by `ActionClassifier._build_pipeline` (which assembles the full

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 def _access_token(
     client: TestClient,
     email: str,
-    password: str,
+    password: str
 ) -> str:
     response = client.post(
         '/auth/login',
@@ -158,6 +158,40 @@ def test_user_can_update_own_watchlist(api_client) -> None:
     assert response.status_code == 200
     assert response.json()['role'] == 'user'
     assert response.json()['watchlist'][0]['ticker'] == 'AAPL'
+
+
+def test_user_can_save_ordered_custom_report_sections(api_client) -> None:
+    client, state = api_client
+    account = next(
+        account
+        for account in state['accounts'].values()
+        if str(account.email) == 'user@example.com'
+    )
+    access_token: str = _access_token(
+        client,
+        'user@example.com',
+        'user-password',
+    )
+    sections = [
+        'growth',
+        'explanation',
+        'valuation',
+        'news',
+        'charts',
+    ]
+
+    response = client.put(
+        '/accounts/me',
+        headers={'Authorization': f'Bearer {access_token}'},
+        json={
+            'name': account.name,
+            'email': str(account.email),
+            'custom_report': sections,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()['custom_report'] == sections
 
 
 def test_change_password_revokes_existing_sessions(api_client) -> None:

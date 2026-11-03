@@ -59,7 +59,7 @@ def get_collection_query(
         alias='filter',
         min_length=1,
         max_length=2048,
-    ),
+    )
 ) -> CollectionQuery:
     if page is not None and page_cursor is not None:
         raise InvalidCollectionQueryError(

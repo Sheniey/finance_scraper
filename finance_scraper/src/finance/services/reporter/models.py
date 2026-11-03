@@ -6,7 +6,7 @@ from finance.types import ReportMode
 from finance.services.stock_analyzer.schema import (
     DescriptiveFacts,
     QuantifiableFacts,
-    StockAnalysis,
+    StockAnalysis
 )
 from finance.services.news_extractor.models import NewsCompilation
 from finance.services.account.models import Account

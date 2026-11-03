@@ -6,7 +6,7 @@ from pydantic_core import core_schema
 from designkit.creational.types import (
     Currencies,
     Money as _Money,
-    Currency as _Currency,
+    Currency as _Currency
 )
 
 

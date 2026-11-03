@@ -12,6 +12,8 @@ import yaml
 
 from datatypes.ticker import Ticker
 from finance.services.account.models import Account
+from finance.services.account.exceptions import VaultLockedError
+from finance.services.account.vault import LLMProvider
 from finance.types.report_mode import ReportMode
 from finance.renderers.yaml.renderer import YAMLRenderer
 from finance.services.database import close_database_pools
@@ -27,7 +29,7 @@ import api.routers.reports as reports_router
 def _account_token(
     client: TestClient,
     email: str,
-    password: str,
+    password: str
 ) -> str:
     response = client.post(
         '/auth/login',
@@ -50,7 +52,7 @@ def _report_job(
     *,
     status: ReportStatus = ReportStatus.PENDING,
     artifact: bytes | None = None,
-    completed_at: int | None = None,
+    completed_at: int | None = None
 ) -> ReportJob:
     return ReportJob(
         report_id='rep_test123',
@@ -84,7 +86,7 @@ def _report_job(
 
 def test_report_post_selects_the_artifact_downloaded_later(
     api_client,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     client, state = api_client
     account = next(
@@ -228,7 +230,7 @@ def test_xlsx_report_format_is_supported_by_the_api_schema() -> None:
 
 
 def test_personalized_artifacts_are_downloadable_only_by_their_owner(
-    api_client,
+    api_client
 ) -> None:
     client, state = api_client
     owner = next(
@@ -285,7 +287,7 @@ def test_personalized_artifacts_are_downloadable_only_by_their_owner(
 
 def test_report_generation_rate_limit_is_configured_per_account(
     api_client,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     client, state = api_client
     account = next(
@@ -383,7 +385,7 @@ def test_report_strategy_selects_renderer_from_filename_extension() -> None:
 
 
 def test_yaml_renderer_serializes_json_compatible_report_values(
-    tmp_path: Path,
+    tmp_path: Path
 ) -> None:
     class SerializableTicker(BaseModel):
         symbol: str
@@ -420,7 +422,7 @@ def test_yaml_renderer_serializes_json_compatible_report_values(
 
 def test_report_worker_persists_completion_failure_and_expiry(
     api_test_paths: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     account_id: str = str(uuid4())
     account: Account = Account(
@@ -469,6 +471,7 @@ def test_report_worker_persists_completion_failure_and_expiry(
                 ReportCreate(
                     ticker='AAPL',
                     filename='complete.TXT',
+                    mode=ReportMode.CLASSIC,
                 ),
             )
             claimed_job: ReportJob | None = (
@@ -517,6 +520,7 @@ def test_report_worker_persists_completion_failure_and_expiry(
                 ReportCreate(
                     ticker='MSFT',
                     filename='failed.txt',
+                    mode=ReportMode.CLASSIC,
                 ),
             )
             failed_claim: ReportJob | None = (
@@ -548,8 +552,102 @@ def test_report_worker_persists_completion_failure_and_expiry(
     asyncio.run(scenario())
 
 
+def test_report_worker_uses_account_keys_without_shared_cache(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    account_id: str = str(uuid4())
+    account: Account = Account(
+        id=UUID(account_id),
+        account_id=UUID(account_id),
+        name='Report Owner',
+        email='report-owner@example.com',
+    )
+    job: ReportJob = _report_job(account_id)
+    job = replace(
+        job,
+        request={
+            **job.request,
+            'explain': True,
+            'mode': 'classic',
+        },
+    )
+    generated_options: dict[str, Any] = {}
+    completed_options: dict[str, Any] = {}
+
+    class FakeRenderer:
+        def render(self, report: object, output: str) -> None:
+            Path(output).write_text('account artifact', encoding='utf-8')
+
+    class FakeStrategy:
+        def match(self, filename: str) -> FakeRenderer:
+            return FakeRenderer()
+
+    async def get_account(requested_id: str) -> Account | None:
+        return account if requested_id == account_id else None
+
+    async def get_account_keys(
+        requested_id: str,
+    ) -> dict[LLMProvider, str]:
+        assert str(requested_id) == account_id
+        return {LLMProvider.DEEPSEEK: 'sk-test-account-key'}
+
+    async def generate_report(
+        requested_account: Account,
+        ticker: Ticker,
+        **kwargs: Any,
+    ) -> object:
+        generated_options.update(kwargs)
+        return object()
+
+    async def complete_report_job(
+        *args: Any,
+        **kwargs: Any,
+    ) -> bool:
+        completed_options.update(kwargs)
+        return True
+
+    monkeypatch.setattr(report_worker, 'get_by_id', get_account)
+    monkeypatch.setattr(
+        report_worker,
+        'get_account_llm_keys',
+        get_account_keys,
+    )
+    monkeypatch.setattr(report_worker, 'generate_report', generate_report)
+    monkeypatch.setattr(
+        report_worker,
+        'get_report_cache_key',
+        lambda *args, **kwargs: pytest.fail(
+            'Account-specific LLM output must not use the shared cache',
+        ),
+    )
+    monkeypatch.setattr(
+        report_worker.ReportRepository,
+        'complete_report_job',
+        complete_report_job,
+    )
+    monkeypatch.setattr(
+        report_worker,
+        'smart_render_strategy',
+        FakeStrategy(),
+    )
+
+    asyncio.run(report_worker._process_report_job(job, 'worker-test'))
+
+    llm_service = generated_options['llm_service']
+    assert 'deepseek' in llm_service.available_providers
+    assert generated_options['cache_enabled'] is False
+    assert completed_options['cache_key'] is None
+    assert completed_options['is_personalized'] is True
+    assert (
+        report_worker._failure_code(
+            VaultLockedError('vault is locked'),
+        )
+        == 'ACCOUNT_VAULT_LOCKED'
+    )
+
+
 def test_expired_report_lease_can_be_reclaimed_after_restart(
-    api_test_paths: Path,
+    api_test_paths: Path
 ) -> None:
     account_id: str = str(uuid4())
 

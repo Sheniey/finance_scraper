@@ -11,7 +11,7 @@ from designkit.behavioral.typing import Assertion
 from finance.config import DEFAULT_LANGUAGE
 from datatypes import (
     HistoricalMetricPoint,
-    YFinanceTickerInfo,
+    YFinanceTickerInfo
 )
 from finance.types import Language
 from finance.services.report_store.cache import cache
@@ -21,7 +21,7 @@ from finance.services.stock_analyzer.utils import (
     NONE_EVALUATOR,
     fact_to_metric,
     get_evaluator,
-    money_value,
+    money_value
 )
 from finance.services.stock_analyzer.schema import (
     QuantifiableFacts,
@@ -34,14 +34,14 @@ from finance.services.stock_analyzer.schema import (
     CapitalAllocation,
     History10Y1Mo,
     WorkingCapital,
-    StockAnalysis,
+    StockAnalysis
 )
 
 
 def _evaluate(
     metric: Metric,
     mnemonic: str,
-    language: str | Language | None,
+    language: str | Language | None
 ) -> Metric:
     return metric.evaluate(get_evaluator(mnemonic, language))
 
@@ -58,7 +58,7 @@ def _normalize_yield(value: float | None) -> float | None:
 
 def _statement_series(
     statement: object,
-    labels: tuple[str, ...],
+    labels: tuple[str, ...]
 ) -> list[HistoricalMetricPoint]:
     values = getattr(statement, 'values', {})
     if not isinstance(values, dict):
@@ -143,7 +143,7 @@ def _history_facts(payload: YFinanceTickerInfo) -> History10Y1Mo:
 
 def _analysis_cache_identity(
     payload: YFinanceTickerInfo,
-    language: str | Language | None,
+    language: str | Language | None
 ) -> tuple[str, Language]:
     selected_language: Language = (
         language

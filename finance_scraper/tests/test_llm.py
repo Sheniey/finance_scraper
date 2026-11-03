@@ -5,9 +5,10 @@
 
 import unittest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
-from finance.services.llm.repository import _parse_explanation
+from finance.services.llm import repository as llm_repository
+from finance.services.llm.repository import _parse_explanation, chat
 from finance.services.llm.strategy import (
     AnthropicStrategy,
     ChatGPTStrategy,
@@ -16,8 +17,9 @@ from finance.services.llm.strategy import (
     LLMStrategy,
     OllamaStrategy,
     Response,
+    create_llm_service_for_account
 )
-from src.settings import settings
+from finance.settings import settings
 
 
 class _FakeStrategy(LLMStrategy):
@@ -52,6 +54,84 @@ class _FakeStrategy(LLMStrategy):
 
 
 class LLMStrategyTests(unittest.IsolatedAsyncioTestCase):
+    async def test_account_service_keeps_provider_keys_request_scoped(self) -> None:
+        primary = _FakeStrategy(
+            'anthropic',
+            response=Response(message='account response', provider='anthropic'),
+        )
+        account_service = LLMService(
+            {'anthropic': primary},
+            ('anthropic',),
+        )
+
+        response = await account_service.chat('system', 'user')
+
+        self.assertEqual(response.message, 'account response')
+        self.assertEqual(account_service.last_provider, 'anthropic')
+        self.assertEqual(primary.calls, 1)
+
+    async def test_chat_uses_account_service_without_mutating_global_service(
+        self,
+    ) -> None:
+        default_strategy = _FakeStrategy(
+            'ollama',
+            response=Response(message='global response', provider='ollama'),
+        )
+        account_strategy = _FakeStrategy(
+            'anthropic',
+            response=Response(
+                message='account response',
+                provider='anthropic',
+            ),
+        )
+        default_service = LLMService(
+            {'ollama': default_strategy},
+            ('ollama',),
+        )
+        account_service = LLMService(
+            {'anthropic': account_strategy},
+            ('anthropic',),
+        )
+        with (
+            patch.object(llm_repository, 'llm_service', default_service),
+            patch.object(
+                llm_repository,
+                'client_provider',
+                'global-provider',
+            ),
+        ):
+            response = await chat(
+                'system',
+                'user',
+                service_override=account_service,
+            )
+            self.assertEqual(
+                llm_repository.client_provider,
+                'global-provider',
+            )
+
+        self.assertEqual(response.message, 'account response')
+        self.assertEqual(account_strategy.calls, 1)
+        self.assertEqual(default_strategy.calls, 0)
+        self.assertIsNone(default_service.last_provider)
+
+    def test_account_key_factory_maps_chatgpt_to_openai(self) -> None:
+        with patch(
+            'finance.services.llm.strategy.create_llm_service',
+            return_value=None,
+        ) as create_service:
+            result = create_llm_service_for_account(
+                {'chatgpt': 'account-openai-key'},
+            )
+
+        self.assertIsNone(result)
+        create_service.assert_called_once_with(
+            openai_api_key='account-openai-key',
+            deepseek_api_key=None,
+            anthropic_api_key=None,
+            use_environment_keys=False,
+        )
+
     async def test_service_falls_back_in_configured_order(self) -> None:
         primary = _FakeStrategy('anthropic', error=True)
         fallback = _FakeStrategy(

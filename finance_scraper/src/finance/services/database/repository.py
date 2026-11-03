@@ -7,15 +7,15 @@ from typing import TYPE_CHECKING, Protocol
 from finance.config import (
     DB_AUTH_TOKEN,
     DB_LOCAL_PATH,
-    DB_LOCATION,
+    DB_LOCATION
 )
 from finance.services.database import (
     AsyncDatabaseResult,
-    get_turso_sync_pool,
+    get_turso_sync_pool
 )
 from finance.services.database.exceptions import (
     DatabaseConfigurationError,
-    DatabaseSyncError,
+    DatabaseSyncError
 )
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 # ================================================== #
-# TYPES                                              #
+# INTERFACES                                         #
 # ================================================== #
 
 class AsyncDatabaseExecutor(Protocol):
@@ -82,7 +82,7 @@ async def initialize_database(
     database: str | Path = DATABASE_PATH,
     *,
     remote_url: str = DB_LOCATION,
-    auth_token: str | None = DB_AUTH_TOKEN,
+    auth_token: str | None = DB_AUTH_TOKEN
 ) -> None:
     """Verify shared tables were provisioned before application startup."""
 
@@ -98,8 +98,9 @@ async def initialize_database(
             'Initial Turso pull failed; checking the local replica: %s',
             e,
         )
-    async with pool.connection() as connection:
-        result: AsyncDatabaseResult = await connection.execute(
+    
+    async with pool.connection() as conn:
+        result: AsyncDatabaseResult = await conn.execute(
             '''
             SELECT name
             FROM sqlite_schema
@@ -130,11 +131,8 @@ def _normalized_value(value: str, field_name: str) -> str:
     return normalized
 
 
-async def ensure_language(
-    connection: AsyncDatabaseExecutor,
-    account: Account,
-) -> None:
-    await connection.execute(
+async def ensure_language(conn: AsyncDatabaseExecutor, account: Account) -> None:
+    await conn.execute(
         '''
         INSERT INTO languages (code, name)
         VALUES (?, ?)
@@ -144,15 +142,11 @@ async def ensure_language(
     )
 
 
-async def get_or_create_ticker(
-    connection: AsyncDatabaseExecutor,
-    ticker: str,
-    region: str,
-) -> int:
+async def get_or_create_ticker(conn: AsyncDatabaseExecutor, ticker: str, region: str) -> int:
     normalized_ticker: str = _normalized_value(ticker, 'ticker')
     normalized_region: str = _normalized_value(region, 'region')
     row: dict[str, object] | None = (
-        await connection.execute(
+        await conn.execute(
             '''
             INSERT INTO tickers (ticker, region)
             VALUES (?, ?)
@@ -171,13 +165,10 @@ async def get_or_create_ticker(
     return int(row['ticker_id'])
 
 
-async def get_or_create_currency(
-    connection: AsyncDatabaseExecutor,
-    currency: str,
-) -> int:
+async def get_or_create_currency(conn: AsyncDatabaseExecutor, currency: str) -> int:
     normalized_currency: str = _normalized_value(currency, 'currency')
     row: dict[str, object] | None = (
-        await connection.execute(
+        await conn.execute(
             '''
             INSERT INTO currencies (currency)
             VALUES (?)
@@ -192,14 +183,3 @@ async def get_or_create_currency(
     if row is None:
         raise RuntimeError(f'Could not resolve currency {normalized_currency}')
     return int(row['currency_id'])
-
-
-__all__: list[str] = [
-    'DATABASE_PATH',
-    'AsyncDatabaseExecutor',
-    'create_schema',
-    'ensure_language',
-    'get_or_create_currency',
-    'get_or_create_ticker',
-    'initialize_database',
-]

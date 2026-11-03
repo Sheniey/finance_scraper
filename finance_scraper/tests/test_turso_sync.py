@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 
 from finance.services.database.exceptions import (
-    DatabaseConfigurationError,
+    DatabaseConfigurationError
 )
 from finance.services.database.sync import (
     acquire_sync_file_lock,
-    validate_sync_url,
+    validate_sync_url
 )
 
 
@@ -23,7 +23,7 @@ from finance.services.database.sync import (
         ('https://token@financescraper-sheniey.turso.io', False),
         ('https://financescraper-sheniey.turso.io?authToken=secret', False),
         ('', False),
-    ],
+    ]
 )
 def test_validate_turso_sync_url(remote_url: str, expected: bool) -> None:
     if not expected:

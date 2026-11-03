@@ -41,6 +41,39 @@ class ReportArtifactNotFoundError(APIException):
     async def handler(req: Request, exc: ReportArtifactNotFoundError) -> JSONResponse:
         return await APIException.handler(req, exc)
 
+
+class InvalidReportConfigurationError(APIException):
+    def __init__(self, message: str) -> None:
+        self.error = 'INVALID_REPORT_CONFIGURATION'
+        self.message = message
+        self.status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
+        self.headers = {}
+        super().__init__(self.message)
+
+    @staticmethod
+    async def handler(
+        req: Request,
+        exc: InvalidReportConfigurationError,
+    ) -> JSONResponse:
+        return await APIException.handler(req, exc)
+
+
+class AIProviderNotConfiguredError(APIException):
+    def __init__(self) -> None:
+        self.error = 'AI_PROVIDER_NOT_CONFIGURED'
+        self.message = 'Configure an AI API key or start an available Ollama model'
+        self.status_code = status.HTTP_409_CONFLICT
+        self.headers = {}
+        super().__init__(self.message)
+
+    @staticmethod
+    async def handler(
+        req: Request,
+        exc: AIProviderNotConfiguredError,
+    ) -> JSONResponse:
+        return await APIException.handler(req, exc)
+
+
 class InvalidCollectionQueryError(APIException):
     def __init__(self, message: str) -> None:
         self.error = 'INVALID_COLLECTION_QUERY'

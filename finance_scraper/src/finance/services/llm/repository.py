@@ -14,7 +14,7 @@ from finance.services.llm.strategy import LLMService, Response, create_llm_servi
 from finance.services.llm.exceptions import (
     EmptyExplanationError,
     InvalidExplanationError,
-    LLMInitializationError,
+    LLMInitializationError
 )
 
 
@@ -45,13 +45,16 @@ def _include_metric(
     preset: ReportPreset,
     custom_report: set[str],
     section: str,
-    metric: str,
+    metric: str
 ) -> bool:
     if section not in preset.sections:
         return False
     if config.mode.value != 'custom':
         return True
-    return metric.lower() in custom_report
+    return (
+        metric.lower() in custom_report
+        or section.lower() in custom_report
+    )
 
 
 def _build_block(
@@ -60,7 +63,7 @@ def _build_block(
     custom_report: set[str],
     title: str,
     section: str,
-    entries: list[PromptEntry],
+    entries: list[PromptEntry]
 ) -> str:
     lines: list[str] = [
         f'{label}: {value}'
@@ -76,7 +79,7 @@ def _build_analysis_blocks(
     config: ExplanationConfig,
     analysis: StockAnalysis,
     preset: ReportPreset,
-    custom_report: set[str],
+    custom_report: set[str]
 ) -> list[str]:
     return [
         _build_block(
@@ -207,7 +210,7 @@ def _build_analysis_blocks(
 def _build_dividends_block(
     config: ExplanationConfig,
     analysis: StockAnalysis,
-    custom_report: set[str],
+    custom_report: set[str]
 ) -> str:
     if (
         config.mode.value == 'custom'
@@ -302,10 +305,16 @@ def init_client() -> None:
     client_provider = llm_service.preferred_provider
 
 
-async def chat(system_prompt: str, user_prompt: str, **options: Any) -> Response:
+async def chat(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    service_override: LLMService | None = None,
+    **options: Any
+) -> Response:
     global client_provider
 
-    service: LLMService | None = llm_service
+    service: LLMService | None = service_override or llm_service
     if service is None:
         init_client()
         service = llm_service
@@ -317,7 +326,8 @@ async def chat(system_prompt: str, user_prompt: str, **options: Any) -> Response
         user_prompt,
         **options,
     )
-    client_provider = service.last_provider
+    if service_override is None:
+        client_provider = service.last_provider
     return response
 
 
@@ -404,7 +414,11 @@ def _dev_explanation() -> Explanation | None:
         ]
     )
 
-async def explain_action(config: ExplanationConfig) -> Explanation:
+async def explain_action(
+    config: ExplanationConfig,
+    *,
+    service: LLMService | None = None
+) -> Explanation:
     response: Response | None = _dev_explanation()
     if response is not None:
         return response
@@ -412,6 +426,7 @@ async def explain_action(config: ExplanationConfig) -> Explanation:
     response: Response = await chat(
         system_prompt=build_system(config),
         user_prompt=build_user(config),
+        service_override=service,
         temperature=LLM_TEMPERATURE,
         max_tokens=LLM_MAX_TOKENS,
         json_mode=True,

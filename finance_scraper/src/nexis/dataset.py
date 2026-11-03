@@ -11,7 +11,7 @@ from nexis.errors import (
     EmptyFeaturesError,
     EmptyTrainingDatasetError,
     HistoryDownloadError,
-    InsufficientHistoryError,
+    InsufficientHistoryError
 )
 from nexis.actions import ALL_ACTION_LABELS, MODEL_ACTION_LABELS, TradingAction
 
@@ -65,7 +65,7 @@ FEATURE_COLUMNS: tuple[str, ...] = (
     'adx_14',
     'volume_ratio_20d',
     'obv',
-    'bollinger_position',
+    'bollinger_position'
 )
 MIN_FEATURE_HISTORY: int = 200
 
@@ -248,7 +248,7 @@ def _download_history(
     ticker: Ticker,
     lookback_days: int,
     *,
-    minimum_points: int = MIN_FEATURE_HISTORY,
+    minimum_points: int = MIN_FEATURE_HISTORY
 ) -> pd.DataFrame:
     history: pd.DataFrame = yf.download(
         ticker.value,

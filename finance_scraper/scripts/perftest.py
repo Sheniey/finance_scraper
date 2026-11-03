@@ -17,5 +17,5 @@ Analyze(
     mode=os.getenv('PERF_MODE', 'full'),
     to=os.getenv('PERF_OUTPUT', 'testing_reports/{ticker}/{date}.pdf'),
     ml_horizon=int(os.getenv('PERF_HORIZON', '60')),
-    verbose=False,
+    verbose=False
 )

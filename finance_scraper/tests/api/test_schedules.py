@@ -21,7 +21,7 @@ import api.services.schedules as schedule_service
 
 
 def test_schedule_records_and_delivery_claim_are_idempotent(
-    api_test_paths: Path,
+    api_test_paths: Path
 ) -> None:
     async def scenario() -> None:
         try:
@@ -91,7 +91,7 @@ def test_schedule_records_and_delivery_claim_are_idempotent(
 
 
 def test_due_schedule_sends_completed_reports_for_its_owner(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch
 ) -> None:
     owner_id: str = str(uuid4())
     schedule_id: str = 'sch_' + 'a' * 32
@@ -199,8 +199,17 @@ def test_due_schedule_sends_completed_reports_for_its_owner(
     async def claim_delivery(*args):
         return True
 
-    async def send_email(account_id: str, subject: str, body: str, attachments):
-        sent_messages.append((account_id, subject, body, list(attachments)))
+    async def send_email(
+        account_id: str,
+        subject: str,
+        body: str,
+        attachments,
+        *,
+        sender_name: str,
+    ):
+        sent_messages.append(
+            (account_id, subject, body, list(attachments), sender_name),
+        )
 
     async def finish_run(
         schedule_id: str,
@@ -260,4 +269,5 @@ def test_due_schedule_sends_completed_reports_for_its_owner(
     assert 'AAPL' in sent_messages[0][1]
     assert 'Hello Owner' in sent_messages[0][2]
     assert sent_messages[0][3][0].content == b'%PDF report'
+    assert sent_messages[0][4] == 'Owner'
     assert finished_statuses == ['SENT']

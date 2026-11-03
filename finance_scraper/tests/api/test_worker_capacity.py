@@ -6,7 +6,7 @@ import api.services.report_worker as report_worker
 
 
 def test_report_worker_concurrency_uses_cpu_memory_and_hard_cap(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     monkeypatch.setattr(
         worker_capacity.psutil,
@@ -23,7 +23,7 @@ def test_report_worker_concurrency_uses_cpu_memory_and_hard_cap(
 
 
 def test_report_worker_concurrency_never_exceeds_one_on_small_machine(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     monkeypatch.setattr(
         worker_capacity.psutil,
@@ -40,7 +40,7 @@ def test_report_worker_concurrency_never_exceeds_one_on_small_machine(
 
 
 def test_report_worker_processes_jobs_concurrently(
-    monkeypatch,
+    monkeypatch
 ) -> None:
     monkeypatch.setattr(report_worker, 'get_report_worker_concurrency', lambda: 2)
     monkeypatch.setattr(report_worker, 'IS_DEV', True)

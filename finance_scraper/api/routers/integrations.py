@@ -12,7 +12,7 @@ from api.schemas.google import (
     GoogleAccountStatusResponse,
     GoogleAuthorizationResponse,
     GoogleDisconnectResponse,
-    GoogleFlowStatusResponse,
+    GoogleFlowStatusResponse
 )
 from api.services.credential_store import delete_google_refresh_token
 from api.services.google_oauth import (
@@ -20,7 +20,7 @@ from api.services.google_oauth import (
     complete_google_oauth,
     fail_google_oauth,
     get_google_oauth_flow,
-    start_google_oauth,
+    start_google_oauth
 )
 from api.repositories import schedules as ScheduleRepository
 from api.services.security import require_permission
@@ -29,7 +29,7 @@ from finance.services.account import Account
 
 router: APIRouter = APIRouter(
     prefix='/integrations/google',
-    tags=['Google integration'],
+    tags=['Google integration']
 )
 
 
@@ -71,11 +71,11 @@ def _callback_page(is_success: bool) -> HTMLResponse:
 @router.post(
     '/authorize',
     response_model=GoogleAuthorizationResponse,
-    summary='Begin a Gmail send-only OAuth authorization flow',
+    summary='Begin a Gmail send-only OAuth authorization flow'
 )
 async def authorize_google_account(
     request: Request,
-    account: Account = Depends(require_permission('account-me:update')),
+    account: Account = Depends(require_permission('account-me:update'))
 ) -> GoogleAuthorizationResponse:
     state, authorization_url = start_google_oauth(
         _account_id(account),
@@ -91,12 +91,12 @@ async def authorize_google_account(
     '/callback',
     name='google_oauth_callback',
     response_class=HTMLResponse,
-    include_in_schema=False,
+    include_in_schema=False
 )
 async def google_oauth_callback(
     code: str | None = None,
     state: str | None = None,
-    error: str | None = None,
+    error: str | None = None
 ) -> HTMLResponse:
     if not state:
         return _callback_page(False)
@@ -118,11 +118,11 @@ async def google_oauth_callback(
 @router.get(
     '/callback/{flow_id}',
     response_model=GoogleFlowStatusResponse,
-    summary='Read the status of the authenticated account OAuth flow',
+    summary='Read the status of the authenticated account OAuth flow'
 )
 async def get_google_flow_status(
     flow_id: str,
-    account: Account = Depends(require_permission('account-me:read')),
+    account: Account = Depends(require_permission('account-me:read'))
 ) -> GoogleFlowStatusResponse:
     flow = get_google_oauth_flow(_account_id(account), flow_id)
     if flow is None:
@@ -141,10 +141,10 @@ async def get_google_flow_status(
 @router.get(
     '/status',
     response_model=GoogleAccountStatusResponse,
-    summary='Get the current account Gmail connection metadata',
+    summary='Get the current account Gmail connection metadata'
 )
 async def get_google_account_status(
-    account: Account = Depends(require_permission('account-me:read')),
+    account: Account = Depends(require_permission('account-me:read'))
 ) -> GoogleAccountStatusResponse:
     connection: GoogleAccountConnection | None = (
         await GoogleRepository.get_google_connection(_account_id(account))
@@ -161,10 +161,10 @@ async def get_google_account_status(
 @router.delete(
     '/status',
     response_model=GoogleDisconnectResponse,
-    summary='Disconnect the authenticated account Gmail integration',
+    summary='Disconnect the authenticated account Gmail integration'
 )
 async def disconnect_google_account(
-    account: Account = Depends(require_permission('account-me:update')),
+    account: Account = Depends(require_permission('account-me:update'))
 ) -> GoogleDisconnectResponse:
     account_id: str = _account_id(account)
     disabled_schedule_ids: list[str] = (

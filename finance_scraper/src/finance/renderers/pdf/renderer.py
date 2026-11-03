@@ -41,6 +41,10 @@ from finance.services.reporter import Report
 from finance.services.stock_analyzer import Fact, Metric, MetricGrade, MetricStatus
 from finance.services.stock_analyzer.schema import DescriptiveFacts, QuantifiableFacts
 from finance.types import Language, ReportPreset, get_preset
+from finance.types.report_presets import (
+    CUSTOM_GRAPH_NAMES,
+    ordered_custom_report_sections,
+)
 from finance.renderers.utils import normalize_output
 from finance.renderers.pdf.colors import (
     ACCENT_COLOR,
@@ -68,7 +72,7 @@ from finance.renderers.pdf.colors import (
     SURFACE_COLOR,
     VERY_BAD_COLOR,
     VERY_GOOD_COLOR,
-    WHITE_COLOR,
+    WHITE_COLOR
 )
 from finance.renderers.pdf.styles import build_styles
 # ================================================== #
@@ -162,7 +166,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
     MetricSpec('working_capital', 'change_in_working_capital', 'working_capital.change_in_working_capital', 'Change in Working Capital', 'currency', wiki.CHANGE_IN_WORKING_CAPITAL_LINK),
     MetricSpec('working_capital', 'receivables', 'working_capital.receivables', 'Receivables', 'currency', wiki.RECEIVABLES_LINK),
     MetricSpec('working_capital', 'inventory', 'working_capital.inventory', 'Inventory', 'currency', wiki.INVENTORY_LINK),
-    MetricSpec('working_capital', 'accounts_payable', 'working_capital.accounts_payable', 'Accounts Payable', 'currency', wiki.ACCOUNTS_PAYABLE_LINK),
+    MetricSpec('working_capital', 'accounts_payable', 'working_capital.accounts_payable', 'Accounts Payable', 'currency', wiki.ACCOUNTS_PAYABLE_LINK)
 )
 
 SECTION_FALLBACKS: dict[str, str] = {
@@ -388,7 +392,7 @@ def _metric_card(
     spec: MetricSpec,
     metric: Metric,
     width: float,
-    styles: dict[str, ParagraphStyle],
+    styles: dict[str, ParagraphStyle]
 ) -> Table:
     title: str = _translation(report, spec.mnemonic, spec.fallback)
     label: str = escape(title)
@@ -425,7 +429,7 @@ def _metric_grid(
     specs: list[MetricSpec],
     section: object,
     width: float,
-    styles: dict[str, ParagraphStyle],
+    styles: dict[str, ParagraphStyle]
 ) -> Table | None:
     visible_specs: list[MetricSpec] = [
         spec for spec in specs
@@ -458,7 +462,7 @@ def _metric_grid(
 def _section_header(
     report: Report,
     section: str,
-    styles: dict[str, ParagraphStyle],
+    styles: dict[str, ParagraphStyle]
 ) -> Table:
     fallback_key: str = SECTION_FALLBACKS[section]
     title: str = _translation(report, section, _ui(report, fallback_key, section))
@@ -699,29 +703,109 @@ class PDFRenderer:
         story.extend(self._summary(report, styles, doc.width))
 
         preset: ReportPreset = get_preset(report.mode)
-        if preset.show_explanation and self._feature_requested(report, 'explanation'):
-            story.extend(self._prediction(report, styles, doc.width))
-        if preset.show_analysis:
-            analysis: list[Flowable] = self._analysis(report, preset, styles, doc.width)
-            story.extend(
-                [
-                    PageBreak(),
-                    *analysis
-                ] if not preset.show_explanation else analysis
-            )
-        if preset.show_facts and self._feature_requested(report, 'dividends_and_splits'):
-            story.extend(self._dividends_and_splits(report, styles, doc.width))
-        if preset.show_news:
-            story.extend(n := self._news(report, styles, doc.width))
-        if report.charts and self._feature_requested(report, 'charts'):
-            chart_story = self._charts(report, styles, doc.width)
-            if chart_story:
-                story.extend([PageBreak(), *chart_story])
-            
-            story.extend([
-                PageBreak(),
-                *self._context_page(report, styles, doc.width, generated_at),
-            ])
+        if report.mode.value == 'custom':
+            for section_name in ordered_custom_report_sections(
+                report.custom_report,
+            ):
+                if section_name == 'explanation':
+                    if self._feature_requested(report, 'explanation'):
+                        story.extend(
+                            self._prediction(report, styles, doc.width),
+                        )
+                elif section_name in preset.sections:
+                    story.extend(
+                        self._analysis(
+                            report,
+                            preset,
+                            styles,
+                            doc.width,
+                            section_names=[section_name],
+                        ),
+                    )
+                elif (
+                    section_name == 'dividends_and_splits'
+                    and preset.show_facts
+                    and self._feature_requested(
+                        report,
+                        'dividends_and_splits',
+                    )
+                ):
+                    story.extend(
+                        self._dividends_and_splits(
+                            report,
+                            styles,
+                            doc.width,
+                        ),
+                    )
+                elif section_name == 'news':
+                    story.extend(self._news(report, styles, doc.width))
+                elif (
+                    section_name == 'charts'
+                    and report.charts
+                    and self._feature_requested(report, 'charts')
+                ):
+                    chart_story = self._charts(report, styles, doc.width)
+                    if chart_story:
+                        story.extend([PageBreak(), *chart_story])
+                    story.extend(
+                        [
+                            PageBreak(),
+                            *self._context_page(
+                                report,
+                                styles,
+                                doc.width,
+                                generated_at,
+                            ),
+                        ],
+                    )
+        else:
+            if (
+                preset.show_explanation
+                and self._feature_requested(report, 'explanation')
+            ):
+                story.extend(self._prediction(report, styles, doc.width))
+            if preset.show_analysis:
+                analysis: list[Flowable] = self._analysis(
+                    report,
+                    preset,
+                    styles,
+                    doc.width,
+                )
+                story.extend(
+                    [
+                        PageBreak(),
+                        *analysis,
+                    ] if not preset.show_explanation else analysis
+                )
+            if (
+                preset.show_facts
+                and self._feature_requested(report, 'dividends_and_splits')
+            ):
+                story.extend(
+                    self._dividends_and_splits(
+                        report,
+                        styles,
+                        doc.width,
+                    ),
+                )
+            if preset.show_news:
+                story.extend(self._news(report, styles, doc.width))
+            if report.charts and self._feature_requested(report, 'charts'):
+                chart_story = self._charts(report, styles, doc.width)
+                if chart_story:
+                    story.extend([PageBreak(), *chart_story])
+
+                story.extend(
+                    [
+                        PageBreak(),
+                        *self._context_page(
+                            report,
+                            styles,
+                            doc.width,
+                            generated_at,
+                        ),
+                    ],
+                )
 
         doc.build(
             story,
@@ -736,6 +820,12 @@ class PDFRenderer:
         requested: set[str] = {item.strip().lower() for item in report.custom_report}
         if feature == 'dividends_and_splits':
             return bool(requested.intersection({'dividends_and_splits', 'dividends', 'splits'}))
+        if feature == 'explanation':
+            return report.has_explanation
+        if feature == 'charts':
+            return 'charts' in requested or bool(
+                requested.intersection(CUSTOM_GRAPH_NAMES),
+            )
         return feature in requested
 
     @staticmethod
@@ -1072,6 +1162,8 @@ class PDFRenderer:
         preset: ReportPreset,
         styles: dict[str, ParagraphStyle],
         width: float,
+        *,
+        section_names: list[str] | None = None,
     ) -> list[Flowable]:
         story: list[Flowable] = []
         sections: list[tuple[str, object]] = [
@@ -1083,6 +1175,13 @@ class PDFRenderer:
             ('capital_allocation', report.analysis.capital_allocation),
             ('working_capital', report.analysis.working_capital),
         ]
+        if section_names is not None:
+            section_map: dict[str, object] = dict(sections)
+            sections = [
+                (name, section_map[name])
+                for name in section_names
+                if name in section_map
+            ]
         for section_name, section_model in sections:
             if section_name not in preset.sections:
                 continue
@@ -1241,6 +1340,8 @@ class PDFRenderer:
             return base_chart_name in preset_graphs.get(report.mode.value, set())
 
         requested = {item.strip().lower() for item in report.custom_report}
+        if 'charts' in requested:
+            return True
         aliases: dict[str, set[str]] = {
             'price_history': {'price_history', 'price', 'close'},
             'relative_performance': {'relative_performance'},

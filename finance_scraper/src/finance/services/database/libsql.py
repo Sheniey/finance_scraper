@@ -17,7 +17,7 @@ from finance.services.database.exceptions import (
     DatabaseConfigurationError,
     DatabaseException,
     DatabaseIntegrityError,
-    DatabaseSyncError,
+    DatabaseSyncError
 )
 from finance.services.database.sync import (
     SyncFileLock,
@@ -25,7 +25,7 @@ from finance.services.database.sync import (
     acquire_sync_file_lock,
     open_turso_sync_connection,
     sync_marker_path,
-    validate_sync_url,
+    validate_sync_url
 )
 
 
@@ -108,7 +108,7 @@ async def _acquire_process_lock(lock: LockType) -> None:
 
 async def _run_with_process_lock(
     lock: LockType,
-    operation: Callable[[], Any],
+    operation: Callable[[], Any]
 ) -> Any:
     await _acquire_process_lock(lock)
     operation_task: asyncio.Task[Any] = asyncio.create_task(
@@ -152,9 +152,7 @@ def database_url(database: str | Path) -> str:
         or parsed.query
         or parsed.fragment
     ):
-        raise DatabaseConfigurationError(
-            'Remote database URLs must not contain credentials or query parameters.',
-        )
+        raise DatabaseConfigurationError('Remote database URLs must not contain credentials or query parameters.')
 
     match parsed.scheme:
         case '':
@@ -171,9 +169,7 @@ def database_url(database: str | Path) -> str:
                 'unencrypted ws:// is not supported',
             )
         case _:
-            raise DatabaseConfigurationError(
-                f'Unsupported DB_LOCATION scheme: {parsed.scheme!r}',
-            )
+            raise DatabaseConfigurationError(f'Unsupported DB_LOCATION scheme: {parsed.scheme!r}')
 
 
 def _local_path(url: str) -> str:
@@ -195,13 +191,12 @@ def _open_connection(
     url: str,
     auth_token: str | None,
     *,
-    sync_remote_url: str | None = None,
+    sync_remote_url: str | None = None
 ) -> SyncConnection:
     if sync_remote_url is not None:
         if not url.startswith('file:'):
-            raise DatabaseConfigurationError(
-                'Turso Sync requires a local database file path.',
-            )
+            raise DatabaseConfigurationError('Turso Sync requires a local database file path.')
+        
         return open_turso_sync_connection(
             _local_path(url),
             sync_remote_url,
@@ -218,12 +213,10 @@ def _open_connection(
         )
 
     import libsql
-
     return libsql.connect(
         url,
         auth_token=auth_token or '',
     )
-
 
 def _translate_error(error: Exception) -> DatabaseException:
     message: str = str(error)
@@ -241,21 +234,19 @@ def _translate_error(error: Exception) -> DatabaseException:
         return DatabaseException('Turso Sync database operation failed.')
     raise error
 
-
 def _raise_database_error(e: Exception) -> None:
     translated: DatabaseException = _translate_error(e)
     raise translated from e
 
-
 def _execute_sync(
-    connection: SyncConnection,
+    conn: SyncConnection,
     statement: str,
-    parameters: SQLParameters,
+    parameters: SQLParameters
 ) -> 'AsyncDatabaseResult':
     cursor = (
-        connection.execute(statement)
+        conn.execute(statement)
         if parameters is None
-        else connection.execute(statement, parameters)
+        else conn.execute(statement, parameters)
     )
     description: Any = getattr(cursor, 'description', None)
     columns: Columns = (
@@ -362,6 +353,7 @@ class AsyncDatabaseConnection:
             )
         except Exception as e:
             _raise_database_error(e)
+
         if self.__metrics is not None:
             self.__metrics.record(
                 _statement_label(statement),
@@ -370,10 +362,7 @@ class AsyncDatabaseConnection:
             )
         return result
 
-    async def batch(
-        self,
-        statements: Sequence[SQLStatement],
-    ) -> list[AsyncDatabaseResult]:
+    async def batch(self, statements: Sequence[SQLStatement]) -> list[AsyncDatabaseResult]:
         started_at: float = time.perf_counter()
 
         def run_batch() -> list[AsyncDatabaseResult]:
@@ -429,6 +418,7 @@ class AsyncDatabaseTransaction:
     ) -> AsyncDatabaseResult:
         if self.__closed:
             raise DatabaseException('The database transaction is closed')
+        
         started_at: float = time.perf_counter()
         try:
             result: AsyncDatabaseResult = await asyncio.to_thread(
@@ -439,6 +429,7 @@ class AsyncDatabaseTransaction:
             )
         except Exception as e:
             _raise_database_error(e)
+
         if self.__metrics is not None:
             self.__metrics.record(
                 _statement_label(statement),
@@ -757,7 +748,7 @@ async def get_database_pool(
     *,
     auth_token: str | None = None,
     size: int = 2,
-    acquire_timeout: float = 5.0,
+    acquire_timeout: float = 5.0
 ) -> AsyncClientPool:
     """Return and start one shared pool for a database configuration."""
 
@@ -804,7 +795,7 @@ async def get_turso_sync_pool(
     auth_token: str | None,
     size: int = 2,
     acquire_timeout: float = 5.0,
-    require_sync_marker: bool = True,
+    require_sync_marker: bool = True
 ) -> AsyncClientPool:
     """Return and start a pool that opens the local file through Turso Sync."""
 

@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     language_code TEXT NOT NULL REFERENCES languages(code),
     language_style TEXT NOT NULL
         CHECK (language_style IN ('friendly', 'professional', 'technical')),
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    encrypted_umk TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_accounts_name_nocase
@@ -45,11 +46,18 @@ CREATE INDEX IF NOT EXISTS idx_action_history_account_action
 ON action_history (account_id, action_id);
 
 CREATE TABLE IF NOT EXISTS account_custom_reports (
+    account_id TEXT NOT NULL PRIMARY KEY
+        REFERENCES accounts(account_id) ON DELETE CASCADE,
+    custom_report_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS account_llm_api_keys (
     account_id TEXT NOT NULL
         REFERENCES accounts(account_id) ON DELETE CASCADE,
-    position INTEGER NOT NULL,
-    metric TEXT NOT NULL,
-    PRIMARY KEY (account_id, position)
+    provider TEXT NOT NULL
+        CHECK (provider IN ('deepseek', 'anthropic', 'chatgpt')),
+    encrypted_value TEXT NOT NULL,
+    PRIMARY KEY (account_id, provider)
 );
 
 CREATE TABLE IF NOT EXISTS account_watchlist (

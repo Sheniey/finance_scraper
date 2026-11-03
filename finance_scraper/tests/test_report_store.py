@@ -3,7 +3,7 @@ from pathlib import Path
 from finance.services.report_store.cache import SQLiteCache
 from finance.services.report_store.database import (
     SQLiteReportDatabase,
-    create_report_schema,
+    create_report_schema
 )
 from finance.services.report_store import reports as ReportStore
 
@@ -22,7 +22,7 @@ def test_sqlite_cache_respects_ttl(tmp_path: Path) -> None:
 
 def test_report_artifacts_are_owner_private_and_expire(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch
 ) -> None:
     database: SQLiteReportDatabase = SQLiteReportDatabase(
         tmp_path / 'report_store.sqlite3',
@@ -91,7 +91,7 @@ def test_report_artifacts_are_owner_private_and_expire(
 
 def test_cli_artifact_uses_the_shared_report_store(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch
 ) -> None:
     database: SQLiteReportDatabase = SQLiteReportDatabase(
         tmp_path / 'report_store.sqlite3',

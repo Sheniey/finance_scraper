@@ -1,11 +1,10 @@
 """Async normalized Turso/libSQL persistence for application accounts."""
 
-import asyncio
-import logging
+import asyncio, json, logging
 from pathlib import Path
 from threading import RLock
 from collections import defaultdict
-from collections.abc import AsyncIterator, Iterable, Sequence
+from collections.abc import AsyncGenerator, Iterable, Sequence
 from contextlib import asynccontextmanager
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -15,27 +14,28 @@ from finance.config import (
     DB_LOCAL_PATH,
     DB_LOCATION,
     DB_POOL_SIZE,
-    DB_POOL_TIMEOUT,
+    DB_POOL_TIMEOUT
 )
 from finance.services.account.exceptions import (
     AccountAlreadyExistsError,
-    AccountSchemaException,
+    AccountSchemaException
 )
 from finance.services.account.models import Account, Action, Stock, WatchlistItem
+from finance.services.account.vault import vault_sessions
 from finance.services.database import (
     AsyncDatabaseConnection,
     DatabaseIntegrityError,
     DatabaseSyncError,
     LibSQLRow,
     get_database_pool,
-    get_turso_sync_pool,
+    get_turso_sync_pool
 )
 from finance.services.database.repository import (
     AsyncDatabaseExecutor,
     create_schema,
     ensure_language,
     get_or_create_currency,
-    get_or_create_ticker,
+    get_or_create_ticker
 )
 
 
@@ -50,7 +50,7 @@ REQUIRE_SYNC_MARKER: bool = True
 _LANGUAGE_STYLES: tuple[str, ...] = (
     'friendly',
     'professional',
-    'technical',
+    'technical'
 )
 _REPORT_MODES: tuple[str, ...] = (
     'classic',
@@ -58,13 +58,14 @@ _REPORT_MODES: tuple[str, ...] = (
     'custom',
     'growth',
     'validation',
-    'info',
+    'info'
 )
 type AccountId = str
 _ACCOUNT_CHILD_TABLES: tuple[str, ...] = (
     'action_history',
     'account_custom_reports',
     'account_watchlist',
+    'account_llm_api_keys'
 )
 _ACCOUNT_MIGRATION_SUFFIX: str = '_uuid_migration'
 _ACCOUNT_ID_MAP_TABLE: str = '_account_id_uuid_migration_map'
@@ -81,8 +82,7 @@ _ACCOUNT_CHILD_COLUMNS: dict[str, tuple[str, ...]] = {
     ),
     'account_custom_reports': (
         'account_id',
-        'position',
-        'metric',
+        'custom_report_json',
     ),
     'account_watchlist': (
         'account_id',
@@ -92,15 +92,32 @@ _ACCOUNT_CHILD_COLUMNS: dict[str, tuple[str, ...]] = {
         'rendering_mode',
         'llm_explanation',
     ),
+    'account_llm_api_keys': (
+        'account_id',
+        'provider',
+        'encrypted_value',
+    ),
+}
+_LEGACY_ACCOUNT_CHILD_COLUMNS: dict[str, tuple[str, ...]] = {
+    'action_history': _ACCOUNT_CHILD_COLUMNS['action_history'],
+    'account_custom_reports': (
+        'account_id',
+        'position',
+        'metric',
+    ),
+    'account_watchlist': _ACCOUNT_CHILD_COLUMNS['account_watchlist'],
 }
 _schema_ready: set[str] = set()
 _schema_locks: dict[str, asyncio.Lock] = {}
 _schema_registry_lock: RLock = RLock()
 
 
+# ================================================== #
+# HELPER FUNCTIONS                                   #
+# ================================================== # 
+
 def _database_key() -> str:
     return str(Path(DATABASE_PATH).expanduser().resolve())
-
 
 def _schema_lock(key: str) -> asyncio.Lock:
     with _schema_registry_lock:
@@ -109,7 +126,6 @@ def _schema_lock(key: str) -> asyncio.Lock:
             lock = asyncio.Lock()
             _schema_locks[key] = lock
         return lock
-
 
 async def _pool():
     if REMOTE_URL:
@@ -121,6 +137,7 @@ async def _pool():
             size=DB_POOL_SIZE,
             acquire_timeout=DB_POOL_TIMEOUT,
         )
+    
     return await get_database_pool(
         DATABASE_PATH,
         auth_token=None,
@@ -128,24 +145,21 @@ async def _pool():
         acquire_timeout=DB_POOL_TIMEOUT,
     )
 
-
 @asynccontextmanager
-async def _connection() -> AsyncIterator[AsyncDatabaseConnection]:
+async def _connection() -> AsyncGenerator[AsyncDatabaseConnection, None]:
     pool = await _pool()
     async with pool.connection() as connection:
         yield connection
+
 
 
 # ================================================== #
 # SCHEMA                                             #
 # ================================================== #
 
-async def _table_exists(
-    connection: AsyncDatabaseExecutor,
-    table_name: str,
-) -> bool:
+async def _table_exists(conn: AsyncDatabaseExecutor, table_name: str) -> bool:
     row: LibSQLRow | None = (
-        await connection.execute(
+        await conn.execute(
             '''
             SELECT 1
             FROM sqlite_schema
@@ -158,28 +172,23 @@ async def _table_exists(
     return row is not None
 
 
-async def _table_columns(
-    connection: AsyncDatabaseExecutor,
-    table_name: str,
-) -> dict[str, LibSQLRow]:
+async def _table_columns(conn: AsyncDatabaseExecutor, table_name: str) -> dict[str, LibSQLRow]:
     return {
         str(row['name']): row
         for row in (
-            await connection.execute(
+            await conn.execute(
                 f'PRAGMA table_info({table_name})',
             )
         ).fetchall()
     }
 
 
-async def _account_schema_is_current(
-    connection: AsyncDatabaseExecutor,
-) -> bool:
-    if not await _table_exists(connection, 'accounts'):
+async def _account_schema_is_current(conn: AsyncDatabaseExecutor) -> bool:
+    if not await _table_exists(conn, 'accounts'):
         return False
 
     columns: dict[str, LibSQLRow] = await _table_columns(
-        connection,
+        conn,
         'accounts',
     )
     required_columns: set[str] = {
@@ -190,28 +199,36 @@ async def _account_schema_is_current(
         'language_code',
         'language_style',
         'password_hash',
+        'encrypted_umk',
     }
     if not required_columns.issubset(columns):
         return False
 
     account_id_column: LibSQLRow = columns['account_id']
     role_column: LibSQLRow = columns['role']
+    encrypted_umk_column: LibSQLRow = columns['encrypted_umk']
     if (
         str(account_id_column['type']).upper() != 'TEXT'
         or int(account_id_column['notnull']) != 1
         or int(account_id_column['pk']) != 1
         or str(role_column['type']).upper() != 'TEXT'
         or int(role_column['notnull']) != 1
+        or str(encrypted_umk_column['type']).upper() != 'TEXT'
     ):
         return False
 
     for table_name in _ACCOUNT_CHILD_TABLES:
-        if not await _table_exists(connection, table_name):
-            continue
+        if not await _table_exists(conn, table_name):
+            return False
+        
         child_columns: dict[str, LibSQLRow] = await _table_columns(
-            connection,
+            conn,
             table_name,
         )
+
+        if set(child_columns) != set(_ACCOUNT_CHILD_COLUMNS[table_name]):
+            return False
+        
         account_id_column = child_columns.get('account_id')
         if (
             account_id_column is None
@@ -219,20 +236,52 @@ async def _account_schema_is_current(
             or int(account_id_column['notnull']) != 1
         ):
             return False
+        
+        if table_name == 'account_custom_reports':
+            report_json_column: LibSQLRow = child_columns[ 'custom_report_json' ]
+            if (
+                str(report_json_column['type']).upper() != 'TEXT'
+                or int(report_json_column['notnull']) != 1
+                or int(report_json_column['pk']) != 0
+                or int(account_id_column['pk']) != 1
+            ):
+                return False
+        
+        if table_name == 'account_llm_api_keys':
+            provider_column: LibSQLRow = child_columns['provider']
+            encrypted_value_column: LibSQLRow = child_columns[ 'encrypted_value' ]
+            if (
+                str(provider_column['type']).upper() != 'TEXT'
+                or int(provider_column['notnull']) != 1
+                or int(provider_column['pk']) != 2
+                or int(account_id_column['pk']) != 1
+                or str(encrypted_value_column['type']).upper() != 'TEXT'
+                or int(encrypted_value_column['notnull']) != 1
+            ):
+                return False
 
-    return True
+    missing_custom_report: LibSQLRow | None = (
+        await conn.execute(
+            '''
+            SELECT accounts.account_id
+            FROM accounts
+            LEFT JOIN account_custom_reports
+                ON account_custom_reports.account_id = accounts.account_id
+            WHERE account_custom_reports.account_id IS NULL
+            LIMIT 1
+            ''',
+        )
+    ).fetchone()
+    return missing_custom_report is None
 
 
-async def _create_account_tables(
-    connection: AsyncDatabaseExecutor,
-    table_suffix: str = '',
-) -> None:
+async def _create_account_tables(conn: AsyncDatabaseExecutor, table_suffix: str = '') -> None:
     accounts_table: str = f'accounts{table_suffix}'
     action_history_table: str = f'action_history{table_suffix}'
     custom_reports_table: str = f'account_custom_reports{table_suffix}'
     watchlist_table: str = f'account_watchlist{table_suffix}'
 
-    await connection.execute(
+    await conn.execute(
         f'''
         CREATE TABLE IF NOT EXISTS {accounts_table} (
             account_id TEXT NOT NULL PRIMARY KEY,
@@ -247,11 +296,12 @@ async def _create_account_tables(
                     '{_LANGUAGE_STYLES[1]}',
                     '{_LANGUAGE_STYLES[2]}'
                 )),
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            encrypted_umk TEXT
         )
         '''
     )
-    await connection.execute(
+    await conn.execute(
         f'''
         CREATE TABLE IF NOT EXISTS {action_history_table} (
             action_id INTEGER PRIMARY KEY,
@@ -268,18 +318,16 @@ async def _create_account_tables(
         )
         '''
     )
-    await connection.execute(
+    await conn.execute(
         f'''
         CREATE TABLE IF NOT EXISTS {custom_reports_table} (
-            account_id TEXT NOT NULL
+            account_id TEXT NOT NULL PRIMARY KEY
                 REFERENCES {accounts_table}(account_id) ON DELETE CASCADE,
-            position INTEGER NOT NULL,
-            metric TEXT NOT NULL,
-            PRIMARY KEY (account_id, position)
+            custom_report_json TEXT NOT NULL
         )
         '''
     )
-    await connection.execute(
+    await conn.execute(
         f'''
         CREATE TABLE IF NOT EXISTS {watchlist_table} (
             account_id TEXT NOT NULL
@@ -307,19 +355,29 @@ async def _create_account_tables(
         )
         '''
     )
+    await conn.execute(
+        f'''
+        CREATE TABLE IF NOT EXISTS account_llm_api_keys{table_suffix} (
+            account_id TEXT NOT NULL
+                REFERENCES {accounts_table}(account_id) ON DELETE CASCADE,
+            provider TEXT NOT NULL
+                CHECK (provider IN ('deepseek', 'anthropic', 'chatgpt')),
+            encrypted_value TEXT NOT NULL,
+            PRIMARY KEY (account_id, provider)
+        )
+        '''
+    )
 
 
-async def create_account_schema(
-    connection: AsyncDatabaseExecutor,
-) -> None:
-    await _create_account_tables(connection)
-    await connection.execute(
+async def create_account_schema(conn: AsyncDatabaseExecutor) -> None:
+    await _create_account_tables(conn)
+    await conn.execute(
         '''
         CREATE INDEX IF NOT EXISTS idx_accounts_name_nocase
         ON accounts(name COLLATE NOCASE)
         '''
     )
-    await connection.execute(
+    await conn.execute(
         '''
         CREATE INDEX IF NOT EXISTS idx_action_history_account_action
         ON action_history(account_id, action_id)
@@ -327,13 +385,8 @@ async def create_account_schema(
     )
 
 
-async def _validate_legacy_account_schema(
-    connection: AsyncDatabaseExecutor,
-) -> dict[str, LibSQLRow]:
-    account_columns: dict[str, LibSQLRow] = await _table_columns(
-        connection,
-        'accounts',
-    )
+async def _validate_legacy_account_schema(conn: AsyncDatabaseExecutor) -> dict[str, LibSQLRow]:
+    account_columns: dict[str, LibSQLRow] = await _table_columns(conn, 'accounts')
     legacy_account_columns: set[str] = {
         'account_id',
         'email',
@@ -366,69 +419,70 @@ async def _validate_legacy_account_schema(
         role_column is not None
         and str(role_column['type']).upper() != 'TEXT'
     ):
-        raise AccountSchemaException(
-            'The legacy role column must use TEXT; no data was changed.'
-        )
+        raise AccountSchemaException('The legacy role column must use TEXT; no data was changed.')
 
-    for table_name, expected_columns in _ACCOUNT_CHILD_COLUMNS.items():
-        if not await _table_exists(connection, table_name):
+    for table_name, expected_columns in _LEGACY_ACCOUNT_CHILD_COLUMNS.items():
+        if not await _table_exists(conn, table_name):
             continue
-        child_columns: dict[str, LibSQLRow] = await _table_columns(
-            connection,
-            table_name,
-        )
+        child_columns: dict[str, LibSQLRow] = await _table_columns(conn, table_name,)
+
         if set(child_columns) != set(expected_columns):
             raise AccountSchemaException(
                 f'The account migration does not recognize table '
                 f'{table_name!r}; no data was changed.'
             )
+        
         account_id_column = child_columns['account_id']
         if str(account_id_column['type']).upper() != 'INTEGER':
+            raise AccountSchemaException(f'Table {table_name!r} does not use integer account IDs; no data was changed.')
+
+    if await _table_exists(conn, 'account_llm_api_keys'):
+        key_columns: dict[str, LibSQLRow] = await _table_columns(conn, 'account_llm_api_keys',)
+
+        if set(key_columns) != set(_ACCOUNT_CHILD_COLUMNS['account_llm_api_keys']):
             raise AccountSchemaException(
-                f'Table {table_name!r} does not use integer account IDs; '
-                'no data was changed.'
+                'The integer-ID migration does not recognize '
+                'account_llm_api_keys; no data was changed.'
+            )
+        
+        if await _table_row_count(conn, 'account_llm_api_keys'):
+            raise AccountSchemaException(
+                'Encrypted LLM keys cannot be rebound from integer IDs to '
+                'UUIDs; export or remove them before this migration.'
             )
 
     return account_columns
 
 
-async def _table_row_count(
-    connection: AsyncDatabaseExecutor,
-    table_name: str,
-) -> int:
+async def _table_row_count(conn: AsyncDatabaseExecutor, table_name: str) -> int:
     row: LibSQLRow | None = (
-        await connection.execute(
+        await conn.execute(
             f'SELECT COUNT(*) AS row_count FROM {table_name}',
         )
     ).fetchone()
+
     if row is None:
         raise RuntimeError(f'Could not count rows in table {table_name!r}')
     return int(row['row_count'])
 
 
-async def _assert_account_foreign_keys(
-    connection: AsyncDatabaseExecutor,
-    table_names: Sequence[str],
-) -> None:
+async def _assert_account_foreign_keys(conn: AsyncDatabaseExecutor, table_names: Sequence[str]) -> None:
     for table_name in table_names:
         violations: list[LibSQLRow] = (
-            await connection.execute(
+            await conn.execute(
                 f'PRAGMA foreign_key_check({table_name})',
             )
         ).fetchall()
+
         if violations:
             raise AccountSchemaException(
                 f'Foreign-key validation failed for {table_name!r}: '
                 f'{violations[0]!r}.'
             )
 
-
-async def _migrate_integer_account_schema(
-    connection: AsyncDatabaseExecutor,
-) -> None:
-    account_columns: dict[str, LibSQLRow] = (
-        await _validate_legacy_account_schema(connection)
-    )
+# this function below was generated by a LLM, and it length is significant.
+async def _migrate_integer_account_schema(conn: AsyncDatabaseExecutor) -> None:
+    account_columns: dict[str, LibSQLRow] = await _validate_legacy_account_schema(conn)
     staged_tables: tuple[str, ...] = (
         f'accounts{_ACCOUNT_MIGRATION_SUFFIX}',
         *(
@@ -436,14 +490,15 @@ async def _migrate_integer_account_schema(
             for table_name in _ACCOUNT_CHILD_TABLES
         ),
     )
+
     for table_name in (*staged_tables, _ACCOUNT_ID_MAP_TABLE):
-        if await _table_exists(connection, table_name):
+        if await _table_exists(conn, table_name):
             raise AccountSchemaException(
                 f'An account migration staging table {table_name!r} already '
                 'exists; inspect the database before retrying.'
             )
 
-    await connection.execute(
+    await conn.execute(
         f'''
         CREATE TABLE {_ACCOUNT_ID_MAP_TABLE} (
             old_account_id INTEGER PRIMARY KEY,
@@ -451,13 +506,12 @@ async def _migrate_integer_account_schema(
         )
         '''
     )
+
     old_account_rows: list[LibSQLRow] = (
-        await connection.execute(
-            'SELECT account_id FROM accounts ORDER BY account_id',
-        )
+        await conn.execute('SELECT account_id FROM accounts ORDER BY account_id')
     ).fetchall()
     for row in old_account_rows:
-        await connection.execute(
+        await conn.execute(
             f'''
             INSERT INTO {_ACCOUNT_ID_MAP_TABLE} (
                 old_account_id, new_account_id
@@ -467,33 +521,31 @@ async def _migrate_integer_account_schema(
             (int(row['account_id']), str(uuid4())),
         )
 
-    await _create_account_tables(
-        connection,
-        _ACCOUNT_MIGRATION_SUFFIX,
-    )
+    await _create_account_tables(conn,_ACCOUNT_MIGRATION_SUFFIX,)
     role_expression: str = (
         "COALESCE(source.role, 'user')"
         if 'role' in account_columns
         else "'user'"
     )
-    await connection.execute(
+    await conn.execute(
         f'''
         INSERT INTO accounts{_ACCOUNT_MIGRATION_SUFFIX} (
             account_id, email, name, role, language_code,
-            language_style, password_hash
+            language_style, password_hash, encrypted_umk
         )
         SELECT id_map.new_account_id, source.email, source.name,
                {role_expression}, source.language_code,
-               source.language_style, source.password_hash
+               source.language_style, source.password_hash, NULL
         FROM accounts AS source
         JOIN {_ACCOUNT_ID_MAP_TABLE} AS id_map
           ON id_map.old_account_id = source.account_id
         '''
     )
 
-    for table_name, columns in _ACCOUNT_CHILD_COLUMNS.items():
-        if not await _table_exists(connection, table_name):
+    for table_name in ('action_history', 'account_watchlist'):
+        if not await _table_exists(conn, table_name):
             continue
+        columns: tuple[str, ...] = _ACCOUNT_CHILD_COLUMNS[table_name]
         column_list: str = ', '.join(columns)
         selected_columns: str = ', '.join(
             (
@@ -503,7 +555,8 @@ async def _migrate_integer_account_schema(
             )
             for column in columns
         )
-        await connection.execute(
+
+        await conn.execute(
             f'''
             INSERT INTO {table_name}{_ACCOUNT_MIGRATION_SUFFIX} (
                 {column_list}
@@ -515,6 +568,59 @@ async def _migrate_integer_account_schema(
             '''
         )
 
+    legacy_report_rows: dict[int, list[str]] = defaultdict(list)
+    if await _table_exists(conn, 'account_custom_reports'):
+        report_rows: list[LibSQLRow] = (
+            await conn.execute(
+                '''
+                SELECT account_id, position, metric
+                FROM account_custom_reports
+                ORDER BY account_id, position
+                ''',
+            )
+        ).fetchall()
+        for row in report_rows:
+              metric: object = row['metric']
+              if not isinstance(metric, str):
+                  raise AccountSchemaException(
+                      'A legacy custom report metric is not text; '
+                      'no data was changed.'
+                  )
+              legacy_report_rows[int(row['account_id'])].append(metric)
+
+    id_map_rows: list[LibSQLRow] = (
+        await conn.execute(
+              f'''
+              SELECT old_account_id, new_account_id
+              FROM {_ACCOUNT_ID_MAP_TABLE}
+              ORDER BY old_account_id
+              ''',
+        )
+    ).fetchall()
+    mapped_old_ids: set[int] = {
+        int(row['old_account_id'])
+        for row in id_map_rows
+    }
+
+    if not set(legacy_report_rows).issubset(mapped_old_ids):
+        raise AccountSchemaException('A legacy custom report references an unknown account; no data was changed.')
+    for row in id_map_rows:
+        old_account_id: int = int(row['old_account_id'])
+        custom_report_json: str = json.dumps(
+            legacy_report_rows.get(old_account_id, []),
+            ensure_ascii=False,
+            separators=(',', ':'),
+        )
+        await conn.execute(
+            f'''
+            INSERT INTO account_custom_reports{_ACCOUNT_MIGRATION_SUFFIX} (
+                account_id, custom_report_json
+            )
+            VALUES (?, ?)
+            ''',
+            (str(row['new_account_id']), custom_report_json),
+        )
+
     source_tables: tuple[str, ...] = (
         'accounts',
         *_ACCOUNT_CHILD_TABLES,
@@ -524,51 +630,192 @@ async def _migrate_integer_account_schema(
         staged_tables,
         strict=True,
     ):
-        if not await _table_exists(connection, source_table):
+        if not await _table_exists(conn, source_table):
             continue
+
         source_count: int = await _table_row_count(
-            connection,
+            conn,
             source_table,
         )
         staged_count: int = await _table_row_count(
-            connection,
+            conn,
             staged_table,
         )
-        if source_count != staged_count:
+        expected_staged_count: int = source_count
+        if source_table == 'account_custom_reports':
+            expected_staged_count = len(id_map_rows)
+        if staged_count != expected_staged_count:
             raise AccountSchemaException(
                 f'Account migration row count mismatch for '
                 f'{source_table!r}; no source tables were replaced.'
             )
 
-    await _assert_account_foreign_keys(connection, staged_tables)
+    await _assert_account_foreign_keys(conn, staged_tables)
 
     for table_name in _ACCOUNT_CHILD_TABLES:
-        if await _table_exists(connection, table_name):
-            await connection.execute(f'DROP TABLE {table_name}')
-    await connection.execute('DROP TABLE accounts')
-    await connection.execute(
+        if await _table_exists(conn, table_name):
+            await conn.execute(f'DROP TABLE {table_name}')
+    await conn.execute('DROP TABLE accounts')
+    await conn.execute(
         f'''
         ALTER TABLE accounts{_ACCOUNT_MIGRATION_SUFFIX}
         RENAME TO accounts
         '''
     )
     for table_name in _ACCOUNT_CHILD_TABLES:
-        await connection.execute(
+        await conn.execute(
             f'''
             ALTER TABLE {table_name}{_ACCOUNT_MIGRATION_SUFFIX}
             RENAME TO {table_name}
             '''
         )
-    await connection.execute(f'DROP TABLE {_ACCOUNT_ID_MAP_TABLE}')
-    await create_account_schema(connection)
+    await conn.execute(f'DROP TABLE {_ACCOUNT_ID_MAP_TABLE}')
+    await create_account_schema(conn)
     await _assert_account_foreign_keys(
-        connection,
+        conn,
+        ('accounts', *_ACCOUNT_CHILD_TABLES),
+    )
+
+
+async def _migrate_uuid_account_schema(conn: AsyncDatabaseExecutor) -> None:
+    account_columns: dict[str, LibSQLRow] = await _table_columns(conn, 'accounts')
+    account_id_column: LibSQLRow | None = account_columns.get('account_id')
+    required_account_columns: set[str] = {
+        'account_id',
+        'email',
+        'name',
+        'role',
+        'language_code',
+        'language_style',
+        'password_hash',
+    }
+    if (
+        not required_account_columns.issubset(account_columns)
+        or account_id_column is None
+        or str(account_id_column['type']).upper() != 'TEXT'
+        or int(account_id_column['pk']) != 1
+    ):
+        raise AccountSchemaException(
+            'The UUID account schema is not recognized; no data was changed.'
+        )
+    
+    if 'encrypted_umk' not in account_columns:
+        await conn.execute(
+            'ALTER TABLE accounts ADD COLUMN encrypted_umk TEXT',
+        )
+
+    if await _table_exists(conn, 'account_custom_reports'):
+        report_columns: dict[str, LibSQLRow] = await _table_columns(conn, 'account_custom_reports')
+        column_names: set[str] = set(report_columns)
+        legacy_columns: set[str] = set(
+            _LEGACY_ACCOUNT_CHILD_COLUMNS['account_custom_reports'],
+        )
+        current_columns: set[str] = set(
+            _ACCOUNT_CHILD_COLUMNS['account_custom_reports'],
+        )
+        if column_names == legacy_columns:
+            staging_table: str = 'account_custom_reports_uuid_migration'
+            if await _table_exists(conn, staging_table):
+                raise AccountSchemaException(
+                    f'An account migration staging table {staging_table!r} '
+                    'already exists; inspect the database before retrying.'
+                )
+            
+            await conn.execute(
+                f'''
+                CREATE TABLE {staging_table} (
+                    account_id TEXT NOT NULL PRIMARY KEY
+                        REFERENCES accounts(account_id) ON DELETE CASCADE,
+                    custom_report_json TEXT NOT NULL
+                )
+                '''
+            )
+
+            account_rows: list[LibSQLRow] = (
+                await conn.execute(
+                    'SELECT account_id FROM accounts ORDER BY account_id',
+                )
+            ).fetchall()
+            legacy_rows: list[LibSQLRow] = (
+                await conn.execute(
+                    '''
+                    SELECT account_id, position, metric
+                    FROM account_custom_reports
+                    ORDER BY account_id, position
+                    ''',
+                )
+            ).fetchall()
+            
+            reports_by_account: defaultdict[str, list[str]] = defaultdict(list)
+            for row in legacy_rows:
+                metric: object = row['metric']
+                if not isinstance(metric, str):
+                    raise AccountSchemaException(
+                        'A legacy custom report metric is not text; no data was changed.'
+                    )
+                reports_by_account[str(row['account_id'])].append(metric)
+
+            account_ids: set[str] = {
+                str(row['account_id'])
+                for row in account_rows
+            }
+            if not set(reports_by_account).issubset(account_ids):
+                raise AccountSchemaException(
+                    'A legacy custom report references an unknown account; no data was changed.'
+                )
+            for row in account_rows:
+                account_id: str = str(row['account_id'])
+                custom_report_json = json.dumps(
+                    reports_by_account.get(account_id, []),
+                    ensure_ascii=False,
+                    separators=(',', ':'),
+                )
+                await conn.execute(
+                    f'''
+                    INSERT INTO {staging_table} (
+                        account_id, custom_report_json
+                    )
+                    VALUES (?, ?)
+                    ''',
+                    (account_id, custom_report_json),
+                )
+
+            await conn.execute('DROP TABLE account_custom_reports')
+            await conn.execute(
+                f'''
+                ALTER TABLE {staging_table}
+                RENAME TO account_custom_reports
+                '''
+            )
+        
+        elif column_names != current_columns:
+            raise AccountSchemaException(
+                'The account_custom_reports schema is not recognized; '
+                'no data was changed.'
+            )
+
+    await _create_account_tables(conn)
+    await conn.execute(
+        '''
+        INSERT INTO account_custom_reports (
+            account_id, custom_report_json
+        )
+        SELECT accounts.account_id, '[]'
+        FROM accounts
+        LEFT JOIN account_custom_reports
+            ON account_custom_reports.account_id = accounts.account_id
+        WHERE account_custom_reports.account_id IS NULL
+        '''
+    )
+    await create_account_schema(conn)
+    await _assert_account_foreign_keys(
+        conn,
         ('accounts', *_ACCOUNT_CHILD_TABLES),
     )
 
 
 async def migrate_account_schema() -> bool:
-    """Migrate legacy integer account IDs to UUIDs without losing relations."""
+    """Migrate supported account schemas without losing their relationships."""
 
     key: str = _database_key()
     pool = await _pool()
@@ -577,17 +824,32 @@ async def migrate_account_schema() -> bool:
             'Account schema changes must be applied through the approved '
             'Turso schema migration, not the runtime sync token.'
         )
+    
     migrated: bool = False
-    async with pool.transaction() as connection:
-        if not await _table_exists(connection, 'accounts'):
+    async with pool.transaction() as conn:
+        if not await _table_exists(conn, 'accounts'):
             return False
-        if await _account_schema_is_current(connection):
+        
+        if await _account_schema_is_current(conn):
             return False
-        await _migrate_integer_account_schema(connection)
-        if not await _account_schema_is_current(connection):
-            raise AccountSchemaException(
-                'The account migration did not produce the current schema.'
-            )
+        
+        account_columns: dict[str, LibSQLRow] = await _table_columns(conn, 'accounts')
+        account_id_column: LibSQLRow | None = account_columns.get('account_id')
+        account_id_type: str = (
+            str(account_id_column['type']).upper()
+            if account_id_column is not None
+            else ''
+        )
+
+        if account_id_type == 'INTEGER':
+            await _migrate_integer_account_schema(conn)
+        elif account_id_type == 'TEXT':
+            await _migrate_uuid_account_schema(conn)
+        else:
+            raise AccountSchemaException('The account schema is not recognized; no data was changed.')
+        
+        if not await _account_schema_is_current(conn):
+            raise AccountSchemaException('The account migration did not produce the current schema.')
         migrated = True
 
     if migrated:
@@ -623,19 +885,29 @@ async def initialize_account_database() -> None:
             *_ACCOUNT_CHILD_TABLES,
         )
         if not pool.is_turso_sync:
+            base_tables: tuple[str, ...] = (
+                'languages',
+                'tickers',
+                'currencies',
+                'accounts',
+                'action_history',
+                'account_custom_reports',
+                'account_watchlist',
+            )
             async with pool.transaction() as connection:
                 existing_tables: list[str] = [
                     table_name
-                    for table_name in required_tables
+                    for table_name in base_tables
                     if await _table_exists(connection, table_name)
                 ]
+
                 if not existing_tables:
                     await create_schema(connection)
                     await create_account_schema(connection)
-                elif len(existing_tables) != len(required_tables):
+                elif len(existing_tables) != len(base_tables):
                     missing_tables: list[str] = [
                         table_name
-                        for table_name in required_tables
+                        for table_name in base_tables
                         if table_name not in existing_tables
                     ]
                     raise AccountSchemaException(
@@ -644,9 +916,8 @@ async def initialize_account_database() -> None:
                     )
 
             async with pool.connection() as connection:
-                is_current_schema: bool = await _account_schema_is_current(
-                    connection,
-                )
+                is_current_schema: bool = await _account_schema_is_current(connection)
+            
             if not is_current_schema:
                 await migrate_account_schema()
 
@@ -656,16 +927,19 @@ async def initialize_account_database() -> None:
                 for table_name in required_tables
                 if not await _table_exists(connection, table_name)
             ]
+
             if missing_tables:
                 raise AccountSchemaException(
                     'The local Turso Sync replica is missing required tables; '
                     'run the database bootstrap migration.'
                 )
+            
             if not await _account_schema_is_current(connection):
                 raise AccountSchemaException(
                     'The account database schema does not match the UUID '
                     'model. Migrate the source database before syncing it.'
                 )
+            
             await _assert_account_foreign_keys(
                 connection,
                 ('accounts', *_ACCOUNT_CHILD_TABLES),
@@ -679,44 +953,47 @@ async def reset_account_schema() -> None:
     key: str = _database_key()
     pool = await _pool()
     if pool.is_turso_sync:
-        raise AccountSchemaException(
-            'Account tables cannot be reset in a Turso Sync database.'
-        )
-    async with pool.transaction() as connection:
+        raise AccountSchemaException('Account tables cannot be reset in a Turso Sync database.')
+    
+    async with pool.transaction() as conn:
         for table_name in (
             'account_watchlist',
+            'account_llm_api_keys',
             'account_custom_reports',
             'action_history',
             'accounts',
         ):
-            await connection.execute(f'DROP TABLE IF EXISTS {table_name}')
-        await create_schema(connection)
-        await create_account_schema(connection)
+            await conn.execute(f'DROP TABLE IF EXISTS {table_name}')
+        await create_schema(conn)
+        await create_account_schema(conn)
+    vault_sessions.clear()
     _schema_ready.add(key)
 
 
 # ================================================== #
-# WRITE HELPERS                                       #
+# WRITE HELPERS                                      #
 # ================================================== #
 
 async def insert_portfolio(
-    connection: AsyncDatabaseExecutor,
+    conn: AsyncDatabaseExecutor,
     account_id: AccountId,
-    account: Account,
+    account: Account
 ) -> None:
     action_values: list[tuple[Any, ...]] = []
     for stock in account.portfolio:
         if stock is None:
             continue
+
         ticker_id: int = await get_or_create_ticker(
-            connection,
+            conn,
             stock.ticker,
             stock.region,
         )
         currency_id: int = await get_or_create_currency(
-            connection,
+            conn,
             stock.currency,
         )
+
         action_values.extend(
             (
                 account_id,
@@ -732,15 +1009,14 @@ async def insert_portfolio(
 
     if not action_values:
         return
-    placeholders: str = ', '.join(
-        '(?, ?, ?, ?, ?, ?, ?)' for _ in action_values
-    )
+    
+    placeholders: str = ', '.join('(?, ?, ?, ?, ?, ?, ?)' for _ in action_values)
     flattened: tuple[Any, ...] = tuple(
         value
         for row in action_values
         for value in row
     )
-    await connection.execute(
+    await conn.execute(
         f'''
         INSERT INTO action_history (
             account_id, ticker_id, currency_id, action,
@@ -753,25 +1029,22 @@ async def insert_portfolio(
 
 
 async def insert_children(
-    connection: AsyncDatabaseExecutor,
+    conn: AsyncDatabaseExecutor,
     account_id: AccountId,
-    account: Account,
+    account: Account
 ) -> None:
-    if account.custom_report:
-        report_values: list[tuple[Any, ...]] = [
-            (account_id, position, metric)
-            for position, metric in enumerate(account.custom_report)
-        ]
-        report_placeholders: str = ', '.join(
-            '(?, ?, ?)' for _ in report_values
-        )
-        await connection.execute(
-            f'''
-            INSERT INTO account_custom_reports (account_id, position, metric)
-            VALUES {report_placeholders}
-            ''',
-            tuple(value for row in report_values for value in row),
-        )
+    custom_report_json: str = json.dumps(
+        account.custom_report,
+        ensure_ascii=False,
+        separators=(',', ':'),
+    )
+    await conn.execute(
+        '''
+        INSERT INTO account_custom_reports (account_id, custom_report_json)
+        VALUES (?, ?)
+        ''',
+        (account_id, custom_report_json),
+    )
 
     watchlist_values: list[tuple[Any, ...]] = []
     for position, item in enumerate(account.watchlist):
@@ -779,7 +1052,7 @@ async def insert_children(
             watchlist_values.append((account_id, position, 1, None, None, 0))
             continue
         ticker_id: int = await get_or_create_ticker(
-            connection,
+            conn,
             item.ticker,
             item.region,
         )
@@ -798,7 +1071,7 @@ async def insert_children(
         watchlist_placeholders: str = ', '.join(
             '(?, ?, ?, ?, ?, ?)' for _ in watchlist_values
         )
-        await connection.execute(
+        await conn.execute(
             f'''
             INSERT INTO account_watchlist (
                 account_id, position, is_empty, ticker_id,
@@ -809,24 +1082,25 @@ async def insert_children(
             tuple(value for row in watchlist_values for value in row),
         )
 
-    await insert_portfolio(connection, account_id, account)
+    await insert_portfolio(conn, account_id, account)
 
 
 async def _insert_account(
-    connection: AsyncDatabaseExecutor,
+    conn: AsyncDatabaseExecutor,
     account: Account,
     password_hash: str,
+    encrypted_umk: str | None
 ) -> Account:
-    await ensure_language(connection, account)
+    await ensure_language(conn, account)
     account_uuid: UUID = account.account_id or account.id
     account_id: AccountId = str(account_uuid)
-    await connection.execute(
+    await conn.execute(
         '''
         INSERT INTO accounts (
             account_id, email, name, role,
-            language_code, language_style, password_hash
+            language_code, language_style, password_hash, encrypted_umk
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''',
         (
             account_id,
@@ -836,9 +1110,11 @@ async def _insert_account(
             account.language.code,
             account.language.style,
             password_hash,
+            encrypted_umk,
         ),
     )
-    await insert_children(connection, account_id, account)
+
+    await insert_children(conn, account_id, account)
     persisted_account_id: UUID = UUID(account_id)
     return account.model_copy(
         update={
@@ -868,20 +1144,21 @@ def _placeholders(values: Sequence[AccountId]) -> str:
 
 
 async def _load_related(
-    connection: AsyncDatabaseConnection,
-    account_ids: Sequence[AccountId],
+    conn: AsyncDatabaseConnection,
+    account_ids: Sequence[AccountId]
 ) -> tuple[list[LibSQLRow], list[LibSQLRow], list[LibSQLRow]]:
     if not account_ids:
         return [], [], []
+    
     placeholders: str = _placeholders(account_ids)
-    custom_reports, watchlists, actions = await connection.batch(
+    custom_reports, watchlists, actions = await conn.batch(
         [
             (
                 f'''
-                SELECT account_id, position, metric
+                SELECT account_id, custom_report_json
                 FROM account_custom_reports
                 WHERE account_id IN ({placeholders})
-                ORDER BY account_id, position
+                ORDER BY account_id
                 ''',
                 tuple(account_ids),
             ),
@@ -927,6 +1204,7 @@ async def _load_related(
             ),
         ]
     )
+
     return (
         custom_reports.fetchall(),
         watchlists.fetchall(),
@@ -938,21 +1216,36 @@ def _account_from_parts(
     row: LibSQLRow,
     custom_rows: Iterable[LibSQLRow],
     watchlist_rows: Iterable[LibSQLRow],
-    action_rows: Iterable[LibSQLRow],
+    action_rows: Iterable[LibSQLRow]
 ) -> Account:
-    custom_report: list[str] = [
-        str(child['metric'])
-        for child in custom_rows
-    ]
+    custom_report_rows: list[LibSQLRow] = list(custom_rows)
+    custom_report: list[str] = []
+    if custom_report_rows:
+        try:
+            stored_custom_report: Any = json.loads(
+                str(custom_report_rows[0]['custom_report_json']),
+            )
+        except json.JSONDecodeError as e:
+            raise AccountSchemaException(f'Account {row["email"]!r} has invalid custom report JSON.') from e
+        if (
+            not isinstance(stored_custom_report, list)
+            or not all(
+                isinstance(metric, str)
+                for metric in stored_custom_report
+            )
+        ):
+            raise AccountSchemaException(f'Account {row["email"]!r} has invalid custom report data.')
+        custom_report = stored_custom_report
+    
     watchlist: list[WatchlistItem | None] = []
     for child in watchlist_rows:
         if child['is_empty']:
             watchlist.append(None)
             continue
+
         if child['ticker'] is None or child['region'] is None:
-            raise ValueError(
-                f'Account {row["email"]!r} has an invalid watchlist row',
-            )
+            raise ValueError(f'Account {row["email"]!r} has an invalid watchlist row')
+        
         watchlist.append(
             WatchlistItem(
                 ticker=str(child['ticker']),
@@ -968,6 +1261,7 @@ def _account_from_parts(
             int(action_row['ticker_id']),
             int(action_row['currency_id']),
         )
+
         if group_key not in portfolio_groups:
             portfolio_groups[group_key] = Stock(
                 ticker=str(action_row['ticker']),
@@ -1003,7 +1297,7 @@ def _account_from_parts(
 
 def _group_rows(
     rows: Iterable[LibSQLRow],
-    key: str,
+    key: str
 ) -> dict[AccountId, list[LibSQLRow]]:
     grouped: defaultdict[AccountId, list[LibSQLRow]] = defaultdict(list)
     for row in rows:
@@ -1012,11 +1306,11 @@ def _group_rows(
 
 
 async def _load_accounts_from_connection(
-    connection: AsyncDatabaseConnection,
+    conn: AsyncDatabaseConnection,
     *,
     account_id: AccountId | None = None,
     email: str | None = None,
-    name: str | None = None,
+    name: str | None = None
 ) -> list[Account]:
     query: str = f'''
         SELECT {_ACCOUNT_COLUMNS}
@@ -1033,12 +1327,13 @@ async def _load_accounts_from_connection(
     elif name is not None:
         query += ' WHERE accounts.name = ? COLLATE NOCASE'
         parameters = (name.strip(),)
+
     query += ' ORDER BY accounts.account_id'
     if account_id is not None or email is not None or name is not None:
         query += ' LIMIT 1'
 
     base_rows: list[LibSQLRow] = (
-        await connection.execute(query, parameters)
+        await conn.execute(query, parameters)
     ).fetchall()
     if not base_rows:
         return []
@@ -1048,7 +1343,7 @@ async def _load_accounts_from_connection(
         for row in base_rows
     ]
     custom_rows, watchlist_rows, action_rows = await _load_related(
-        connection,
+        conn,
         account_ids,
     )
     custom_by_account = _group_rows(custom_rows, 'account_id')
@@ -1074,6 +1369,7 @@ def _account_id_as_text(account_id: UUID | str) -> AccountId:
         return str(account_id)
     if not isinstance(account_id, str):
         raise TypeError('Account ID must be a UUID or UUID string')
+    
     try:
         return str(UUID(account_id.strip()))
     except ValueError as e:
@@ -1083,10 +1379,12 @@ def _account_id_as_text(account_id: UUID | str) -> AccountId:
 def _is_email_compatibility_value(value: UUID | str) -> bool:
     if not isinstance(value, str):
         return False
+    
     try:
         UUID(value.strip())
     except ValueError:
         return '@' in value
+    
     return False
 
 
@@ -1132,7 +1430,7 @@ async def get_account_by_email(email: str) -> Account | None:
 
 async def _get_account_with_password_by_field(
     field_name: Literal['account_id', 'email', 'name'],
-    value: str,
+    value: str
 ) -> tuple[Account | None, str | None]:
     lookup_value: str = (
         _account_id_as_text(value)
@@ -1159,6 +1457,7 @@ async def _get_account_with_password_by_field(
             connection,
             [str(row['account_id'])],
         )
+
     account: Account = _account_from_parts(
         row,
         custom_rows,
@@ -1168,9 +1467,7 @@ async def _get_account_with_password_by_field(
     return account, str(row['password_hash'])
 
 
-async def get_account_with_password(
-    account_id: UUID | str,
-) -> tuple[Account | None, str | None]:
+async def get_account_with_password(account_id: UUID | str) -> tuple[Account | None, str | None]:
     """Load account credentials by UUID."""
 
     return await _get_account_with_password_by_field(
@@ -1179,25 +1476,20 @@ async def get_account_with_password(
     )
 
 
-async def get_account_with_password_by_email(
-    email: str,
-) -> tuple[Account | None, str | None]:
+async def get_account_with_password_by_email(email: str) -> tuple[Account | None, str | None]:
     """Load account credentials by email."""
-
     return await _get_account_with_password_by_field('email', email)
 
 
-async def get_account_with_password_by_name(
-    name: str,
-) -> tuple[Account | None, str | None]:
+async def get_account_with_password_by_name(name: str) -> tuple[Account | None, str | None]:
     return await _get_account_with_password_by_field('name', name)
 
 
 async def get_account_email_by_name(name: str) -> str | None:
     await initialize_account_database()
-    async with _connection() as connection:
+    async with _connection() as conn:
         row: LibSQLRow | None = (
-            await connection.execute(
+            await conn.execute(
                 '''
                 SELECT email
                 FROM accounts
@@ -1210,12 +1502,9 @@ async def get_account_email_by_name(name: str) -> str | None:
     return str(row['email']) if row is not None else None
 
 
-async def language_name(
-    connection: AsyncDatabaseExecutor,
-    language_code: str,
-) -> str:
+async def language_name(conn: AsyncDatabaseExecutor, language_code: str) -> str:
     row: LibSQLRow | None = (
-        await connection.execute(
+        await conn.execute(
             'SELECT name FROM languages WHERE code = ? LIMIT 1',
             (language_code,),
         )
@@ -1225,21 +1514,197 @@ async def language_name(
     return str(row['name'])
 
 
-async def create_account(account: Account, password_hash: str) -> Account:
+async def create_account(
+    account: Account,
+    password_hash: str,
+    encrypted_umk: str | None = None
+) -> Account:
     if not isinstance(password_hash, str) or not password_hash.strip():
         raise ValueError('A password is required to create an account')
     await initialize_account_database()
+    
     pool = await _pool()
     try:
         async with pool.transaction() as connection:
-            return await _insert_account(connection, account, password_hash)
+            return await _insert_account(
+                connection,
+                account,
+                password_hash,
+                encrypted_umk,
+            )
+    
     except DatabaseIntegrityError as e:
         raise AccountAlreadyExistsError(str(account.email)) from e
+
+
+async def get_account_umk_envelope(account_id: UUID | str) -> str | None:
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    async with _connection() as connection:
+        row: LibSQLRow | None = (
+            await connection.execute(
+                '''
+                SELECT encrypted_umk
+                FROM accounts
+                WHERE account_id = ?
+                LIMIT 1
+                ''',
+                (account_id_text,),
+            )
+        ).fetchone()
+
+    if row is None or row['encrypted_umk'] is None:
+        return None
+    return str(row['encrypted_umk'])
+
+
+async def set_account_umk_envelope_if_missing(
+    account_id: UUID | str,
+    envelope: str
+) -> bool:
+    if not isinstance(envelope, str) or not envelope.strip():
+        raise ValueError('An encrypted UMK envelope is required.')
+    
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    pool = await _pool()
+    async with pool.transaction() as connection:
+        result = await connection.execute(
+            '''
+            UPDATE accounts
+            SET encrypted_umk = ?
+            WHERE account_id = ? AND encrypted_umk IS NULL
+            ''',
+            (envelope, account_id_text),
+        )
+    return result.rowcount == 1
+
+
+async def load_account_llm_key_envelopes(account_id: UUID | str) -> dict[str, str]:
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    async with _connection() as connection:
+        rows: list[LibSQLRow] = (
+            await connection.execute(
+                '''
+                SELECT provider, encrypted_value
+                FROM account_llm_api_keys
+                WHERE account_id = ?
+                ORDER BY provider
+                ''',
+                (account_id_text,),
+            )
+        ).fetchall()
+
+    return {
+        str(row['provider']): str(row['encrypted_value'])
+        for row in rows
+    }
+
+
+async def upsert_account_llm_key_envelope(
+    account_id: UUID | str,
+    provider: str,
+    envelope: str
+) -> None:
+    if provider not in {'deepseek', 'anthropic', 'chatgpt'}:
+        raise ValueError(f'Unsupported LLM provider: {provider!r}.')
+    if not isinstance(envelope, str) or not envelope.strip():
+        raise ValueError('An encrypted provider key envelope is required.')
+    
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    pool = await _pool()
+    async with pool.transaction() as connection:
+        await connection.execute(
+            '''
+            INSERT INTO account_llm_api_keys (
+                account_id, provider, encrypted_value
+            )
+            VALUES (?, ?, ?)
+            ON CONFLICT(account_id, provider)
+            DO UPDATE SET encrypted_value = excluded.encrypted_value
+            ''',
+            (account_id_text, provider, envelope),
+        )
+
+
+async def delete_account_llm_key(account_id: UUID | str, provider: str) -> bool:
+    if provider not in {'deepseek', 'anthropic', 'chatgpt'}:
+        raise ValueError(f'Unsupported LLM provider: {provider!r}.')
+    
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    pool = await _pool()
+    async with pool.transaction() as connection:
+        result = await connection.execute(
+            '''
+            DELETE FROM account_llm_api_keys
+            WHERE account_id = ? AND provider = ?
+            ''',
+            (account_id_text, provider),
+        )
+    return result.rowcount > 0
+
+
+async def update_account_password_and_umk(
+    account_id: UUID | str,
+    password_hash: str,
+    encrypted_umk: str
+) -> bool:
+    if not isinstance(password_hash, str) or not password_hash.strip():
+        raise ValueError('A password hash is required.')
+    if not isinstance(encrypted_umk, str) or not encrypted_umk.strip():
+        raise ValueError('An encrypted UMK envelope is required.')
+    
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    pool = await _pool()
+    async with pool.transaction() as connection:
+        result = await connection.execute(
+            '''
+            UPDATE accounts
+            SET password_hash = ?, encrypted_umk = ?
+            WHERE account_id = ?
+            ''',
+            (password_hash, encrypted_umk, account_id_text),
+        )
+    return result.rowcount > 0
+
+
+async def replace_account_umk_and_clear_llm_keys(
+    account_id: UUID | str,
+    encrypted_umk: str
+) -> bool:
+    if not isinstance(encrypted_umk, str) or not encrypted_umk.strip():
+        raise ValueError('An encrypted UMK envelope is required.')
+    
+    account_id_text: AccountId = _account_id_as_text(account_id)
+    await initialize_account_database()
+    pool = await _pool()
+    async with pool.transaction() as connection:
+        updated = await connection.execute(
+            '''
+            UPDATE accounts
+            SET encrypted_umk = ?
+            WHERE account_id = ?
+            ''',
+            (encrypted_umk, account_id_text),
+        )
+
+        if updated.rowcount == 0:
+            return False
+        await connection.execute(
+            'DELETE FROM account_llm_api_keys WHERE account_id = ?',
+            (account_id_text,),
+        )
+    return True
 
 
 async def update_account(account: Account) -> Account | None:
     if account.account_id is None:
         raise ValueError('A UUID is required to update an account')
+    
     account_id: AccountId = _account_id_as_text(account.account_id)
     await initialize_account_database()
     pool = await _pool()
@@ -1276,6 +1741,7 @@ async def update_account(account: Account) -> Account | None:
                     account_id,
                 ),
             )
+
             await connection.execute(
                 'DELETE FROM account_custom_reports WHERE account_id = ?',
                 (account_id,),
@@ -1316,9 +1782,8 @@ async def delete_account_by_email(email: str) -> Account | None:
 
 async def _delete_account_record(account: Account) -> Account:
     if account.account_id is None:
-        raise RuntimeError(
-            'A persisted account must have a UUID before deletion'
-        )
+        raise RuntimeError('A persisted account must have a UUID before deletion')
+    
     account_id: AccountId = _account_id_as_text(account.account_id)
     pool = await _pool()
     async with pool.transaction() as connection:
@@ -1326,6 +1791,7 @@ async def _delete_account_record(account: Account) -> Account:
             'DELETE FROM accounts WHERE account_id = ?',
             (account_id,),
         )
+    vault_sessions.lock(account_id)
     return account
 
 
@@ -1351,36 +1817,13 @@ async def get_password_hash(account_id: UUID | str) -> str | None:
     return str(row['password_hash'])
 
 
-async def update_password_hash(
-    account_id: UUID | str,
-    password_hash: str,
-) -> bool:
-    """Replace an account password hash and report whether the account exists."""
-
-    if not isinstance(password_hash, str) or not password_hash.strip():
-        raise ValueError('A password hash is required')
-    account_id_text: AccountId = _account_id_as_text(account_id)
-    await initialize_account_database()
-    pool = await _pool()
-    async with pool.transaction() as connection:
-        result = await connection.execute(
-            '''
-            UPDATE accounts
-            SET password_hash = ?
-            WHERE account_id = ?
-            ''',
-            (password_hash, account_id_text),
-        )
-    return result.rowcount > 0
-
-
 async def get_password_hash_by_email(email: str) -> str | None:
     """Return the stored password hash for an account email."""
 
     await initialize_account_database()
-    async with _connection() as connection:
+    async with _connection() as conn:
         row: LibSQLRow | None = (
-            await connection.execute(
+            await conn.execute(
                 '''
                 SELECT password_hash
                 FROM accounts
@@ -1395,14 +1838,12 @@ async def get_password_hash_by_email(email: str) -> str | None:
     return str(row['password_hash'])
 
 
-async def import_accounts(
-    accounts: Iterable[Account],
-    password_hash: str,
-) -> int:
+async def import_accounts(accounts: Iterable[Account], password_hash: str) -> int:
     """Insert accounts supplied by the explicit data migration command."""
 
     if not isinstance(password_hash, str) or not password_hash.strip():
         raise ValueError('A password is required to import accounts')
+    
     await initialize_account_database()
     imported: int = 0
     for account in accounts:
@@ -1411,31 +1852,3 @@ async def import_accounts(
         await create_account(account, password_hash)
         imported += 1
     return imported
-
-
-__all__: list[str] = [
-    'DATABASE_PATH',
-    'create_account',
-    'create_account_schema',
-    'delete_account',
-    'delete_account_by_email',
-    'get_account',
-    'get_account_by_email',
-    'get_account_by_id',
-    'get_account_email_by_name',
-    'get_account_with_password',
-    'get_account_with_password_by_email',
-    'get_account_with_password_by_name',
-    'get_password_hash',
-    'get_password_hash_by_email',
-    'import_accounts',
-    'initialize_account_database',
-    'insert_children',
-    'insert_portfolio',
-    'language_name',
-    'load_accounts',
-    'migrate_account_schema',
-    'reset_account_schema',
-    'update_account',
-    'update_password_hash',
-]

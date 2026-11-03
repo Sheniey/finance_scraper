@@ -3,7 +3,6 @@ import asyncio
 import mimetypes
 from datetime import date
 from pathlib import Path
-from smtplib import SMTPException
 from typing import Annotated
 from typer import Typer, Argument, Option
 from designkit.behavioral.verboser import VerboseSystem
@@ -22,11 +21,11 @@ from finance.logging import (
     RENDERER_NOT_SUPPORTED,
     TICKER_ADDED_TO_WATCHLIST,
     TICKER_NOT_FOUND,
-    UNKNOWN_ERROR,
+    UNKNOWN_ERROR
 )
 from finance.renderers.factory import RendererFactory
 from finance.services.database import (
-    sync_and_close_database_pools,
+    sync_and_close_database_pools
 )
 from finance.services.i18n import load_i18n
 from finance.services.account import (
@@ -38,27 +37,50 @@ from finance.services.account import (
     get_available_report_modes,
     get_by_email_or_name as get_account,
     get_by_name as get_account_by_name,
+    get_account_llm_keys,
+    get_account_llm_key_providers,
+    set_account_llm_key,
+    remove_account_llm_key,
+    regenerate_account_umk,
     remove_watchlist_item,
     create_account
 )
-from finance.services.account import Stock
-from finance.services.account.exceptions import AccountAlreadyExistsError
+from finance.services.account import (
+    Stock,
+    LLMProvider,
+    normalize_llm_provider,
+    vault_sessions,
+    AccountAlreadyExistsError,
+    AccountNotFoundError,
+    AccountVaultException,
+    VaultEnvelopeError,
+    VaultLockedError,
+)
 from finance.services.yf_extractor import TickerNotFoundError
 from finance.services.reporter import generate_report, Report
+from finance.services.llm.strategy import create_llm_service_for_account
 from finance.renderers import (
     RendererNotFoundError, smart_render_strategy
 )
 from finance.renderers.utils import normalize_output as normalize_renderer_output
 from finance.services.report_store.reports import create_cli_artifact
 from finance.services.report_store.database import report_database
-from finance.services.reporter.repository import get_report_cache_key
+from finance.services.reporter.repository import (
+    get_report_cache_key,
+    will_generate_explanation
+)
 from finance.services.email import (
     EmailAttachment,
     EmailException,
-    EmailService,
+    EmailService
 )
 from finance.services.report_delivery import render_pdf_attachment
-from finance.cli.forms import prompt_signup
+from finance.cli.forms import (
+    confirm_umk_regeneration,
+    prompt_account_password,
+    prompt_llm_api_key,
+    prompt_signup
+)
 from finance.services.watchlist_dispatcher import WatchlistDispatcher
 
 
@@ -66,8 +88,18 @@ app: Typer = Typer()
 account: Typer = Typer(
     name='account',
     help='Account management commands.',
-    epilog='Example: python -m finance account <command> [<args>]',
+    epilog='Example: python -m finance account <command> [<args>]'
 )
+llm_keys: Typer = Typer(
+    name='llm-keys',
+    help='Manage encrypted account LLM API keys.'
+)
+account.add_typer(llm_keys)
+vault: Typer = Typer(
+    name='vault',
+    help='Manage the account encryption vault.'
+)
+account.add_typer(vault)
 
 
 def _is_finance_api_process(pid: int) -> bool:
@@ -127,7 +159,7 @@ def ServeAPI(
     foreground: Annotated[
         bool,
         Option(..., '--foreground/--background'),
-    ] = False,
+    ] = False
 ) -> None:
     import os
     import signal
@@ -249,7 +281,7 @@ def Analyze(
     charts: ChartsOption = True,
     to: RendererOption = 'console',
     ml_horizon: MachineLearningHorizonOption = 10,
-    verbose: VerboseOption = True,
+    verbose: VerboseOption = True
 ) -> None:
     account: Account | None = account_for_command(
         email=email,
@@ -273,6 +305,19 @@ def Analyze(
 
     load_i18n(account.language)
     try:
+        needs_explanation: bool = will_generate_explanation(
+            account,
+            generate_explanation=explain,
+            mode=mode,
+        )
+        provider_keys: dict[LLMProvider, str] = (
+            asyncio.run(
+                get_account_llm_keys(account.account_id or account.id),
+            )
+            if needs_explanation
+            else {}
+        )
+        llm_service = create_llm_service_for_account(provider_keys)
         report: Report = asyncio.run(
             generate_report(
                 account,
@@ -282,7 +327,9 @@ def Analyze(
                 generate_charts=charts,
                 mode=mode,
                 horizon=ml_horizon,
-                verbose=verboser.is_verbose
+                verbose=verboser.is_verbose,
+                llm_service=llm_service,
+                cache_enabled=not provider_keys,
             )
         )
 
@@ -309,14 +356,16 @@ def Analyze(
         if normalized_output is not None:
             artifact_path: Path = Path(normalized_output)
             if artifact_path.is_file():
-                cache_key: str | None = get_report_cache_key(
-                    account,
-                    report.ticker,
-                    generate_explanation=explain,
-                    generate_charts=charts,
-                    mode=mode,
-                    horizon=ml_horizon,
-                )
+                cache_key: str | None = None
+                if not provider_keys:
+                    cache_key = get_report_cache_key(
+                        account,
+                        report.ticker,
+                        generate_explanation=explain,
+                        generate_charts=charts,
+                        mode=mode,
+                        horizon=ml_horizon,
+                    )
                 create_cli_artifact(
                     account_id=str(account.account_id or account.id),
                     resource=report.ticker.ticker,
@@ -342,6 +391,7 @@ def Analyze(
     
     except TickerNotFoundError as e:    verboser.error(TICKER_NOT_FOUND, expt=e)
     except RendererNotFoundError as e:  verboser.error(RENDERER_NOT_SUPPORTED, expt=e)
+    except AccountVaultException as e:         verboser.error(str(e))
     except Exception as e:              
         raise e
         verboser.error(UNKNOWN_ERROR, expt=e())
@@ -350,7 +400,7 @@ def Analyze(
 @app.command(
     name='send',
     help='Generate a PDF report and send it by email.',
-    epilog='Example: python -m finance-cli send <ticker> --email <account_email> --password <account_password>',
+    epilog='Example: python -m finance-cli send <ticker> --email <account_email> --password <account_password>'
 )
 def SendReport(
     requested_symbol: Annotated[str, Argument(help='The stock ticker symbol to generate a report for')],
@@ -361,7 +411,7 @@ def SendReport(
     charts: ChartsOption = False,
     mode: ModeOption = ReportMode.CLASSIC,
     ml_horizon: MachineLearningHorizonOption = 10,
-    verbose: VerboseOption = True,
+    verbose: VerboseOption = True
 ) -> None:
     account: Account | None = account_for_command(
         email=email,
@@ -377,6 +427,19 @@ def SendReport(
 
     load_i18n(account.language)
     try:
+        needs_explanation: bool = will_generate_explanation(
+            account,
+            generate_explanation=explain,
+            mode=mode,
+        )
+        provider_keys: dict[LLMProvider, str] = (
+            asyncio.run(
+                get_account_llm_keys(account.account_id or account.id),
+            )
+            if needs_explanation
+            else {}
+        )
+        llm_service = create_llm_service_for_account(provider_keys)
         report: Report = asyncio.run(
             generate_report(
                 account,
@@ -387,6 +450,8 @@ def SendReport(
                 mode=mode,
                 horizon=ml_horizon,
                 verbose=verboser.is_verbose,
+                llm_service=llm_service,
+                cache_enabled=not provider_keys,
             )
         )
 
@@ -403,14 +468,16 @@ def SendReport(
             report,
             filename=attachment_name,
         )
-        cache_key: str | None = get_report_cache_key(
-            account,
-            report.ticker,
-            generate_explanation=explain,
-            generate_charts=charts,
-            mode=mode,
-            horizon=ml_horizon,
-        )
+        cache_key: str | None = None
+        if not provider_keys:
+            cache_key = get_report_cache_key(
+                account,
+                report.ticker,
+                generate_explanation=explain,
+                generate_charts=charts,
+                mode=mode,
+                horizon=ml_horizon,
+            )
         create_cli_artifact(
             account_id=str(account.account_id or account.id),
             resource=report.ticker.ticker,
@@ -430,31 +497,36 @@ def SendReport(
             is_personalized=cache_key is None,
             cache_key=cache_key,
         )
-        recipient: str = str(account.email)
-        EmailService().send_report_bundle(
-            recipient,
-            date.today(),
-            [report.ticker.symbol],
-            [attachment],
+        sender_email: str = asyncio.run(
+            EmailService().send_report_bundle(
+                str(account.account_id or account.id),
+                account.name,
+                date.today(),
+                [report.ticker.symbol],
+                [attachment],
+                language_code=account.language.code,
+            ),
         )
         verboser.just_info(
             EMAIL_SENT.format(
                 symbol=requested_symbol,
-                email=recipient,
+                email=sender_email,
             )
         )
     except TickerNotFoundError:
         verboser.error(TICKER_NOT_FOUND)
     except RendererNotFoundError:
         verboser.error(RENDERER_NOT_SUPPORTED)
-    except (EmailException, OSError, SMTPException, ValueError) as e:
+    except AccountVaultException as e:
+        verboser.error(str(e))
+    except (EmailException, OSError, ValueError) as e:
         verboser.error(EMAIL_DELIVERY_FAILED, expt=e)
 
 
 @app.command(
     name='dispatch',
     help='Generate and email PDF reports for every account watchlist.',
-    epilog='Example: python -m finance-cli dispatch',
+    epilog='Example: python -m finance-cli dispatch'
 )
 def DispatchReports(verbose: VerboseOption = True) -> None:
     """Run the stateless watchlist dispatcher from an external scheduler."""
@@ -462,7 +534,7 @@ def DispatchReports(verbose: VerboseOption = True) -> None:
     verboser: VerboseSystem = VerboseSystem(verbose)
     try:
         results = asyncio.run(WatchlistDispatcher().dispatch_all_accounts())
-    except (EmailException, OSError, SMTPException, ValueError) as e:
+    except (EmailException, OSError, ValueError) as e:
         verboser.error(EMAIL_DELIVERY_FAILED, expt=e)
         return
     finally:
@@ -495,29 +567,37 @@ def SignUp(verbose: VerboseOption = True) -> None:
     return AccountSignUp(verbose)
 
 
-def _legacy_account_for_command(
-    email: str | None,
-    name: str | None,
-    password: str | None,
-) -> Account | None:
-    if not password:
-        return None
-    return get_account(email=email, name=name, password=password)
-
-
 def account_for_command(
     email: str | None,
     name: str | None,
-    password: str | None,
+    password: str | None
 ) -> Account | None:
     if not password:
         return None
-    return asyncio.run(
-        get_account(
-            email=email,
-            name=name,
-            password=password,
+    try:
+        return asyncio.run(
+            get_account(
+                email=email,
+                name=name,
+                password=password,
+            )
         )
+    except AccountVaultException as e:
+        console.print(str(e))
+        return None
+
+
+def account_for_vault_command(
+    email: str | None,
+    name: str | None,
+    password: str | None
+) -> tuple[Account | None, str | None]:
+    account_password: str | None = password or prompt_account_password()
+    if not account_password:
+        return None, None
+    return (
+        account_for_command(email, name, account_password),
+        account_password,
     )
 
 
@@ -577,13 +657,148 @@ def AccountSignUp(verbose: VerboseOption = True) -> None:
 def AccountShow(
     email: AccountEmailOption = None,
     name: AccountNameOption = None,
-    password: AccountPasswordOption = None,
+    password: AccountPasswordOption = None
+) -> None:
+    account_data, _ = account_for_vault_command(email, name, password)
+    if account_data is None:
+        console.print('Account not found or password is missing.')
+        return
+    console.print(account_data.model_dump_json(indent=2))
+
+
+@llm_keys.command(name='list', help='List configured LLM providers.')
+def AccountLLMKeysList(
+    email: AccountEmailOption = None,
+    name: AccountNameOption = None,
+    password: AccountPasswordOption = None
+) -> None:
+    account_data, _ = account_for_vault_command(email, name, password)
+    if account_data is None:
+        console.print('Account not found or password is missing.')
+        return
+
+    providers: list[LLMProvider] = asyncio.run(
+        get_account_llm_key_providers(
+            account_data.account_id or account_data.id,
+        )
+    )
+    if not providers:
+        console.print('No account LLM API keys are configured.')
+        return
+
+    table: Table = Table('Provider')
+    for provider in providers:
+        provider_name: str = (
+            'chatgpt (OpenAI)'
+            if provider is LLMProvider.CHATGPT
+            else provider.value
+        )
+        table.add_row(provider_name)
+    console.print(table)
+
+
+@llm_keys.command(name='set', help='Set or replace an account LLM API key.')
+def AccountLLMKeySet(
+    provider: Annotated[
+        str,
+        Argument(help='Provider: deepseek, anthropic, chatgpt, or openai'),
+    ],
+    email: AccountEmailOption = None,
+    name: AccountNameOption = None,
+    password: AccountPasswordOption = None
+) -> None:
+    account_data, _ = account_for_vault_command(email, name, password)
+    if account_data is None:
+        console.print('Account not found or password is missing.')
+        return
+    try:
+        normalized_provider: LLMProvider = normalize_llm_provider(provider)
+    except ValueError as e:
+        console.print(str(e))
+        return
+
+    api_key: str | None = prompt_llm_api_key(normalized_provider.value)
+    if api_key is None:
+        console.print('API key update was cancelled.')
+        return
+    try:
+        asyncio.run(
+            set_account_llm_key(
+                account_data.account_id or account_data.id,
+                normalized_provider,
+                api_key,
+            )
+        )
+    except (ValueError, AccountVaultException) as e:
+        console.print(str(e))
+        return
+    console.print(f'Saved the {normalized_provider.value} API key.')
+
+
+@llm_keys.command(name='remove', help='Remove an account LLM API key.')
+def AccountLLMKeyRemove(
+    provider: Annotated[
+        str,
+        Argument(help='Provider: deepseek, anthropic, chatgpt, or openai'),
+    ],
+    email: AccountEmailOption = None,
+    name: AccountNameOption = None,
+    password: AccountPasswordOption = None
 ) -> None:
     account_data: Account | None = account_for_command(email, name, password)
     if account_data is None:
         console.print('Account not found or password is missing.')
         return
-    console.print(account_data.model_dump_json(indent=2))
+    try:
+        normalized_provider: LLMProvider = normalize_llm_provider(provider)
+        was_removed: bool = asyncio.run(
+            remove_account_llm_key(
+                account_data.account_id or account_data.id,
+                normalized_provider,
+            )
+        )
+    except (ValueError, AccountVaultException) as e:
+        console.print(str(e))
+        return
+    if not was_removed:
+        console.print(f'No {normalized_provider.value} API key was configured.')
+        return
+    console.print(f'Removed the {normalized_provider.value} API key.')
+
+
+@vault.command(
+    name='regenerate',
+    help='Regenerate the UMK and discard all saved LLM API keys.'
+)
+def AccountVaultRegenerate(
+    email: AccountEmailOption = None,
+    name: AccountNameOption = None,
+    password: AccountPasswordOption = None
+) -> None:
+    account_data, account_password = account_for_vault_command(
+        email,
+        name,
+        password,
+    )
+    if account_data is None or account_password is None:
+        console.print('Account not found or password is missing.')
+        return
+    if not confirm_umk_regeneration():
+        console.print('UMK regeneration was cancelled.')
+        return
+    was_regenerated: bool = asyncio.run(
+        regenerate_account_umk(
+            account_data.account_id or account_data.id,
+            account_password,
+            confirmed=True,
+        )
+    )
+    if not was_regenerated:
+        console.print('Could not regenerate the account UMK.')
+        return
+    console.print(
+        'The account UMK was regenerated and saved LLM API keys were removed.',
+    )
 
 
 @account.command(name='add', help='Add a ticker to your watchlist.')
@@ -595,7 +810,7 @@ def AccountAdd(
     mode: ModeOption = ReportMode.CLASSIC,
     explain: ExplainOption = False,
     charts: ChartsOption = True,
-    ml_horizon: MachineLearningHorizonOption = 10,
+    ml_horizon: MachineLearningHorizonOption = 10
 ) -> None:
     account_data: Account | None = account_for_command(email, name, password)
     if account_data is None:
@@ -626,7 +841,7 @@ def AccountRemove(
     ticker: Annotated[str, Argument(help='Ticker symbol to remove')],
     email: AccountEmailOption = None,
     name: AccountNameOption = None,
-    password: AccountPasswordOption = None,
+    password: AccountPasswordOption = None
 ) -> None:
     account_data: Account | None = account_for_command(email, name, password)
     if account_data is None:
@@ -653,7 +868,7 @@ def add_account_trade(
     region: str,
     price: float,
     quantity: int,
-    trade_date: str,
+    trade_date: str
 ) -> None:
     account_data: Account | None = account_for_command(email, name, password)
     if account_data is None:
@@ -691,7 +906,7 @@ def AccountBuy(
     trade_date: Annotated[str | None, Option(help='Trade date, YYYY-MM-DD')] = None,
     email: AccountEmailOption = None,
     name: AccountNameOption = None,
-    password: AccountPasswordOption = None,
+    password: AccountPasswordOption = None
 ) -> None:
     add_account_trade(
         'BUY',
@@ -717,7 +932,7 @@ def AccountSell(
     trade_date: Annotated[str | None, Option(help='Trade date, YYYY-MM-DD')] = None,
     email: AccountEmailOption = None,
     name: AccountNameOption = None,
-    password: AccountPasswordOption = None,
+    password: AccountPasswordOption = None
 ) -> None:
     add_account_trade(
         'SELL',
@@ -737,7 +952,7 @@ def AccountSell(
 def AccountPortfolio(
     email: AccountEmailOption = None,
     name: AccountNameOption = None,
-    password: AccountPasswordOption = None,
+    password: AccountPasswordOption = None
 ) -> None:
     account_data: Account | None = account_for_command(email, name, password)
     if account_data is None:
@@ -767,6 +982,7 @@ def main() -> None:
     try:
         app()
     finally:
+        vault_sessions.clear()
         try:
             report_database.close()
         finally:
