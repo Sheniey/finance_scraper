@@ -1,6 +1,6 @@
 
 import type { APIRoute } from 'astro';
-import { BINARY_CURRENT_VERSION, BINARY_DOWNLOAD_URL } from 'astro:env/client';
+import { BINARY_CURRENT_VERSION, BINARY_DOWNLOAD_URL } from 'astro:env/server';
 
 export const GET: APIRoute = async () => {
     return new Response(
